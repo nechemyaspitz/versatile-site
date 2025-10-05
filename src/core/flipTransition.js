@@ -4,6 +4,7 @@
 import { prepareForAnimation, cleanupAfterAnimation, deferHeavyWork, getAnimationDuration } from '../utils/performance.js';
 
 let clickedElement = null;
+let clickedElementClone = null;
 let flipState = null;
 
 // Ensure Flip plugin is registered
@@ -23,6 +24,7 @@ function ensureFlipPlugin() {
 
 /**
  * Capture the clicked collection item for morphing
+ * Creates a clone that survives page transitions
  */
 export function captureClickedItem(event) {
   if (!ensureFlipPlugin()) return;
@@ -33,21 +35,39 @@ export function captureClickedItem(event) {
   // Store reference
   clickedElement = gridItem;
   
-  // Mark for identification
-  gridItem.setAttribute('data-flip-id', 'morphing-item');
+  // Get the position before we do anything
+  const rect = gridItem.getBoundingClientRect();
+  
+  // Clone the element to keep it visible during transition
+  clickedElementClone = gridItem.cloneNode(true);
+  clickedElementClone.style.position = 'fixed';
+  clickedElementClone.style.top = rect.top + 'px';
+  clickedElementClone.style.left = rect.left + 'px';
+  clickedElementClone.style.width = rect.width + 'px';
+  clickedElementClone.style.height = rect.height + 'px';
+  clickedElementClone.style.margin = '0';
+  clickedElementClone.style.zIndex = '9999';
+  clickedElementClone.style.pointerEvents = 'none';
+  clickedElementClone.setAttribute('data-flip-clone', 'true');
   
   // Optimize for animation
-  prepareForAnimation(gridItem);
+  prepareForAnimation(clickedElementClone);
   
-  // Capture initial state with Flip
-  try {
-    flipState = Flip.getState(gridItem, {
-      props: 'borderRadius,opacity',
-      simple: true, // Faster state capture
-    });
-  } catch (e) {
-    console.warn('Failed to capture Flip state:', e);
-    cleanup();
+  // Don't append yet - will append in leave hook
+  
+  // Store the rect for later use
+  flipState = {
+    rect: rect,
+    borderRadius: window.getComputedStyle(gridItem).borderRadius,
+  };
+}
+
+/**
+ * Append the clone to body (called in leave hook)
+ */
+export function showCloneDuringTransition() {
+  if (clickedElementClone) {
+    document.body.appendChild(clickedElementClone);
   }
 }
 
@@ -55,7 +75,10 @@ export function captureClickedItem(event) {
  * Perform the morph animation from Collections → Product
  */
 export function morphToProduct() {
-  if (!ensureFlipPlugin() || !clickedElement || !flipState) return;
+  if (!ensureFlipPlugin() || !flipState || !clickedElementClone) {
+    cleanup();
+    return;
+  }
   
   const targetElement = document.querySelector('.slider-wrap');
   
@@ -64,32 +87,24 @@ export function morphToProduct() {
     return;
   }
   
-  // Optimize both elements for animation
-  prepareForAnimation(clickedElement);
+  // Optimize for animation
   prepareForAnimation(targetElement);
   
   // Get animation duration (respect reduced motion preference)
-  const duration = getAnimationDuration(0.7);
+  const duration = getAnimationDuration(0.8);
   
   try {
-    // Get the current state of the target (where we're going)
-    const endState = Flip.getState(targetElement, {
-      props: 'borderRadius,opacity',
-      simple: true,
-    });
-    
-    // Make target look like the clicked item (START position)
-    // This is the key: position target at the START, then animate to END
-    const clickedRect = clickedElement.getBoundingClientRect();
+    // Get target's natural position
     const targetRect = targetElement.getBoundingClientRect();
+    const cloneRect = clickedElementClone.getBoundingClientRect();
     
-    // Calculate transform needed to place target at clicked position
-    const scaleX = clickedRect.width / targetRect.width;
-    const scaleY = clickedRect.height / targetRect.height;
-    const translateX = clickedRect.left - targetRect.left;
-    const translateY = clickedRect.top - targetRect.top;
+    // Calculate transform needed to move from clone position to target position
+    const scaleX = cloneRect.width / targetRect.width;
+    const scaleY = cloneRect.height / targetRect.height;
+    const translateX = cloneRect.left - targetRect.left;
+    const translateY = cloneRect.top - targetRect.top;
     
-    // Set target to clicked item's position/size instantly
+    // Position target at clone's position initially
     gsap.set(targetElement, {
       x: translateX,
       y: translateY,
@@ -97,13 +112,17 @@ export function morphToProduct() {
       scaleY: scaleY,
       transformOrigin: 'top left',
       opacity: 1,
-      borderRadius: window.getComputedStyle(clickedElement).borderRadius,
+      borderRadius: flipState.borderRadius,
     });
     
-    // Hide clicked item now that target is in its place
-    gsap.set(clickedElement, { opacity: 0 });
+    // Start fading out clone
+    gsap.to(clickedElementClone, {
+      opacity: 0,
+      duration: duration * 0.3,
+      ease: 'power2.in',
+    });
     
-    // Animate target from clicked position to its natural position
+    // Animate target to its natural position
     gsap.to(targetElement, {
       x: 0,
       y: 0,
@@ -112,34 +131,18 @@ export function morphToProduct() {
       borderRadius: window.getComputedStyle(targetElement).borderRadius,
       duration: duration,
       ease: 'power3.inOut',
-      clearProps: 'transform,borderRadius', // Clean up after animation
+      clearProps: 'transform,borderRadius',
       
       onComplete: () => {
-        // Clean up performance hints
         cleanupAfterAnimation(targetElement);
-        cleanupAfterAnimation(clickedElement);
         cleanup();
       },
     });
     
-    // Fade in other content of the product page during morph
-    const otherContent = document.querySelectorAll('.slider-wrap > *:not(.f-carousel)');
-    if (otherContent.length > 0) {
-      gsap.fromTo(otherContent, 
-        { opacity: 0 },
-        { 
-          opacity: 1, 
-          duration: duration * 0.6,
-          delay: duration * 0.4,
-          ease: 'power2.out',
-        }
-      );
-    }
-    
   } catch (e) {
     console.warn('Flip animation failed:', e);
     // Fallback: simple fade
-    gsap.set(clickedElement, { opacity: 0 });
+    gsap.set(clickedElementClone, { opacity: 0 });
     gsap.fromTo(targetElement, 
       { opacity: 0 },
       {
@@ -218,14 +221,29 @@ export function morphBackToCollections() {
         cleanupAfterAnimation(productWrap);
         cleanupAfterAnimation(targetItem);
         
-        // Fade in other collection items
+        // Fade in other collection items smoothly
         const otherItems = targetGrid.querySelectorAll('.collection_grid-item');
-        gsap.from(otherItems, {
-          opacity: 0,
-          duration: 0.3,
-          stagger: 0.02,
-          ease: 'power2.out',
-        });
+        // Check if items are already visible (from snapshot restore)
+        const areItemsVisible = Array.from(otherItems).some(item => 
+          parseFloat(window.getComputedStyle(item).opacity) > 0.5
+        );
+        
+        if (!areItemsVisible) {
+          gsap.fromTo(otherItems,
+            { opacity: 0, y: 10 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.4,
+              stagger: {
+                amount: 0.2,
+                from: 'start',
+              },
+              ease: 'power2.out',
+              clearProps: 'transform',
+            }
+          );
+        }
       },
     });
     
@@ -257,7 +275,12 @@ function cleanup() {
     cleanupAfterAnimation(clickedElement);
     clickedElement.removeAttribute('data-flip-id');
   }
+  if (clickedElementClone) {
+    clickedElementClone.remove();
+    cleanupAfterAnimation(clickedElementClone);
+  }
   clickedElement = null;
+  clickedElementClone = null;
   flipState = null;
 }
 

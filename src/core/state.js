@@ -40,6 +40,13 @@ export function restoreCollectionsSnapshotIfPossible() {
 
   // Restore the DOM
   grid.innerHTML = snap.html;
+  
+  // Make all items visible immediately (no animation on restore)
+  const items = grid.querySelectorAll('.w-dyn-item, .collection_grid-item');
+  items.forEach(item => {
+    item.style.opacity = '1';
+    item.style.transform = 'none';
+  });
 
   // Re-create the filter instance without fetching
   // Import is handled at runtime, so we'll check window global

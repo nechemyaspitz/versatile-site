@@ -6,7 +6,7 @@ import { getState, clearState, saveCollectionsSnapshot, restoreCollectionsSnapsh
 import { closeNav, updateActiveNavLinks, initScalingHamburgerNavigation } from '../components/navigation.js';
 import { initButtonCharacterStagger } from '../components/buttonStagger.js';
 import { reinitWebflow } from '../utils/webflow.js';
-import { initCollectionItemListeners, morphToProduct, morphBackToCollections } from './flipTransition.js';
+import { initCollectionItemListeners, morphToProduct, morphBackToCollections, showCloneDuringTransition } from './flipTransition.js';
 
 export function initBarba() {
   // Initialize persistent navigation
@@ -41,34 +41,47 @@ export function initBarba() {
           namespace: ['product']
         },
         leave({ current }) {
-          // Fade out other elements, keep clicked item visible
-          const otherItems = current.container.querySelectorAll('.collection_grid-item:not([data-flip-id])');
-          if (window.gsap && otherItems.length > 0) {
-            return gsap.to(otherItems, {
+          // Show the clone overlay to keep clicked item visible
+          showCloneDuringTransition();
+          
+          // Fade out all items including the clicked one
+          const allItems = current.container.querySelectorAll('.collection_grid-item');
+          if (window.gsap && allItems.length > 0) {
+            return gsap.to(allItems, {
               opacity: 0,
-              duration: 0.3,
+              duration: 0.25,
               ease: 'power2.out',
-              stagger: 0.02,
+              stagger: 0.015,
             });
           }
         },
         enter({ next }) {
-          // Set initial state - Flip will animate from here
+          // Hide the new container initially
           if (window.gsap) {
-            next.container.style.opacity = 0;
+            next.container.style.opacity = 1;
+            // Hide only the slider-wrap, show other content
+            const sliderWrap = next.container.querySelector('.slider-wrap');
+            if (sliderWrap) {
+              sliderWrap.style.opacity = 0;
+            }
           }
         },
         after({ next }) {
           // Perform the morph animation
           morphToProduct();
           
-          // Fade in the container
-          if (window.gsap) {
-            gsap.to(next.container, {
-              opacity: 1,
-              duration: 0.4,
-              ease: 'power2.out',
-            });
+          // Fade in other page content
+          const otherContent = next.container.querySelectorAll(':scope > *:not([data-barba])');
+          if (window.gsap && otherContent.length > 0) {
+            gsap.fromTo(otherContent,
+              { opacity: 0 },
+              { 
+                opacity: 1, 
+                duration: 0.4,
+                delay: 0.2,
+                ease: 'power2.out',
+              }
+            );
           }
         },
       },

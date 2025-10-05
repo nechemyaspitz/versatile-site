@@ -569,16 +569,36 @@ export async function initCollections(nsCtx) {
     }
 
     animateItemsIn() {
-      const items =
-        this.productContainer.querySelectorAll('.w-dyn-item');
-      items.forEach((item, index) => {
-        setTimeout(() => {
-          item.style.transition =
-            'opacity 0.4s ease-out, transform 0.4s ease-out';
-          item.style.opacity = '1';
-          item.style.transform = 'translateY(0)';
-        }, index * 20);
-      });
+      const items = this.productContainer.querySelectorAll('.w-dyn-item');
+      
+      // Use GSAP for smooth 60fps animation
+      if (window.gsap) {
+        gsap.fromTo(items,
+          { 
+            opacity: 0,
+            y: 15,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: 'power2.out',
+            stagger: {
+              amount: 0.3,
+              from: 'start',
+            },
+            clearProps: 'transform',
+          }
+        );
+      } else {
+        // Fallback if GSAP not loaded
+        items.forEach((item, index) => {
+          setTimeout(() => {
+            item.style.transition = 'opacity 0.4s ease-out';
+            item.style.opacity = '1';
+          }, index * 15);
+        });
+      }
     }
 
     initImageHover() {
