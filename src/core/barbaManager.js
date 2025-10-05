@@ -87,6 +87,18 @@ export function initBarba() {
         async enter({ next, trigger, current }) {
           console.log('🎯 product-reverse-morph ENTER hook', { trigger });
           
+          // Make next container visible but position it behind current
+          next.container.style.opacity = 1;
+          next.container.style.position = 'absolute';
+          next.container.style.top = '0';
+          next.container.style.left = '0';
+          next.container.style.width = '100%';
+          next.container.style.zIndex = '1';
+          
+          // Keep current container on top during morph
+          current.container.style.position = 'relative';
+          current.container.style.zIndex = '2';
+          
           // CRITICAL: Restore snapshot BEFORE morph runs
           // This ensures the target items exist for morphing
           if (trigger === 'back') {
@@ -95,16 +107,21 @@ export function initBarba() {
             if (restored) {
               // Mark that we restored snapshot (so afterEnter doesn't re-init)
               next.container.dataset.snapshotRestored = 'true';
+              
+              // Re-initialize click listeners immediately after DOM restore
+              console.log('🔗 Re-initializing click listeners after snapshot restore');
+              initCollectionItemListeners();
             }
           }
-          
-          // Keep container visible, let morph handle items
-          next.container.style.opacity = 1;
           
           // CRITICAL FIX: Morph needs to happen NOW while both containers exist
           // The old container (product) is still in DOM during enter hook
           console.log('⏰ Calling morphBackToCollections in ENTER hook');
           await morphBackToCollections();
+          
+          // Clean up positioning
+          next.container.style.position = '';
+          next.container.style.zIndex = '';
         },
         async after({ next }) {
           console.log('✅ product-reverse-morph AFTER hook');
@@ -170,11 +187,12 @@ export function initBarba() {
           const snapshotRestored = ctx.next.container.dataset.snapshotRestored === 'true';
           
           if (snapshotRestored) {
-            // Snapshot was restored during transition, just reinit listeners
+            // Snapshot was restored during transition
+            // Click listeners were already re-initialized in enter hook
             console.log('✅ Skipping re-init (snapshot already restored)');
             delete ctx.next.container.dataset.snapshotRestored;
             reinitWebflow();
-            initCollectionItemListeners();
+            // Don't call initCollectionItemListeners again - already done in enter hook
             return;
           }
           

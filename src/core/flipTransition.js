@@ -201,6 +201,7 @@ export function morphBackToCollections() {
     console.log('🎬 Starting reverse morph animation');
     console.log('   - Total items in grid:', allItems.length);
     console.log('   - Target item found:', !!targetItem);
+    console.log('   - Product wrap visible:', productWrap.style.opacity);
     
     // Force GPU layers for smooth animation
     forceGPULayer(productWrap);
@@ -216,16 +217,29 @@ export function morphBackToCollections() {
     const translateX = targetRect.left - productRect.left;
     const translateY = targetRect.top - productRect.top;
     
-    console.log('📐 Reverse morph metrics:', { scaleX, scaleY, translateX, translateY });
+    console.log('📐 Reverse morph metrics:', { 
+      scaleX: scaleX.toFixed(3), 
+      scaleY: scaleY.toFixed(3), 
+      translateX: translateX.toFixed(0), 
+      translateY: translateY.toFixed(0) 
+    });
     
-    // CRITICAL FIX: Don't hide all items - they're already visible!
-    // Only hide the target item for the morph
+    // CRITICAL: Hide target item but keep others visible
+    // Product slider is VISIBLE and will morph over items
     gsap.set(targetItem, { opacity: 0 });
+    
+    // Ensure product wrap is visible and on top
+    gsap.set(productWrap, { 
+      opacity: 1,
+      zIndex: 9999,
+    });
     
     // Create timeline for coordinated animations
     const tl = gsap.timeline({
       onComplete: () => {
         console.log('✅ Reverse morph complete');
+        // Reset z-index
+        gsap.set(productWrap, { zIndex: '' });
         cleanup();
         resolve();
       }
@@ -243,20 +257,20 @@ export function morphBackToCollections() {
       ease: 'power3.inOut',
     }, 0);
     
-    // 2. Fade out product slider as it morphs
+    // 2. Fade out product slider as it morphs (crossfade with target)
     tl.to(productWrap, {
       opacity: 0,
-      duration: getDuration(0.3),
-      ease: 'power2.in',
-    }, getDuration(0.3));
+      duration: getDuration(0.4),
+      ease: 'power2.inOut',
+    }, getDuration(0.2));
     
-    // 3. Reveal target item as product fades out
+    // 3. Reveal target item as product fades out (crossfade)
     tl.to(targetItem, {
       opacity: 1,
-      duration: getDuration(0.2),
-      ease: 'power2.out',
+      duration: getDuration(0.4),
+      ease: 'power2.inOut',
       clearProps: 'all',
-    }, getDuration(0.4));
+    }, getDuration(0.2));
   });
 }
 
