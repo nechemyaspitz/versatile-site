@@ -219,36 +219,47 @@ export async function initCollections(nsCtx) {
       
       if (!window.gsap || allItems.length === 0) return;
       
-      // CRITICAL: Set initial state IMMEDIATELY (before browser paints)
-      // This prevents any flash of visible content
+      // CRITICAL FIX: Set initial state on BOTH parent AND child
+      // This prevents the "double animation" effect
       gsap.set(allItems, {
         opacity: 0,
-        y: 0, // Don't offset - simpler, smoother
-        willChange: 'opacity', // Hint to browser
-        clearProps: 'transition', // Kill CSS transitions
+        clearProps: 'transition,transform',
       });
       
-      // Start animation IMMEDIATELY (don't wait for features)
-      // This gives instant visual feedback
+      // Also set child elements (prevent flash)
+      const gridItems = this.productContainer.querySelectorAll('.collection_grid-item');
+      gsap.set(gridItems, {
+        opacity: 0,
+        clearProps: 'transition',
+      });
+      
+      // Start animation IMMEDIATELY
       requestAnimationFrame(() => {
+        // Animate parent containers
         gsap.to(allItems, {
           opacity: 1,
+          duration: 0.6,
+          stagger: 0.03,
+          ease: 'power2.out',
+        });
+        
+        // Animate children (slightly delayed for depth)
+        gsap.to(gridItems, {
+          opacity: 1,
           duration: 0.5,
-          stagger: 0.025, // 25ms per item
-          ease: 'power1.out', // Simpler easing = smoother
-          clearProps: 'willChange', // Clean up after
+          stagger: 0.03,
+          ease: 'power2.out',
         });
       });
       
-      // Defer ALL feature initialization to AFTER animation starts
-      // This keeps main thread free during animation
+      // Defer feature initialization
       setTimeout(() => {
         requestIdleCallback(() => {
           this.initImageHover();
           this.updateProductImages();
           this.updateProductLinks();
         }, { timeout: 2000 });
-      }, 100); // Small delay to ensure animation starts first
+      }, 100);
     }
 
     appendItems(items) {
@@ -267,21 +278,37 @@ export async function initCollections(nsCtx) {
       
       if (!window.gsap || newItems.length === 0) return;
       
-      // Set initial state
+      // Set initial state on containers AND children
       gsap.set(newItems, {
         opacity: 0,
-        willChange: 'opacity',
         clearProps: 'transition',
       });
       
-      // Animate immediately
+      const newGridItems = [];
+      newItems.forEach(item => {
+        const gridItem = item.querySelector('.collection_grid-item');
+        if (gridItem) newGridItems.push(gridItem);
+      });
+      
+      gsap.set(newGridItems, {
+        opacity: 0,
+        clearProps: 'transition',
+      });
+      
+      // Animate both
       requestAnimationFrame(() => {
         gsap.to(newItems, {
           opacity: 1,
-          duration: 0.4,
-          stagger: 0.02,
-          ease: 'power1.out',
-          clearProps: 'willChange',
+          duration: 0.5,
+          stagger: 0.025,
+          ease: 'power2.out',
+        });
+        
+        gsap.to(newGridItems, {
+          opacity: 1,
+          duration: 0.45,
+          stagger: 0.025,
+          ease: 'power2.out',
         });
       });
       
@@ -308,7 +335,7 @@ export async function initCollections(nsCtx) {
       // Don't set any inline opacity - let GSAP control it completely
 
       productItem.innerHTML = `
-        <div class="collection_grid-item" data-base-url="${baseUrl}" style="opacity: 1; view-transition-name: ${productSlug};" data-hover-initialized="false">
+        <div class="collection_grid-item" data-base-url="${baseUrl}" style="view-transition-name: ${productSlug};" data-hover-initialized="false">
           <a href="${baseUrl}" class="collection_image-cover" style="display: block; color: inherit; text-decoration: none;">
             <img src="https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg" loading="lazy" alt="" class="thumbnail-cover-img overlay-1">
             <img src="https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg" loading="lazy" alt="" class="thumbnail-cover-img overlay-2">
