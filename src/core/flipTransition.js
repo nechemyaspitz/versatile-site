@@ -76,15 +76,19 @@ export function showCloneDuringTransition() {
  */
 export function morphToProduct() {
   return new Promise((resolve) => {
+    console.log('🎬 Forward morph: Starting');
+    
     if (!clickedElementClone || !window.gsap) {
-      cleanup();
+      console.warn('❌ No clone or GSAP');
+      cleanup(true);
       resolve();
       return;
     }
     
     const target = document.querySelector('.slider-wrap');
     if (!target) {
-      cleanup();
+      console.warn('❌ No slider-wrap found');
+      cleanup(true);
       resolve();
       return;
     }
@@ -102,6 +106,8 @@ export function morphToProduct() {
     const translateX = cloneRect.left - targetRect.left;
     const translateY = cloneRect.top - targetRect.top;
     
+    console.log('📐 Morph transform:', { scaleX, scaleY, translateX, translateY });
+    
     // Position target at clone location instantly
     gsap.set(target, {
       x: translateX,
@@ -110,11 +116,13 @@ export function morphToProduct() {
       scaleY: scaleY,
       transformOrigin: 'top left',
       opacity: 1,
+      borderRadius: window.getComputedStyle(clickedElementClone).borderRadius,
     });
     
     // Create timeline for synchronized animations
     const tl = gsap.timeline({
       onComplete: () => {
+        console.log('✅ Forward morph complete');
         cleanup(true); // Preserve slug for reverse morph
         resolve();
       },
@@ -123,7 +131,7 @@ export function morphToProduct() {
     // Fade out clone
     tl.to(clickedElementClone, {
       opacity: 0,
-      duration: getDuration(0.25),
+      duration: getDuration(0.3),
       ease: 'power2.in',
     }, 0);
     
@@ -133,9 +141,10 @@ export function morphToProduct() {
       y: 0,
       scaleX: 1,
       scaleY: 1,
-      duration: getDuration(0.8),
+      borderRadius: window.getComputedStyle(target).borderRadius,
+      duration: getDuration(0.7),
       ease: 'power3.inOut',
-      clearProps: 'transform',
+      clearProps: 'transform,borderRadius',
     }, 0);
   });
 }
