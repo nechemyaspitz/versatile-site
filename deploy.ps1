@@ -36,8 +36,14 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host ""
         Write-Host "Deployed successfully!" -ForegroundColor Green
         Write-Host ""
-        Write-Host "Purge CDN cache (optional):" -ForegroundColor Yellow
-        Write-Host "https://purge.jsdelivr.net/gh/nechemyaspitz/versatile-site@master/main.js" -ForegroundColor Blue
+        Write-Host "DEV MODE (instant updates, no cache):" -ForegroundColor Yellow
+        Write-Host "<script defer src=`"https://raw.githubusercontent.com/nechemyaspitz/versatile-site/master/main.js`"></script>" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "PRODUCTION MODE (fast CDN, requires purge/wait):" -ForegroundColor Yellow  
+        Write-Host "<script defer src=`"https://cdn.jsdelivr.net/gh/nechemyaspitz/versatile-site@master/main.js`"></script>" -ForegroundColor Blue
+        Write-Host ""
+        Write-Host "Purge CDN cache:" -ForegroundColor Yellow
+        Write-Host "https://purge.jsdelivr.net/gh/nechemyaspitz/versatile-site@master/main.js" -ForegroundColor Cyan
     }
     Write-Host ""
     
