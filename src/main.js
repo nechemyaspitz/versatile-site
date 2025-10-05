@@ -2,13 +2,13 @@
 import { initTaxi } from './taxi.js';
 
 // Version tracking
-const VERSION = '2.0.2';
+const VERSION = '2.0.3';
 const DEPLOY_TIME = new Date().toISOString();
 
 console.log(`%c🚕 Versatile Site v${VERSION} - Powered by Taxi.js`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
 console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold;');
 console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
-console.log(`%c🎉 v2.0.2: Factory pattern - Renderers/Transitions load AFTER Taxi.js!`, 'color: #ff6600; font-weight: bold;');
+console.log(`%c🔍 v2.0.3: DEBUG MODE - Checking Taxi.js availability!`, 'color: #ff6600; font-weight: bold;');
 
 // Debug: Log what's available on window
 console.log('%c🔍 DEBUG: Checking what\'s loaded...', 'color: #ff00ff; font-weight: bold;');
