@@ -11,7 +11,13 @@ export const pageSnapshots = new Map(); // key: href, value: { html, state, scro
 export function saveCollectionsSnapshot() {
   const grid = document.querySelector('.product-grid');
   const href = location.href;
-  if (!grid) return;
+  console.log('💾 Saving collections snapshot for:', href);
+  
+  if (!grid) {
+    console.warn('❌ No product-grid found, cannot save snapshot');
+    return;
+  }
+  
   const state = window.productFilter
     ? {
         activeFilters: window.productFilter.activeFilters,
@@ -22,24 +28,51 @@ export function saveCollectionsSnapshot() {
       }
     : null;
 
-  pageSnapshots.set(href, {
+  const snapshot = {
     html: grid.innerHTML,
     state,
     scrollY: window.scrollY,
+  };
+  
+  pageSnapshots.set(href, snapshot);
+  console.log('✅ Snapshot saved:', {
+    itemCount: grid.querySelectorAll('.collection_grid-item').length,
+    hasState: !!state,
   });
 }
 
 export function restoreCollectionsSnapshotIfPossible() {
   const href = location.href;
+  console.log('🔍 Attempting to restore snapshot for:', href);
+  console.log('📦 Available snapshots:', Array.from(pageSnapshots.keys()));
+  
   const snap = pageSnapshots.get(href);
-  if (!snap) return false;
+  if (!snap) {
+    console.warn('❌ No snapshot found for this URL');
+    return false;
+  }
+  
+  console.log('✅ Snapshot found:', {
+    hasHTML: !!snap.html,
+    hasState: !!snap.state,
+  });
 
   const grid = document.querySelector('.product-grid');
   const form = document.getElementById('filters');
-  if (!grid || !form) return false;
+  
+  if (!grid) {
+    console.warn('❌ No product-grid element found');
+    return false;
+  }
+  
+  if (!form) {
+    console.warn('❌ No filters form found');
+    return false;
+  }
 
   // Restore the DOM
   grid.innerHTML = snap.html;
+  console.log('✅ DOM restored, item count:', grid.querySelectorAll('.collection_grid-item').length);
   
   // Make all items visible immediately (no animation on restore)
   const items = grid.querySelectorAll('.w-dyn-item, .collection_grid-item');
@@ -49,8 +82,16 @@ export function restoreCollectionsSnapshotIfPossible() {
   });
 
   // Re-create the filter instance without fetching
-  // Import is handled at runtime, so we'll check window global
-  if (!window.InfiniteScrollProductFilter) return false;
+  // Check if we have a reference to the filter class
+  if (!window.productFilter) {
+    console.warn('⚠️ No window.productFilter reference, skipping state restoration');
+    return true; // Still return true since we restored the DOM
+  }
+  
+  if (!window.InfiniteScrollProductFilter) {
+    console.warn('⚠️ No window.InfiniteScrollProductFilter constructor, skipping state restoration');
+    return true; // Still return true since we restored the DOM
+  }
   
   const FilterClass = window.InfiniteScrollProductFilter.constructor;
   const f = Object.create(FilterClass.prototype);
@@ -94,6 +135,7 @@ export function restoreCollectionsSnapshotIfPossible() {
   }
 
   window.productFilter = f;
+  console.log('✅ Filter state restored successfully');
   return true;
 }
 

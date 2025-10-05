@@ -17,11 +17,26 @@ export function captureClickedItem(event) {
   // Store reference
   clickedElement = gridItem;
   
-  // Extract product slug from URL
-  const link = gridItem.querySelector('a[href*="/collections/"]');
-  if (link) {
-    const match = link.href.match(/\/collections\/([^/?]+)/);
-    if (match) productSlug = match[1];
+  // Extract product slug from data-base-url attribute (more reliable)
+  const baseUrl = gridItem.getAttribute('data-base-url');
+  if (baseUrl) {
+    const match = baseUrl.match(/\/collections\/([^/?]+)/);
+    if (match) {
+      productSlug = match[1];
+      console.log('🏷️ Captured product slug:', productSlug);
+    }
+  }
+  
+  // Fallback: try to find link
+  if (!productSlug) {
+    const link = gridItem.querySelector('a[href*="/collections/"]');
+    if (link) {
+      const match = link.href.match(/\/collections\/([^/?]+)/);
+      if (match) {
+        productSlug = match[1];
+        console.log('🏷️ Captured product slug (fallback):', productSlug);
+      }
+    }
   }
   
   // Get position BEFORE any DOM changes
