@@ -10,9 +10,20 @@ console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold
 console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
 console.log(`%c🎉 v2.0.2: Factory pattern - Renderers/Transitions load AFTER Taxi.js!`, 'color: #ff6600; font-weight: bold;');
 
+// Debug: Log what's available on window
+console.log('%c🔍 DEBUG: Checking what\'s loaded...', 'color: #ff00ff; font-weight: bold;');
+console.log('window.Taxi:', typeof window.Taxi);
+console.log('window.Taxi keys:', window.Taxi ? Object.keys(window.Taxi) : 'undefined');
+
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   console.log('%c🚕 Taxi.js initializing...', 'color: #ff00ff;');
+  console.log('%c🔍 window.Taxi available?', 'color: #ff00ff;', !!window.Taxi);
+  
+  if (window.Taxi) {
+    console.log('%c✅ Taxi.js found! Keys:', 'color: #00ff00;', Object.keys(window.Taxi));
+  }
+  
   const taxi = initTaxi();
   
   // Expose for debugging
