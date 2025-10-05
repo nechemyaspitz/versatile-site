@@ -10,8 +10,11 @@ export default function createDefaultTransition() {
   return class DefaultTransition extends window.taxi.Transition {
     /**
      * Animate out the current page
+     * @param {{ from: HTMLElement, trigger: string|HTMLElement|false, done: Function }} props
      */
-    onLeave({ from, done }) {
+    onLeave({ from, trigger, done }) {
+      console.log('👋 Default transition: leaving', { trigger });
+      
       if (!window.gsap) {
         done();
         return;
@@ -27,8 +30,11 @@ export default function createDefaultTransition() {
     
     /**
      * Animate in the new page
+     * @param {{ to: HTMLElement, trigger: string|HTMLElement|false, done: Function }} props
      */
-    onEnter({ to, done }) {
+    onEnter({ to, trigger, done }) {
+      console.log('📥 Default transition: entering', { trigger });
+      
       if (!window.gsap) {
         done();
         return;
@@ -41,10 +47,9 @@ export default function createDefaultTransition() {
       gsap.to(to, {
         opacity: 1,
         duration: 0.3,
-        ease: 'power2.out',
+        ease: 'power2.in',
         onComplete: done,
       });
     }
   };
 }
-

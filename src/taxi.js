@@ -31,13 +31,16 @@ export function initTaxi() {
   // Initialize Taxi (using global taxi from CDN - lowercase!)
   const taxiInstance = new window.taxi.Core({
     // Links to intercept (exclude external, anchors, etc.)
-    links: 'a:not([target]):not([href^="#"]):not([data-no-taxi])',
+    links: 'a:not([target]):not([href^="#"]):not([data-taxi-ignore])',
     
     // Remove old content after transition
     removeOldContent: true,
     
-    // Enable built-in preloading
-    allowInterruption: true,
+    // Allow navigation interruption
+    allowInterruption: false,
+    
+    // Enable built-in prefetch on hover/focus
+    enablePrefetch: true,
     
     // Transitions
     transitions: {
@@ -54,15 +57,28 @@ export function initTaxi() {
     },
   });
   
-  // Global hooks
-  taxiInstance.on('NAVIGATE_START', ({ to }) => {
-    console.log('🚀 Navigating to:', to.page.url);
+  // Set up routing for morph transitions
+  // Collections → Product (forward morph)
+  taxiInstance.addRoute('/collections', '/collections/.*', 'morph');
+  
+  // Product → Collections via back button is handled automatically by MorphTransition
+  // checking for trigger === 'popstate'
+  
+  console.log('✅ Routing configured for morph transitions');
+  
+  // Global hooks using official event names
+  taxiInstance.on('NAVIGATE_IN', ({ to }) => {
+    console.log('📥 NAVIGATE_IN:', to.page?.dataset?.taxiView || 'unknown');
   });
   
+  taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
+    console.log('📤 NAVIGATE_OUT:', from.page?.dataset?.taxiView || 'unknown');
+  });
+
   taxiInstance.on('NAVIGATE_END', ({ to, trigger }) => {
-    console.log('✅ Navigation complete:', to.page.url);
+    console.log('✅ NAVIGATE_END:', to.page?.dataset?.taxiView || 'unknown', { trigger });
     
-    // Reinit Webflow interactions
+    // Re-initialize Webflow interactions after every navigation
     reinitWebflow();
     
     // Log navigation type
@@ -75,6 +91,7 @@ export function initTaxi() {
     console.error('❌ Navigation error:', error);
   });
   
+  console.log('✅ Taxi.js initialized successfully!');
+  
   return taxiInstance;
 }
-

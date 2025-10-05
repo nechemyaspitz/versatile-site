@@ -6,19 +6,31 @@ export default function createCollectionsRenderer() {
   const DefaultRenderer = createDefaultRenderer();
   
   return class CollectionsRenderer extends DefaultRenderer {
-    // Instance variable for filter
+    // Instance variables
     filterInstance = null;
-    
-    // Store click listeners (so we can clean them up)
     clickHandler = null;
   
+    /**
+     * Initial load - set up persistent features
+     */
+    initialLoad() {
+      console.log('🎬 Collections: Initial load');
+      this.onEnter();
+      this.onEnterCompleted();
+    }
+    
+    /**
+     * Enter: Prepare collections page
+     */
     onEnter() {
-      super.onEnter();
       console.log('🛍️ Collections page entering');
     }
     
+    /**
+     * Enter completed: Initialize filter, infinite scroll, click listeners
+     */
     async onEnterCompleted() {
-      super.onEnterCompleted();
+      console.log('🛍️ Collections: Initializing filter...');
       
       // Initialize product filter & infinite scroll
       this.filterInstance = await initCollections();
@@ -28,8 +40,11 @@ export default function createCollectionsRenderer() {
       this.initClickListeners();
     }
     
+    /**
+     * Set up click listeners to capture product info for morph
+     */
     initClickListeners() {
-      // Event delegation - attach to container (persists across navigations!)
+      // Event delegation on grid
       this.clickHandler = (e) => {
         const productLink = e.target.closest('.collection_image-cover, .collection_details');
         if (!productLink) return;
@@ -39,16 +54,26 @@ export default function createCollectionsRenderer() {
         if (gridItem) {
           const productSlug = gridItem.getAttribute('data-base-url');
           if (productSlug) {
+            const rect = gridItem.getBoundingClientRect();
+            
             // Store in sessionStorage for morph transition
-            sessionStorage.setItem('morphFrom', JSON.stringify({
+            sessionStorage.setItem('morphData', JSON.stringify({
               slug: productSlug.replace('/collections/', ''),
-              rect: gridItem.getBoundingClientRect(),
+              rect: {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+              },
+              borderRadius: window.getComputedStyle(gridItem).borderRadius,
             }));
+            
+            console.log('💾 Stored morph data for:', productSlug);
           }
         }
       };
       
-      // Attach to product grid container
+      // Attach to product grid
       const grid = document.querySelector('.product-grid');
       if (grid) {
         grid.addEventListener('click', this.clickHandler);
@@ -56,12 +81,21 @@ export default function createCollectionsRenderer() {
       }
     }
     
+    /**
+     * Leave: Prepare to exit (cleanup happens in onLeaveCompleted)
+     */
     onLeave() {
-      super.onLeave();
-      
+      console.log('👋 Collections page leaving');
+    }
+    
+    /**
+     * Leave completed: Cleanup filter and listeners
+     */
+    onLeaveCompleted() {
       // Cleanup filter instance
       if (this.filterInstance?.destroy) {
         this.filterInstance.destroy();
+        this.filterInstance = null;
         console.log('🗑️ Collections filter destroyed');
       }
       
@@ -69,6 +103,7 @@ export default function createCollectionsRenderer() {
       const grid = document.querySelector('.product-grid');
       if (grid && this.clickHandler) {
         grid.removeEventListener('click', this.clickHandler);
+        this.clickHandler = null;
         console.log('🗑️ Collections click listeners removed');
       }
     }
