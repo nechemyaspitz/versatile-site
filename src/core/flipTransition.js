@@ -64,53 +64,90 @@ export function morphToProduct() {
     return;
   }
   
-  // Optimize target for animation
+  // Optimize both elements for animation
+  prepareForAnimation(clickedElement);
   prepareForAnimation(targetElement);
   
-  // Match the flip-id for Flip to work
-  targetElement.setAttribute('data-flip-id', 'morphing-item');
-  
   // Get animation duration (respect reduced motion preference)
-  const duration = getAnimationDuration(0.6);
+  const duration = getAnimationDuration(0.7);
   
   try {
-    // Perform the morph
-    Flip.from(flipState, {
-      duration: duration,
-      ease: 'power2.inOut',
-      absolute: true, // Position absolutely during animation
-      scale: true,
+    // Get the current state of the target (where we're going)
+    const endState = Flip.getState(targetElement, {
+      props: 'borderRadius,opacity',
       simple: true,
-      
-      // Performance: use transforms only
-      onEnter: (elements) => {
-        gsap.set(elements, {
-          opacity: 0,
-          scale: 0.95,
-        });
-        return gsap.to(elements, {
-          opacity: 1,
-          scale: 1,
-          duration: getAnimationDuration(0.4),
-          ease: 'power2.out',
-        });
-      },
+    });
+    
+    // Make target look like the clicked item (START position)
+    // This is the key: position target at the START, then animate to END
+    const clickedRect = clickedElement.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    
+    // Calculate transform needed to place target at clicked position
+    const scaleX = clickedRect.width / targetRect.width;
+    const scaleY = clickedRect.height / targetRect.height;
+    const translateX = clickedRect.left - targetRect.left;
+    const translateY = clickedRect.top - targetRect.top;
+    
+    // Set target to clicked item's position/size instantly
+    gsap.set(targetElement, {
+      x: translateX,
+      y: translateY,
+      scaleX: scaleX,
+      scaleY: scaleY,
+      transformOrigin: 'top left',
+      opacity: 1,
+      borderRadius: window.getComputedStyle(clickedElement).borderRadius,
+    });
+    
+    // Hide clicked item now that target is in its place
+    gsap.set(clickedElement, { opacity: 0 });
+    
+    // Animate target from clicked position to its natural position
+    gsap.to(targetElement, {
+      x: 0,
+      y: 0,
+      scaleX: 1,
+      scaleY: 1,
+      borderRadius: window.getComputedStyle(targetElement).borderRadius,
+      duration: duration,
+      ease: 'power3.inOut',
+      clearProps: 'transform,borderRadius', // Clean up after animation
       
       onComplete: () => {
         // Clean up performance hints
         cleanupAfterAnimation(targetElement);
-        targetElement.removeAttribute('data-flip-id');
+        cleanupAfterAnimation(clickedElement);
         cleanup();
       },
     });
+    
+    // Fade in other content of the product page during morph
+    const otherContent = document.querySelectorAll('.slider-wrap > *:not(.f-carousel)');
+    if (otherContent.length > 0) {
+      gsap.fromTo(otherContent, 
+        { opacity: 0 },
+        { 
+          opacity: 1, 
+          duration: duration * 0.6,
+          delay: duration * 0.4,
+          ease: 'power2.out',
+        }
+      );
+    }
+    
   } catch (e) {
     console.warn('Flip animation failed:', e);
     // Fallback: simple fade
-    gsap.to(targetElement, {
-      opacity: 1,
-      duration: 0.3,
-      ease: 'power2.out',
-    });
+    gsap.set(clickedElement, { opacity: 0 });
+    gsap.fromTo(targetElement, 
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: 0.3,
+        ease: 'power2.out',
+      }
+    );
     cleanup();
   }
 }
@@ -144,39 +181,54 @@ export function morphBackToCollections() {
   prepareForAnimation(productWrap);
   prepareForAnimation(targetItem);
   
-  // Mark elements
-  productWrap.setAttribute('data-flip-id', 'reverse-morph');
-  targetItem.setAttribute('data-flip-id', 'reverse-morph');
+  // Get animation duration
+  const duration = getAnimationDuration(0.7);
   
   try {
-    // Capture state of product page
-    const productState = Flip.getState(productWrap, {
-      props: 'borderRadius,opacity',
-      simple: true,
-    });
+    // Get positions for the morph
+    const productRect = productWrap.getBoundingClientRect();
+    const targetRect = targetItem.getBoundingClientRect();
     
-    // Get animation duration
-    const duration = getAnimationDuration(0.5);
+    // Calculate transform to shrink product into target position
+    const scaleX = targetRect.width / productRect.width;
+    const scaleY = targetRect.height / productRect.height;
+    const translateX = targetRect.left - productRect.left;
+    const translateY = targetRect.top - productRect.top;
     
-    // Switch to collection item visually
-    requestAnimationFrame(() => {
-      // Morph back
-      Flip.from(productState, {
-        targets: targetItem,
-        duration: duration,
-        ease: 'power2.inOut',
-        absolute: true,
-        scale: true,
-        simple: true,
+    // Hide target item (we'll morph product into its place)
+    gsap.set(targetItem, { opacity: 0 });
+    
+    // Animate product wrap to target item position
+    gsap.to(productWrap, {
+      x: translateX,
+      y: translateY,
+      scaleX: scaleX,
+      scaleY: scaleY,
+      transformOrigin: 'top left',
+      borderRadius: window.getComputedStyle(targetItem).borderRadius,
+      duration: duration,
+      ease: 'power3.inOut',
+      
+      onComplete: () => {
+        // Show target item, hide product
+        gsap.set(targetItem, { opacity: 1 });
+        gsap.set(productWrap, { opacity: 0 });
         
-        onComplete: () => {
-          cleanupAfterAnimation(productWrap);
-          cleanupAfterAnimation(targetItem);
-          productWrap.removeAttribute('data-flip-id');
-          targetItem.removeAttribute('data-flip-id');
-        },
-      });
+        // Clean up
+        cleanupAfterAnimation(productWrap);
+        cleanupAfterAnimation(targetItem);
+        
+        // Fade in other collection items
+        const otherItems = targetGrid.querySelectorAll('.collection_grid-item');
+        gsap.from(otherItems, {
+          opacity: 0,
+          duration: 0.3,
+          stagger: 0.02,
+          ease: 'power2.out',
+        });
+      },
     });
+    
   } catch (e) {
     console.warn('Reverse morph failed:', e);
     // Fallback
