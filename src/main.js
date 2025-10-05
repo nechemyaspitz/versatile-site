@@ -13,7 +13,9 @@ console.log(`%c🔍 v2.0.3: DEBUG MODE - Checking Taxi.js availability!`, 'color
 // Debug: Log what's available on window
 console.log('%c🔍 DEBUG: Checking what\'s loaded...', 'color: #ff00ff; font-weight: bold;');
 console.log('window.Taxi:', typeof window.Taxi);
-console.log('window.Taxi keys:', window.Taxi ? Object.keys(window.Taxi) : 'undefined');
+console.log('window.taxi:', typeof window.taxi);
+console.log('window.Taxi keys:', window.Taxi ? Object.keys(window.Taxi) : 'N/A');
+console.log('window.taxi keys:', window.taxi ? Object.keys(window.taxi) : 'N/A');
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,7 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('%c🔍 window.Taxi available?', 'color: #ff00ff;', !!window.Taxi);
   
   if (window.Taxi) {
-    console.log('%c✅ Taxi.js found! Keys:', 'color: #00ff00;', Object.keys(window.Taxi));
+    console.log('%c✅ window.Taxi found! Keys:', 'color: #00ff00;', Object.keys(window.Taxi));
+  }
+  if (window.taxi) {
+    console.log('%c✅ window.taxi found! Keys:', 'color: #00ff00;', Object.keys(window.taxi));
   }
   
   const taxi = initTaxi();
