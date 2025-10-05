@@ -1,15 +1,15 @@
 // Taxi.js initialization - MUCH simpler than Barba!
 import { reinitWebflow } from './utils/webflow.js';
 
-// Import renderers (page-specific logic)
-import DefaultRenderer from './renderers/DefaultRenderer.js';
-import HomeRenderer from './renderers/HomeRenderer.js';
-import CollectionsRenderer from './renderers/CollectionsRenderer.js';
-import ProductRenderer from './renderers/ProductRenderer.js';
+// Import renderer factories
+import createDefaultRenderer from './renderers/DefaultRenderer.js';
+import createHomeRenderer from './renderers/HomeRenderer.js';
+import createCollectionsRenderer from './renderers/CollectionsRenderer.js';
+import createProductRenderer from './renderers/ProductRenderer.js';
 
-// Import transitions
-import DefaultTransition from './transitions/DefaultTransition.js';
-import MorphTransition from './transitions/MorphTransition.js';
+// Import transition factories
+import createDefaultTransition from './transitions/DefaultTransition.js';
+import createMorphTransition from './transitions/MorphTransition.js';
 
 export function initTaxi() {
   console.log('🚕 Taxi.js initializing...');
@@ -19,6 +19,14 @@ export function initTaxi() {
     console.error('❌ Taxi.js not found! Make sure the CDN script is loaded.');
     return null;
   }
+  
+  // Create renderer and transition classes (now that Taxi is loaded)
+  const DefaultRenderer = createDefaultRenderer();
+  const HomeRenderer = createHomeRenderer();
+  const CollectionsRenderer = createCollectionsRenderer();
+  const ProductRenderer = createProductRenderer();
+  const DefaultTransition = createDefaultTransition();
+  const MorphTransition = createMorphTransition();
   
   // Initialize Taxi (using global Taxi from CDN)
   const taxi = new window.Taxi.Core({

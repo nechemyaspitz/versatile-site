@@ -1,17 +1,23 @@
 // Morph transition - for collections → product
-// Taxi.Transition is available globally from CDN
+// Factory function to create transition class when Taxi.js is loaded
 
-export default class MorphTransition extends window.Taxi.Transition {
-  /**
-   * Check if this transition should be used
-   */
-  static shouldTransition({ from, to }) {
-    // Use morph when going from collections to product
-    const fromCollections = from.page.view === 'collections';
-    const toProduct = to.page.view === 'product';
-    
-    return fromCollections && toProduct;
+export default function createMorphTransition() {
+  if (!window.Taxi) {
+    console.error('Taxi.js not loaded!');
+    return class {}; // Return empty class as fallback
   }
+  
+  return class MorphTransition extends window.Taxi.Transition {
+    /**
+     * Check if this transition should be used
+     */
+    static shouldTransition({ from, to }) {
+      // Use morph when going from collections to product
+      const fromCollections = from.page.view === 'collections';
+      const toProduct = to.page.view === 'product';
+      
+      return fromCollections && toProduct;
+    }
   
   /**
    * Animate out (collections page)
@@ -128,5 +134,6 @@ export default class MorphTransition extends window.Taxi.Transition {
       clearProps: 'all',
     }, 0);
   }
+  };
 }
 
