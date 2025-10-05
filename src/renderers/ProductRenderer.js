@@ -12,28 +12,30 @@ export default function createProductRenderer() {
     /**
      * Initial load - set up persistent features
      */
-    initialLoad() {
+    async initialLoad() {
       console.log('🎬 Product: Initial load');
-      this.onEnter();
+      await this.onEnter();
       this.onEnterCompleted();
     }
     
     /**
-     * Enter: Prepare product page
+     * Enter: Initialize carousel BEFORE transition so morph has content
      */
-    onEnter() {
+    async onEnter() {
       console.log('📦 Product page entering');
+      console.log('📦 Product: Initializing carousel BEFORE transition...');
+      
+      // CRITICAL: Initialize carousel BEFORE transition so slider has content
+      // This ensures the morph animation has images to morph into!
+      this.carouselInstance = await initProduct();
+      console.log('✅ Product carousel initialized (ready for morph)');
     }
     
     /**
-     * Enter completed: Initialize carousel
+     * Enter completed: Nothing to do (carousel already initialized)
      */
-    async onEnterCompleted() {
-      console.log('📦 Product: Initializing carousel...');
-      
-      // Initialize product carousel
-      this.carouselInstance = await initProduct();
-      console.log('✅ Product carousel initialized');
+    onEnterCompleted() {
+      console.log('✅ Product page enter complete');
     }
     
     /**

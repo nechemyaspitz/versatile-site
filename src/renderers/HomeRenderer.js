@@ -12,28 +12,29 @@ export default function createHomeRenderer() {
     /**
      * Initial load - set up persistent features
      */
-    initialLoad() {
+    async initialLoad() {
       console.log('🎬 Home: Initial load');
-      this.onEnter();
+      await this.onEnter();
       this.onEnterCompleted();
     }
     
     /**
-     * Enter: Set up home page
+     * Enter: Initialize slider BEFORE transition
      */
-    onEnter() {
+    async onEnter() {
       console.log('🏠 Home page entering');
+      console.log('🏠 Home: Initializing slider BEFORE transition...');
+      
+      // Initialize home page features BEFORE transition
+      this.homeInstance = await initHome();
+      console.log('✅ Home slider initialized');
     }
     
     /**
-     * Enter completed: Initialize heavy components (slider, etc.)
+     * Enter completed: Nothing to do (slider already initialized)
      */
-    async onEnterCompleted() {
-      console.log('🏠 Home: Initializing slider...');
-      
-      // Initialize home page features
-      this.homeInstance = await initHome();
-      console.log('✅ Home slider initialized');
+    onEnterCompleted() {
+      console.log('✅ Home page enter complete');
     }
     
     /**

@@ -13,31 +13,32 @@ export default function createCollectionsRenderer() {
     /**
      * Initial load - set up persistent features
      */
-    initialLoad() {
+    async initialLoad() {
       console.log('🎬 Collections: Initial load');
-      this.onEnter();
+      await this.onEnter();
       this.onEnterCompleted();
     }
     
     /**
-     * Enter: Prepare collections page
+     * Enter: Initialize filter BEFORE transition
      */
-    onEnter() {
+    async onEnter() {
       console.log('🛍️ Collections page entering');
-    }
-    
-    /**
-     * Enter completed: Initialize filter, infinite scroll, click listeners
-     */
-    async onEnterCompleted() {
-      console.log('🛍️ Collections: Initializing filter...');
+      console.log('🛍️ Collections: Initializing filter BEFORE transition...');
       
-      // Initialize product filter & infinite scroll
+      // Initialize product filter & infinite scroll BEFORE transition
       this.filterInstance = await initCollections();
       console.log('✅ Collections filter initialized');
       
       // Attach click listeners for morph animation
       this.initClickListeners();
+    }
+    
+    /**
+     * Enter completed: Nothing to do (filter already initialized)
+     */
+    onEnterCompleted() {
+      console.log('✅ Collections page enter complete');
     }
     
     /**
