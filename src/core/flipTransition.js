@@ -199,6 +199,8 @@ export function morphBackToCollections() {
     const allItems = targetGrid.querySelectorAll('.collection_grid-item');
     
     console.log('🎬 Starting reverse morph animation');
+    console.log('   - Total items in grid:', allItems.length);
+    console.log('   - Target item found:', !!targetItem);
     
     // Force GPU layers for smooth animation
     forceGPULayer(productWrap);
@@ -214,14 +216,16 @@ export function morphBackToCollections() {
     const translateX = targetRect.left - productRect.left;
     const translateY = targetRect.top - productRect.top;
     
-    // CRITICAL: Set initial state for smooth morph
-    // All items start hidden (from snapshot restore)
-    gsap.set(allItems, { opacity: 0 });
+    console.log('📐 Reverse morph metrics:', { scaleX, scaleY, translateX, translateY });
+    
+    // CRITICAL FIX: Don't hide all items - they're already visible!
+    // Only hide the target item for the morph
     gsap.set(targetItem, { opacity: 0 });
     
     // Create timeline for coordinated animations
     const tl = gsap.timeline({
       onComplete: () => {
+        console.log('✅ Reverse morph complete');
         cleanup();
         resolve();
       }
@@ -251,19 +255,8 @@ export function morphBackToCollections() {
       opacity: 1,
       duration: getDuration(0.2),
       ease: 'power2.out',
-    }, getDuration(0.4));
-    
-    // 4. Stagger in other items smoothly
-    tl.to(allItems, {
-      opacity: 1,
-      duration: getDuration(0.4),
-      stagger: {
-        amount: getDuration(0.15),
-        from: 'start',
-      },
-      ease: 'power2.out',
       clearProps: 'all',
-    }, getDuration(0.5));
+    }, getDuration(0.4));
   });
 }
 

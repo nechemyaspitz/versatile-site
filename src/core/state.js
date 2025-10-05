@@ -80,13 +80,15 @@ export function restoreCollectionsSnapshotIfPossible() {
   grid.innerHTML = snap.html;
   console.log('✅ DOM restored, item count:', grid.querySelectorAll('.collection_grid-item').length);
   
-  // CRITICAL: Keep items HIDDEN for reverse morph animation
-  // The morph will reveal them smoothly
+  // CRITICAL FIX: Make items visible immediately (no blank screen)
+  // The morph animation will handle the specific target item
   const items = grid.querySelectorAll('.w-dyn-item, .collection_grid-item');
   items.forEach(item => {
-    item.style.opacity = '0';
+    item.style.opacity = '1';
     item.style.transform = 'none';
   });
+  
+  console.log('✅ Items made visible:', items.length);
 
   // Re-create the filter instance without fetching
   // Check if we have a reference to the filter class
