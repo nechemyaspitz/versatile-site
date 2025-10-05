@@ -186,78 +186,75 @@ export function morphBackToCollections() {
       return;
     }
     
-    // Check if items are from snapshot (already visible)
+    // Get all collection items
     const allItems = targetGrid.querySelectorAll('.collection_grid-item');
-    const itemsAlreadyVisible = Array.from(allItems).some(item => isVisible(item));
     
-    // Force GPU layers
+    console.log('🎬 Starting reverse morph animation');
+    
+    // Force GPU layers for smooth animation
     forceGPULayer(productWrap);
     forceGPULayer(targetItem);
     
-    // Get positions
+    // Get positions for morph calculation
     const productRect = productWrap.getBoundingClientRect();
     const targetRect = targetItem.getBoundingClientRect();
     
-    // Calculate transform
+    // Calculate transform to shrink product into target item
     const scaleX = targetRect.width / productRect.width;
     const scaleY = targetRect.height / productRect.height;
     const translateX = targetRect.left - productRect.left;
     const translateY = targetRect.top - productRect.top;
     
-    // Hide target during morph
+    // CRITICAL: Set initial state for smooth morph
+    // All items start hidden (from snapshot restore)
+    gsap.set(allItems, { opacity: 0 });
     gsap.set(targetItem, { opacity: 0 });
     
-    // If items are already visible, hide them temporarily
-    if (itemsAlreadyVisible) {
-      gsap.set(allItems, { opacity: 0 });
-    }
+    // Create timeline for coordinated animations
+    const tl = gsap.timeline({
+      onComplete: () => {
+        cleanup();
+        resolve();
+      }
+    });
     
-    // Morph product wrap to target position
-    gsap.to(productWrap, {
+    // 1. Morph product slider into target item position
+    tl.to(productWrap, {
       x: translateX,
       y: translateY,
       scaleX: scaleX,
       scaleY: scaleY,
       transformOrigin: 'top left',
-      duration: getDuration(0.7),
+      borderRadius: window.getComputedStyle(targetItem).borderRadius,
+      duration: getDuration(0.6),
       ease: 'power3.inOut',
-      
-      onComplete: () => {
-        // Show target item
-        gsap.set(targetItem, { opacity: 1, clearProps: 'all' });
-        
-        // Fade in other items
-        if (!itemsAlreadyVisible) {
-          // Fresh load - stagger them in
-          gsap.fromTo(allItems,
-            { opacity: 0, y: 10 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: getDuration(0.4),
-              stagger: {
-                amount: getDuration(0.2),
-                from: 'start',
-              },
-              ease: 'power2.out',
-              clearProps: 'transform',
-            }
-          );
-        } else {
-          // Snapshot restore - just show them
-          gsap.to(allItems, {
-            opacity: 1,
-            duration: getDuration(0.3),
-            ease: 'power2.out',
-            clearProps: 'all',
-          });
-        }
-        
-        // Final cleanup after morph completes
-        cleanup();
-        resolve();
+    }, 0);
+    
+    // 2. Fade out product slider as it morphs
+    tl.to(productWrap, {
+      opacity: 0,
+      duration: getDuration(0.3),
+      ease: 'power2.in',
+    }, getDuration(0.3));
+    
+    // 3. Reveal target item as product fades out
+    tl.to(targetItem, {
+      opacity: 1,
+      duration: getDuration(0.2),
+      ease: 'power2.out',
+    }, getDuration(0.4));
+    
+    // 4. Stagger in other items smoothly
+    tl.to(allItems, {
+      opacity: 1,
+      duration: getDuration(0.4),
+      stagger: {
+        amount: getDuration(0.15),
+        from: 'start',
       },
-    });
+      ease: 'power2.out',
+      clearProps: 'all',
+    }, getDuration(0.5));
   });
 }
 

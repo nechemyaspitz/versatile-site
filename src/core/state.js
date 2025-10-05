@@ -80,10 +80,11 @@ export function restoreCollectionsSnapshotIfPossible() {
   grid.innerHTML = snap.html;
   console.log('✅ DOM restored, item count:', grid.querySelectorAll('.collection_grid-item').length);
   
-  // Make all items visible immediately (no animation on restore)
+  // CRITICAL: Keep items HIDDEN for reverse morph animation
+  // The morph will reveal them smoothly
   const items = grid.querySelectorAll('.w-dyn-item, .collection_grid-item');
   items.forEach(item => {
-    item.style.opacity = '1';
+    item.style.opacity = '0';
     item.style.transform = 'none';
   });
 
