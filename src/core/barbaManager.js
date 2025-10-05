@@ -6,6 +6,7 @@ import { getState, clearState, saveCollectionsSnapshot, restoreCollectionsSnapsh
 import { closeNav, updateActiveNavLinks, initScalingHamburgerNavigation } from '../components/navigation.js';
 import { initButtonCharacterStagger } from '../components/buttonStagger.js';
 import { reinitWebflow } from '../utils/webflow.js';
+import { initCollectionItemListeners, morphToProduct, morphBackToCollections } from './flipTransition.js';
 
 export function initBarba() {
   // Initialize persistent navigation
@@ -31,7 +32,87 @@ export function initBarba() {
     prevent: ({ el }) => el?.hasAttribute?.('data-no-barba'),
     transitions: [
       {
+        name: 'product-morph',
+        // Apply to collections → product transitions
+        from: {
+          namespace: ['collections']
+        },
+        to: {
+          namespace: ['product']
+        },
+        leave({ current }) {
+          // Fade out other elements, keep clicked item visible
+          const otherItems = current.container.querySelectorAll('.collection_grid-item:not([data-flip-id])');
+          if (window.gsap && otherItems.length > 0) {
+            return gsap.to(otherItems, {
+              opacity: 0,
+              duration: 0.3,
+              ease: 'power2.out',
+              stagger: 0.02,
+            });
+          }
+        },
+        enter({ next }) {
+          // Set initial state - Flip will animate from here
+          if (window.gsap) {
+            next.container.style.opacity = 0;
+          }
+        },
+        after({ next }) {
+          // Perform the morph animation
+          morphToProduct();
+          
+          // Fade in the container
+          if (window.gsap) {
+            gsap.to(next.container, {
+              opacity: 1,
+              duration: 0.4,
+              ease: 'power2.out',
+            });
+          }
+        },
+      },
+      {
+        name: 'product-reverse-morph',
+        // Apply to product → collections (back button)
+        from: {
+          namespace: ['product']
+        },
+        to: {
+          namespace: ['collections']
+        },
+        leave({ current }) {
+          // Fade out product page
+          if (window.gsap) {
+            return gsap.to(current.container, {
+              opacity: 0,
+              duration: 0.3,
+              ease: 'power2.out',
+            });
+          }
+        },
+        enter({ next }) {
+          if (window.gsap) {
+            next.container.style.opacity = 0;
+          }
+        },
+        after({ next }) {
+          // Perform reverse morph if going back
+          morphBackToCollections();
+          
+          // Fade in container
+          if (window.gsap) {
+            gsap.to(next.container, {
+              opacity: 1,
+              duration: 0.4,
+              ease: 'power2.out',
+            });
+          }
+        },
+      },
+      {
         name: 'fade',
+        // Default transition for all other page combinations
         leave({ current }) {
           if (window.gsap) {
             return gsap.to(current.container, {
@@ -77,10 +158,14 @@ export function initBarba() {
           if (ctx.trigger === 'back' && restoreCollectionsSnapshotIfPossible()) {
             // Snapshot restored, just reinit Webflow and bail
             reinitWebflow();
+            // Re-initialize click listeners for Flip
+            initCollectionItemListeners();
             return;
           }
           // Fresh entry: normal init (will fetch)
           await initCollections();
+          // Initialize click listeners for Flip morphing
+          initCollectionItemListeners();
         },
       },
       {
