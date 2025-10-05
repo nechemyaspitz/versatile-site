@@ -55,11 +55,11 @@ export function initTaxi() {
   });
   
   // Global hooks
-  taxi.on('NAVIGATE_START', ({ to }) => {
+  taxiInstance.on('NAVIGATE_START', ({ to }) => {
     console.log('🚀 Navigating to:', to.page.url);
   });
   
-  taxi.on('NAVIGATE_END', ({ to, trigger }) => {
+  taxiInstance.on('NAVIGATE_END', ({ to, trigger }) => {
     console.log('✅ Navigation complete:', to.page.url);
     
     // Reinit Webflow interactions
