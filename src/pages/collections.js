@@ -2,6 +2,7 @@
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 import { setupFilterListeners } from '../components/filterDrawer.js';
+import { staggerFadeIn, forceGPULayer } from '../utils/animationOptimizer.js';
 
 export async function initCollections(nsCtx) {
   // GSAP for filter drawer, Nice Select assets
@@ -225,18 +226,23 @@ export async function initCollections(nsCtx) {
       const newItems = Array.from(this.productContainer.children).slice(
         -items.length
       );
-      newItems.forEach((item, index) => {
-        setTimeout(() => {
-          item.style.transition =
-            'opacity 0.4s ease-out, transform 0.4s ease-out';
-          item.style.opacity = '1';
-        }, index * 20);
+      
+      // Force GPU layers
+      newItems.forEach(item => forceGPULayer(item));
+      
+      // Optimized stagger animation
+      staggerFadeIn(newItems, {
+        duration: 0.4,
+        stagger: 0.2,
+        y: 10,
+        ease: 'power2.out',
       });
 
-      setTimeout(() => {
+      // Re-check images & links after animation starts
+      requestAnimationFrame(() => {
         this.updateProductImages();
         this.updateProductLinks();
-      }, 20);
+      });
     }
 
     createProductElement(item) {
@@ -570,35 +576,18 @@ export async function initCollections(nsCtx) {
 
     animateItemsIn() {
       const items = this.productContainer.querySelectorAll('.w-dyn-item');
+      if (items.length === 0) return;
       
-      // Use GSAP for smooth 60fps animation
-      if (window.gsap) {
-        gsap.fromTo(items,
-          { 
-            opacity: 0,
-            y: 15,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            ease: 'power2.out',
-            stagger: {
-              amount: 0.3,
-              from: 'start',
-            },
-            clearProps: 'transform',
-          }
-        );
-      } else {
-        // Fallback if GSAP not loaded
-        items.forEach((item, index) => {
-          setTimeout(() => {
-            item.style.transition = 'opacity 0.4s ease-out';
-            item.style.opacity = '1';
-          }, index * 15);
-        });
-      }
+      // Force GPU layers for all items
+      items.forEach(item => forceGPULayer(item));
+      
+      // Use optimized stagger animation
+      staggerFadeIn(items, {
+        duration: 0.4,
+        stagger: 0.25,
+        y: 12,
+        ease: 'power2.out',
+      });
     }
 
     initImageHover() {

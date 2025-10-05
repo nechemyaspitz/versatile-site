@@ -33,61 +33,43 @@ export function initBarba() {
     transitions: [
       {
         name: 'product-morph',
-        // Apply to collections → product transitions
         from: {
           namespace: ['collections']
         },
         to: {
           namespace: ['product']
         },
-        leave({ current }) {
-          // Show the clone overlay to keep clicked item visible
+        async leave({ current }) {
+          // Show clone to maintain visual continuity
           showCloneDuringTransition();
           
-          // Fade out all items including the clicked one
+          // Fast fade out all items (don't wait, run parallel)
           const allItems = current.container.querySelectorAll('.collection_grid-item');
           if (window.gsap && allItems.length > 0) {
-            return gsap.to(allItems, {
+            gsap.to(allItems, {
               opacity: 0,
-              duration: 0.25,
+              duration: 0.2,
               ease: 'power2.out',
-              stagger: 0.015,
             });
           }
         },
         enter({ next }) {
-          // Hide the new container initially
-          if (window.gsap) {
-            next.container.style.opacity = 1;
-            // Hide only the slider-wrap, show other content
-            const sliderWrap = next.container.querySelector('.slider-wrap');
-            if (sliderWrap) {
-              sliderWrap.style.opacity = 0;
-            }
+          // Prepare container but keep it visible
+          next.container.style.opacity = 1;
+          
+          // Hide slider-wrap initially (morph will reveal it)
+          const sliderWrap = next.container.querySelector('.slider-wrap');
+          if (sliderWrap) {
+            sliderWrap.style.opacity = 0;
           }
         },
-        after({ next }) {
-          // Perform the morph animation
-          morphToProduct();
-          
-          // Fade in other page content
-          const otherContent = next.container.querySelectorAll(':scope > *:not([data-barba])');
-          if (window.gsap && otherContent.length > 0) {
-            gsap.fromTo(otherContent,
-              { opacity: 0 },
-              { 
-                opacity: 1, 
-                duration: 0.4,
-                delay: 0.2,
-                ease: 'power2.out',
-              }
-            );
-          }
+        async after({ next }) {
+          // Wait for morph to complete
+          await morphToProduct();
         },
       },
       {
         name: 'product-reverse-morph',
-        // Apply to product → collections (back button)
         from: {
           namespace: ['product']
         },
@@ -95,32 +77,24 @@ export function initBarba() {
           namespace: ['collections']
         },
         leave({ current }) {
-          // Fade out product page
-          if (window.gsap) {
-            return gsap.to(current.container, {
+          // DON'T fade out - let the morph handle visibility
+          // Just hide other content
+          const otherContent = current.container.querySelectorAll(':scope > *:not([data-barba]):not(.slider-wrap)');
+          if (window.gsap && otherContent.length > 0) {
+            gsap.to(otherContent, {
               opacity: 0,
-              duration: 0.3,
+              duration: 0.2,
               ease: 'power2.out',
             });
           }
         },
         enter({ next }) {
-          if (window.gsap) {
-            next.container.style.opacity = 0;
-          }
+          // Keep container visible, let morph handle items
+          next.container.style.opacity = 1;
         },
-        after({ next }) {
-          // Perform reverse morph if going back
-          morphBackToCollections();
-          
-          // Fade in container
-          if (window.gsap) {
-            gsap.to(next.container, {
-              opacity: 1,
-              duration: 0.4,
-              ease: 'power2.out',
-            });
-          }
+        async after({ next }) {
+          // Wait for reverse morph to complete
+          await morphBackToCollections();
         },
       },
       {
