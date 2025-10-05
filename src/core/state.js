@@ -8,10 +8,15 @@ export const clearState = (ns) => PageState.delete(ns);
 // Collections page snapshots for back/forward caching
 export const pageSnapshots = new Map(); // key: href, value: { html, state, scrollY }
 
-export function saveCollectionsSnapshot() {
+export function saveCollectionsSnapshot(url = null) {
   const grid = document.querySelector('.product-grid');
-  const href = location.href;
+  
+  // CRITICAL: Use provided URL or extract from container's data attribute
+  // DO NOT use location.href as it may have already changed during transition
+  const href = url || document.querySelector('[data-barba-namespace="collections"]')?.dataset?.barbaUrl || location.href;
+  
   console.log('💾 Saving collections snapshot for:', href);
+  console.log('📍 Current location.href:', location.href);
   
   if (!grid) {
     console.warn('❌ No product-grid found, cannot save snapshot');
@@ -36,6 +41,7 @@ export function saveCollectionsSnapshot() {
   
   pageSnapshots.set(href, snapshot);
   console.log('✅ Snapshot saved:', {
+    url: href,
     itemCount: grid.querySelectorAll('.collection_grid-item').length,
     hasState: !!state,
   });

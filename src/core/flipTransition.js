@@ -177,6 +177,10 @@ export function morphBackToCollections() {
     
     if (!targetItem) {
       console.warn('❌ No matching collection item found for reverse morph');
+      console.warn('   - Available items in grid:', 
+        Array.from(targetGrid.querySelectorAll('[data-base-url]'))
+          .map(el => el.getAttribute('data-base-url'))
+      );
       cleanup(); // Final cleanup
       resolve();
       return;

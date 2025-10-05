@@ -154,12 +154,17 @@ export function initBarba() {
       {
         namespace: 'collections',
         beforeLeave(ctx) {
-          console.log('📸 Collections beforeLeave, current URL:', location.href);
+          console.log('📸 Collections beforeLeave');
+          console.log('   - Current location.href:', location.href);
+          console.log('   - ctx.current.url.href:', ctx.current.url.href);
+          console.log('   - ctx.next.namespace:', ctx.next?.namespace);
           
           // CRITICAL: Only save snapshot when navigating TO product page
-          // Don't save when navigating away to other pages
+          // Use the CURRENT page URL from Barba context, not location.href
           if (ctx.next?.namespace === 'product') {
-            saveCollectionsSnapshot();
+            const collectionsUrl = ctx.current.url.href;
+            console.log('💾 Saving snapshot with URL from ctx.current:', collectionsUrl);
+            saveCollectionsSnapshot(collectionsUrl);
           }
           
           getState('collections')?.destroy?.();
