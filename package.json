@@ -1,7 +1,7 @@
 {
   "name": "versatile-site",
-  "version": "1.0.0",
-  "description": "Modular Barba.js SPA with performance optimizations",
+  "version": "2.0.0",
+  "description": "Modular Taxi.js SPA - Smoother, faster, simpler!",
   "type": "module",
   "scripts": {
     "build": "rollup -c",

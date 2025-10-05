@@ -9,7 +9,11 @@ export default {
     file: 'main.js',
     format: 'iife',
     sourcemap: !production,
+    globals: {
+      '@unseenco/taxi': 'Taxi'
+    }
   },
+  external: ['@unseenco/taxi'],
   plugins: [
     nodeResolve(),
     production && terser()
