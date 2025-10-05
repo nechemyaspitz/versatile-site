@@ -209,23 +209,24 @@ export async function initCollections(nsCtx) {
       items.forEach((item) => {
         const el = this.createProductElement(item);
         el.style.opacity = '0';
-        // Pre-optimize for animation
-        forceGPULayer(el.querySelector('.collection_grid-item'));
         fragment.appendChild(el);
       });
       
       // Single DOM append (batch write)
       this.productContainer.appendChild(fragment);
       
-      // Start animation immediately (most important for UX)
-      this.animateItemsIn();
+      // Force GPU layers BEFORE animation (prevents jank)
+      const gridItems = this.productContainer.querySelectorAll('.collection_grid-item');
+      gridItems.forEach(item => forceGPULayer(item));
       
-      // Defer ALL heavy operations until after animation starts
-      batchToNextFrame(() => {
-        // These are progressive enhancements, not critical for first paint
-        deferToIdle(() => this.initImageHover());
-        deferToIdle(() => this.updateProductImages());
-        deferToIdle(() => this.updateProductLinks());
+      // Initialize features synchronously (they're needed!)
+      this.initImageHover();
+      this.updateProductImages();
+      this.updateProductLinks();
+      
+      // Start animation AFTER everything is ready
+      requestAnimationFrame(() => {
+        this.animateItemsIn();
       });
     }
 
@@ -234,9 +235,6 @@ export async function initCollections(nsCtx) {
       items.forEach((item) => {
         const el = this.createProductElement(item);
         el.style.opacity = '0';
-        // Pre-optimize for animation
-        const gridItem = el.querySelector('.collection_grid-item');
-        if (gridItem) forceGPULayer(gridItem);
         fragment.appendChild(el);
       });
       
@@ -247,19 +245,25 @@ export async function initCollections(nsCtx) {
         -items.length
       );
       
-      // Optimized stagger animation (shorter for appended items)
-      staggerFadeIn(newItems, {
-        duration: 0.3,
-        stagger: 0.12,
-        y: 6,
-        ease: 'power2.out',
+      // Force GPU layers before animation
+      newItems.forEach(item => {
+        const gridItem = item.querySelector('.collection_grid-item');
+        if (gridItem) forceGPULayer(gridItem);
       });
-
-      // Defer heavy operations until after animation
-      batchToNextFrame(() => {
-        deferToIdle(() => this.initImageHover());
-        deferToIdle(() => this.updateProductImages());
-        deferToIdle(() => this.updateProductLinks());
+      
+      // Initialize features synchronously
+      this.initImageHover();
+      this.updateProductImages();
+      this.updateProductLinks();
+      
+      // Then animate
+      requestAnimationFrame(() => {
+        staggerFadeIn(newItems, {
+          duration: 0.35,
+          stagger: 0.15,
+          y: 8,
+          ease: 'power2.out',
+        });
       });
     }
 
@@ -301,7 +305,7 @@ export async function initCollections(nsCtx) {
         'https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg';
       const safeImageAlt = imageAlt || 'product-image';
       
-      // PERFORMANCE: No inline styles! CSS is in Webflow global styles
+      // Keep inline styles - they're needed for the progressive blur to work
       return `
         <div class="progressive-img-blur w-embed">
           <div class="blur-img">
@@ -313,6 +317,18 @@ export async function initCollections(nsCtx) {
             </div>
             <img src="${safeImageSrc}" alt="${safeImageAlt}" data-original-src="${safeImageSrc}" data-original-alt="${safeImageAlt}">
           </div>
+          <style>
+            .blur-img { position: absolute; inset: 0; overflow: hidden; border-radius: 0px; width: 100%; height: 100%; z-index: 0; transition: opacity 0.2s; }
+            .blur-img.top { z-index: 1; }
+            .blur-img img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); }
+            .progressive-blur { position: absolute; z-index: 6; width: 100%; height: 100%; pointer-events: none; inset: auto 0 0 0; transform: scale(1.06); }
+            .blur { background: var(--bg); background-size: cover; position: absolute; background-position: center center; inset: 0; }
+            .progressive-blur>div:nth-child(1) { filter: blur(2px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 70%, rgba(0,0,0,1) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 88%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 70%, rgba(0,0,0,1) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 88%); z-index: 1; }
+            .progressive-blur>div:nth-child(2) { filter: blur(4px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 94%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 94%); z-index: 2; }
+            .progressive-blur>div:nth-child(3) { filter: blur(8px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,0) 100%); z-index: 3; }
+            .progressive-blur>div:nth-child(4) { filter: blur(16px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,1) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,1) 100%); z-index: 4; }
+            .progressive-blur>div:nth-child(5) { filter: blur(32px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 94%, rgba(0,0,0,1) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 94%, rgba(0,0,0,1) 100%); z-index: 5; }
+          </style>
         </div>
       `;
     }
@@ -586,25 +602,14 @@ export async function initCollections(nsCtx) {
       const items = this.productContainer.querySelectorAll('.w-dyn-item');
       if (items.length === 0) return;
       
-      // Only animate visible items (HUGE performance win)
-      const visibleItems = Array.from(items).slice(0, 12); // First 2-3 rows
-      const belowFoldItems = Array.from(items).slice(12);
-      
-      // Animate visible items with minimal stagger
-      staggerFadeIn(visibleItems, {
-        duration: 0.35,
-        stagger: 0.15, // Reduced from 0.25
-        y: 8, // Reduced from 12
+      // Animate ALL items with optimized stagger
+      // Key: shorter total stagger time = faster, smoother appearance
+      staggerFadeIn(items, {
+        duration: 0.4,
+        stagger: 0.18, // Total stagger time: 0.18s (was causing "twice" effect)
+        y: 10,
         ease: 'power2.out',
       });
-      
-      // Show below-fold items instantly (no animation)
-      if (belowFoldItems.length > 0) {
-        // Defer showing below-fold to after first items animate
-        setTimeout(() => {
-          gsap.set(belowFoldItems, { opacity: 1, y: 0 });
-        }, 200);
-      }
     }
 
     initImageHover() {
