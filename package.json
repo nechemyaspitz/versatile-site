@@ -1,0 +1,17 @@
+{
+  "name": "versatile-site",
+  "version": "1.0.0",
+  "description": "Modular Barba.js SPA with performance optimizations",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "build:prod": "rollup -c --environment NODE_ENV:production"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.9.6"
+  }
+}
+
