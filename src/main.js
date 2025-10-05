@@ -2,13 +2,13 @@
 import { initBarba } from './core/barbaManager.js';
 
 // Version tracking for deployment verification
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 const DEPLOY_TIME = new Date().toISOString();
 
 console.log(`%c🚀 Versatile Site SPA v${VERSION}`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
 console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold;');
 console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
-console.log(`%c✨ v1.4: GOATED PERFORMANCE - Complete animation overhaul!`, 'color: #ff6600; font-weight: bold;');
+console.log(`%c✨ v1.5: ULTRA-SMOOTH COLLECTIONS - Zero jank animations!`, 'color: #ff6600; font-weight: bold;');
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

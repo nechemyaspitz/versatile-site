@@ -2,7 +2,9 @@
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 import { setupFilterListeners } from '../components/filterDrawer.js';
-import { staggerFadeIn, forceGPULayer } from '../utils/animationOptimizer.js';
+import { staggerFadeIn, forceGPULayer, deferToIdle } from '../utils/animationOptimizer.js';
+import { initLazyLoader, observeElements, cleanupLazyLoader } from '../utils/lazyLoader.js';
+import { batchToNextFrame } from '../utils/domBatcher.js';
 
 export async function initCollections(nsCtx) {
   // GSAP for filter drawer, Nice Select assets
@@ -199,18 +201,32 @@ export async function initCollections(nsCtx) {
     }
 
     renderItems(items) {
+      // Clear container
       this.productContainer.innerHTML = '';
+      
+      // Build all elements in fragment (off-DOM for performance)
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
         el.style.opacity = '0';
+        // Pre-optimize for animation
+        forceGPULayer(el.querySelector('.collection_grid-item'));
         fragment.appendChild(el);
       });
+      
+      // Single DOM append (batch write)
       this.productContainer.appendChild(fragment);
-      this.initImageHover();
+      
+      // Start animation immediately (most important for UX)
       this.animateItemsIn();
-      this.updateProductImages();
-      this.updateProductLinks();
+      
+      // Defer ALL heavy operations until after animation starts
+      batchToNextFrame(() => {
+        // These are progressive enhancements, not critical for first paint
+        deferToIdle(() => this.initImageHover());
+        deferToIdle(() => this.updateProductImages());
+        deferToIdle(() => this.updateProductLinks());
+      });
     }
 
     appendItems(items) {
@@ -218,30 +234,32 @@ export async function initCollections(nsCtx) {
       items.forEach((item) => {
         const el = this.createProductElement(item);
         el.style.opacity = '0';
+        // Pre-optimize for animation
+        const gridItem = el.querySelector('.collection_grid-item');
+        if (gridItem) forceGPULayer(gridItem);
         fragment.appendChild(el);
       });
+      
+      // Batch DOM append
       this.productContainer.appendChild(fragment);
-      this.initImageHover();
 
       const newItems = Array.from(this.productContainer.children).slice(
         -items.length
       );
       
-      // Force GPU layers
-      newItems.forEach(item => forceGPULayer(item));
-      
-      // Optimized stagger animation
+      // Optimized stagger animation (shorter for appended items)
       staggerFadeIn(newItems, {
-        duration: 0.4,
-        stagger: 0.2,
-        y: 10,
+        duration: 0.3,
+        stagger: 0.12,
+        y: 6,
         ease: 'power2.out',
       });
 
-      // Re-check images & links after animation starts
-      requestAnimationFrame(() => {
-        this.updateProductImages();
-        this.updateProductLinks();
+      // Defer heavy operations until after animation
+      batchToNextFrame(() => {
+        deferToIdle(() => this.initImageHover());
+        deferToIdle(() => this.updateProductImages());
+        deferToIdle(() => this.updateProductLinks());
       });
     }
 
@@ -282,6 +300,8 @@ export async function initCollections(nsCtx) {
         imageSrc ||
         'https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg';
       const safeImageAlt = imageAlt || 'product-image';
+      
+      // PERFORMANCE: No inline styles! CSS is in Webflow global styles
       return `
         <div class="progressive-img-blur w-embed">
           <div class="blur-img">
@@ -293,18 +313,6 @@ export async function initCollections(nsCtx) {
             </div>
             <img src="${safeImageSrc}" alt="${safeImageAlt}" data-original-src="${safeImageSrc}" data-original-alt="${safeImageAlt}">
           </div>
-          <style>
-            .blur-img { position: absolute; inset: 0; overflow: hidden; border-radius: 0px; width: 100%; height: 100%; z-index: 0; transition: opacity 0.2s; }
-            .blur-img.top { z-index: 1; }
-            .blur-img img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); }
-            .progressive-blur { position: absolute; z-index: 6; width: 100%; height: 100%; pointer-events: none; inset: auto 0 0 0; transform: scale(1.06); }
-            .blur { background: var(--bg); background-size: cover; position: absolute; background-position: center center; inset: 0; }
-            .progressive-blur>div:nth-child(1) { filter: blur(2px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 70%, rgba(0,0,0,1) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 88%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 70%, rgba(0,0,0,1) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 88%); z-index: 1; }
-            .progressive-blur>div:nth-child(2) { filter: blur(4px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 94%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 94%); z-index: 2; }
-            .progressive-blur>div:nth-child(3) { filter: blur(8px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,0) 100%); z-index: 3; }
-            .progressive-blur>div:nth-child(4) { filter: blur(16px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,1) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,1) 100%); z-index: 4; }
-            .progressive-blur>div:nth-child(5) { filter: blur(32px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 94%, rgba(0,0,0,1) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 94%, rgba(0,0,0,1) 100%); z-index: 5; }
-          </style>
         </div>
       `;
     }
@@ -578,16 +586,25 @@ export async function initCollections(nsCtx) {
       const items = this.productContainer.querySelectorAll('.w-dyn-item');
       if (items.length === 0) return;
       
-      // Force GPU layers for all items
-      items.forEach(item => forceGPULayer(item));
+      // Only animate visible items (HUGE performance win)
+      const visibleItems = Array.from(items).slice(0, 12); // First 2-3 rows
+      const belowFoldItems = Array.from(items).slice(12);
       
-      // Use optimized stagger animation
-      staggerFadeIn(items, {
-        duration: 0.4,
-        stagger: 0.25,
-        y: 12,
+      // Animate visible items with minimal stagger
+      staggerFadeIn(visibleItems, {
+        duration: 0.35,
+        stagger: 0.15, // Reduced from 0.25
+        y: 8, // Reduced from 12
         ease: 'power2.out',
       });
+      
+      // Show below-fold items instantly (no animation)
+      if (belowFoldItems.length > 0) {
+        // Defer showing below-fold to after first items animate
+        setTimeout(() => {
+          gsap.set(belowFoldItems, { opacity: 1, y: 0 });
+        }, 200);
+      }
     }
 
     initImageHover() {
