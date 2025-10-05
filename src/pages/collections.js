@@ -217,24 +217,38 @@ export async function initCollections(nsCtx) {
       // Get all items for animation
       const allItems = this.productContainer.querySelectorAll('.w-dyn-item');
       
-      // Set initial state CLEANLY (no transitions, pure GSAP control)
-      if (window.gsap) {
-        gsap.set(allItems, {
-          opacity: 0,
-          y: 15,
-          clearProps: 'transition', // Remove any CSS transitions
-        });
-      }
+      if (!window.gsap || allItems.length === 0) return;
       
-      // Initialize features (needed for hover, images, etc)
-      this.initImageHover();
-      this.updateProductImages();
-      this.updateProductLinks();
-      
-      // Animate in next frame (ensures everything is ready)
-      requestAnimationFrame(() => {
-        this.animateItemsIn();
+      // CRITICAL: Set initial state IMMEDIATELY (before browser paints)
+      // This prevents any flash of visible content
+      gsap.set(allItems, {
+        opacity: 0,
+        y: 0, // Don't offset - simpler, smoother
+        willChange: 'opacity', // Hint to browser
+        clearProps: 'transition', // Kill CSS transitions
       });
+      
+      // Start animation IMMEDIATELY (don't wait for features)
+      // This gives instant visual feedback
+      requestAnimationFrame(() => {
+        gsap.to(allItems, {
+          opacity: 1,
+          duration: 0.5,
+          stagger: 0.025, // 25ms per item
+          ease: 'power1.out', // Simpler easing = smoother
+          clearProps: 'willChange', // Clean up after
+        });
+      });
+      
+      // Defer ALL feature initialization to AFTER animation starts
+      // This keeps main thread free during animation
+      setTimeout(() => {
+        requestIdleCallback(() => {
+          this.initImageHover();
+          this.updateProductImages();
+          this.updateProductLinks();
+        }, { timeout: 2000 });
+      }, 100); // Small delay to ensure animation starts first
     }
 
     appendItems(items) {
@@ -251,34 +265,34 @@ export async function initCollections(nsCtx) {
         -items.length
       );
       
-      // Set clean initial state
-      if (window.gsap) {
-        gsap.set(newItems, {
-          opacity: 0,
-          y: 12,
-          clearProps: 'transition',
-        });
-      }
+      if (!window.gsap || newItems.length === 0) return;
       
-      // Initialize features
-      this.initImageHover();
-      this.updateProductImages();
-      this.updateProductLinks();
-      
-      // Animate in next frame
-      requestAnimationFrame(() => {
-        if (window.gsap) {
-          gsap.to(newItems, {
-            opacity: 1,
-            y: 0,
-            duration: 0.4,
-            stagger: 0.015, // Per-item delay (fast for appended items)
-            ease: 'power2.out',
-            force3D: true,
-            clearProps: 'transform',
-          });
-        }
+      // Set initial state
+      gsap.set(newItems, {
+        opacity: 0,
+        willChange: 'opacity',
+        clearProps: 'transition',
       });
+      
+      // Animate immediately
+      requestAnimationFrame(() => {
+        gsap.to(newItems, {
+          opacity: 1,
+          duration: 0.4,
+          stagger: 0.02,
+          ease: 'power1.out',
+          clearProps: 'willChange',
+        });
+      });
+      
+      // Defer features
+      setTimeout(() => {
+        requestIdleCallback(() => {
+          this.initImageHover();
+          this.updateProductImages();
+          this.updateProductLinks();
+        }, { timeout: 2000 });
+      }, 100);
     }
 
     createProductElement(item) {
@@ -613,87 +627,91 @@ export async function initCollections(nsCtx) {
     }
 
     animateItemsIn() {
-      const items = this.productContainer.querySelectorAll('.w-dyn-item');
-      if (items.length === 0 || !window.gsap) return;
-      
-      // Kill any existing animations on these elements
-      gsap.killTweensOf(items);
-      
-      // Ultra-smooth stagger animation with GPU acceleration
-      gsap.to(items, {
-        opacity: 1,
-        y: 0,
-        duration: 0.45,
-        stagger: {
-          each: 0.02, // 20ms per item (smooth wave)
-          ease: 'power1.inOut',
-        },
-        ease: 'power2.out',
-        force3D: true, // GPU acceleration
-        onComplete: () => {
-          // Clean up transforms after animation
-          gsap.set(items, { clearProps: 'transform' });
-        },
-      });
+      // This method is now called directly in renderItems
+      // Keeping it here for consistency but it's a no-op
+      return;
     }
 
     initImageHover() {
       const currentProducts = document.querySelectorAll(
         '.collection_grid-item'
       );
-      currentProducts.forEach((product) => {
-        if (product.dataset.hoverInitialized === 'true') return;
+      
+      // Process in chunks to avoid blocking main thread
+      const chunkSize = 5;
+      let index = 0;
+      
+      const processChunk = () => {
+        const chunk = Array.from(currentProducts).slice(index, index + chunkSize);
+        
+        chunk.forEach((product) => {
+          if (product.dataset.hoverInitialized === 'true') return;
 
-        const variantThumbs = product.querySelectorAll('.variant-thumb');
-        const thumbnailContainer = product.querySelector(
-          '.variant_thumbnail-list'
-        );
-        if (variantThumbs.length === 0) return;
+          const variantThumbs = product.querySelectorAll('.variant-thumb');
+          const thumbnailContainer = product.querySelector(
+            '.variant_thumbnail-list'
+          );
+          if (variantThumbs.length === 0) return;
 
-        let hideTimeout;
-        let isHoveringThumbnails = false;
+          let hideTimeout;
+          let isHoveringThumbnails = false;
 
-        if (thumbnailContainer) {
-          thumbnailContainer.addEventListener('mouseenter', () => {
-            isHoveringThumbnails = true;
-            if (hideTimeout) {
-              clearTimeout(hideTimeout);
-              hideTimeout = null;
-            }
-          });
-          thumbnailContainer.addEventListener('mouseleave', () => {
-            isHoveringThumbnails = false;
-            hideTimeout = setTimeout(() => {
-              this.hideImageOverlay(product);
-            }, 200);
-          });
-        }
-
-        variantThumbs.forEach((thumb) => {
-          thumb.addEventListener('mouseenter', () => {
-            if (hideTimeout) {
-              clearTimeout(hideTimeout);
-              hideTimeout = null;
-            }
-            const permanentOverlay = product.querySelector(
-              '.blur-img.top[data-permanent]'
-            );
-            if (!permanentOverlay) {
-              this.showImageOverlay(product, thumb.src, thumb.alt, false);
-            }
-          });
-
-          thumb.addEventListener('mouseleave', () => {
-            if (!isHoveringThumbnails) {
+          if (thumbnailContainer) {
+            // Use passive listeners for better scroll performance
+            thumbnailContainer.addEventListener('mouseenter', () => {
+              isHoveringThumbnails = true;
+              if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+              }
+            }, { passive: true });
+            
+            thumbnailContainer.addEventListener('mouseleave', () => {
+              isHoveringThumbnails = false;
               hideTimeout = setTimeout(() => {
                 this.hideImageOverlay(product);
               }, 200);
-            }
-          });
-        });
+            }, { passive: true });
+          }
 
-        product.dataset.hoverInitialized = 'true';
-      });
+          variantThumbs.forEach((thumb) => {
+            thumb.addEventListener('mouseenter', () => {
+              if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+              }
+              const permanentOverlay = product.querySelector(
+                '.blur-img.top[data-permanent]'
+              );
+              if (!permanentOverlay) {
+                this.showImageOverlay(product, thumb.src, thumb.alt, false);
+              }
+            }, { passive: true });
+
+            thumb.addEventListener('mouseleave', () => {
+              if (!isHoveringThumbnails) {
+                hideTimeout = setTimeout(() => {
+                  this.hideImageOverlay(product);
+                }, 200);
+              }
+            }, { passive: true });
+          });
+
+          product.dataset.hoverInitialized = 'true';
+        });
+        
+        index += chunkSize;
+        
+        // Process next chunk in next frame (avoid blocking)
+        if (index < currentProducts.length) {
+          requestAnimationFrame(processChunk);
+        }
+      };
+      
+      // Start processing first chunk
+      if (currentProducts.length > 0) {
+        requestAnimationFrame(processChunk);
+      }
     }
 
     initProductNavigation() {
