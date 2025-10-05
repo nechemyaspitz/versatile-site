@@ -153,9 +153,15 @@ export function initBarba() {
       },
       {
         namespace: 'collections',
-        beforeLeave() {
-          // Save snapshot before destroying
-          saveCollectionsSnapshot();
+        beforeLeave(ctx) {
+          console.log('📸 Collections beforeLeave, current URL:', location.href);
+          
+          // CRITICAL: Only save snapshot when navigating TO product page
+          // Don't save when navigating away to other pages
+          if (ctx.next?.namespace === 'product') {
+            saveCollectionsSnapshot();
+          }
+          
           getState('collections')?.destroy?.();
           clearState('collections');
         },

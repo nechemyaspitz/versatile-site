@@ -115,7 +115,7 @@ export function morphToProduct() {
     // Create timeline for synchronized animations
     const tl = gsap.timeline({
       onComplete: () => {
-        cleanup();
+        cleanup(true); // Preserve slug for reverse morph
         resolve();
       },
     });
@@ -164,6 +164,7 @@ export function morphBackToCollections() {
     
     if (!productWrap || !targetGrid) {
       console.warn('❌ Missing elements for reverse morph');
+      cleanup(); // Final cleanup
       resolve();
       return;
     }
@@ -176,6 +177,7 @@ export function morphBackToCollections() {
     
     if (!targetItem) {
       console.warn('❌ No matching collection item found for reverse morph');
+      cleanup(); // Final cleanup
       resolve();
       return;
     }
@@ -247,6 +249,8 @@ export function morphBackToCollections() {
           });
         }
         
+        // Final cleanup after morph completes
+        cleanup();
         resolve();
       },
     });
@@ -266,15 +270,20 @@ function getProductSlugFromURL() {
 
 /**
  * Clean up all references and DOM elements
+ * @param {boolean} preserveSlug - If true, keep productSlug for reverse morph
  */
-function cleanup() {
+function cleanup(preserveSlug = false) {
   if (clickedElementClone) {
     clickedElementClone.remove();
   }
   
   clickedElement = null;
   clickedElementClone = null;
-  productSlug = null;
+  
+  // Don't clear slug if we need it for reverse morph
+  if (!preserveSlug) {
+    productSlug = null;
+  }
 }
 
 /**
