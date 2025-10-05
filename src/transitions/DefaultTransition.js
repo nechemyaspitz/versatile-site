@@ -1,7 +1,7 @@
 // Default fade transition - simple and smooth
-import { Transition } from '@unseenco/taxi';
+// Taxi.Transition is available globally from CDN
 
-export default class DefaultTransition extends Transition {
+export default class DefaultTransition extends window.Taxi.Transition {
   /**
    * Animate out the current page
    */

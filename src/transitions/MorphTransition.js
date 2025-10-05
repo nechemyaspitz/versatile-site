@@ -1,7 +1,7 @@
 // Morph transition - for collections → product
-import { Transition } from '@unseenco/taxi';
+// Taxi.Transition is available globally from CDN
 
-export default class MorphTransition extends Transition {
+export default class MorphTransition extends window.Taxi.Transition {
   /**
    * Check if this transition should be used
    */

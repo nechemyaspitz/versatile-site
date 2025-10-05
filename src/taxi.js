@@ -1,5 +1,4 @@
 // Taxi.js initialization - MUCH simpler than Barba!
-import Taxi from '@unseenco/taxi';
 import { reinitWebflow } from './utils/webflow.js';
 
 // Import renderers (page-specific logic)
@@ -15,8 +14,14 @@ import MorphTransition from './transitions/MorphTransition.js';
 export function initTaxi() {
   console.log('🚕 Taxi.js initializing...');
   
-  // Initialize Taxi
-  const taxi = new Taxi({
+  // Check if Taxi is available (loaded via CDN)
+  if (typeof window.Taxi === 'undefined') {
+    console.error('❌ Taxi.js not found! Make sure the CDN script is loaded.');
+    return null;
+  }
+  
+  // Initialize Taxi (using global Taxi from CDN)
+  const taxi = new window.Taxi.Core({
     // Links to intercept (exclude external, anchors, etc.)
     links: 'a:not([target]):not([href^="#"]):not([data-no-taxi])',
     

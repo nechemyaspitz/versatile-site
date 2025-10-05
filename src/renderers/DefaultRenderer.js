@@ -1,7 +1,7 @@
 // Default renderer - base class for all pages
-import { Renderer } from '@unseenco/taxi';
+// Taxi.Renderer is available globally from CDN
 
-export default class DefaultRenderer extends Renderer {
+export default class DefaultRenderer extends window.Taxi.Renderer {
   // Called when content is added to DOM (before transition in)
   onEnter() {
     console.log('📄 Page entering:', this.content.dataset.taxiView);
