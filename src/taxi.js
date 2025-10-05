@@ -71,10 +71,10 @@ export function initTaxi() {
     }
   });
   
-  taxi.on('NAVIGATE_ERROR', (error) => {
+  taxiInstance.on('NAVIGATE_ERROR', (error) => {
     console.error('❌ Navigation error:', error);
   });
   
-  return taxi;
+  return taxiInstance;
 }
 
