@@ -2,12 +2,12 @@
 // Factory function to create transition class when Taxi.js is loaded
 
 export default function createMorphTransition() {
-  if (!window.Taxi) {
-    console.error('Taxi.js not loaded!');
+  if (!window.taxi) {
+    console.error('taxi not loaded!');
     return class {}; // Return empty class as fallback
   }
   
-  return class MorphTransition extends window.Taxi.Transition {
+  return class MorphTransition extends window.taxi.Transition {
     /**
      * Check if this transition should be used
      */

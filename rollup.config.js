@@ -10,7 +10,7 @@ export default {
     format: 'iife',
     sourcemap: !production,
     globals: {
-      '@unseenco/taxi': 'Taxi'
+      '@unseenco/taxi': 'taxi'
     }
   },
   external: ['@unseenco/taxi'],

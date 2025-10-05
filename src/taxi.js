@@ -14,13 +14,13 @@ import createMorphTransition from './transitions/MorphTransition.js';
 export function initTaxi() {
   console.log('🚕 Taxi.js initializing...');
   
-  // Check if Taxi is available (loaded via CDN)
-  if (typeof window.Taxi === 'undefined') {
-    console.error('❌ Taxi.js not found! Make sure the CDN script is loaded.');
+  // Check if taxi is available (loaded via CDN) - NOTE: lowercase!
+  if (typeof window.taxi === 'undefined') {
+    console.error('❌ Taxi.js not found! Make sure BOTH @unseenco/e AND @unseenco/taxi CDN scripts are loaded.');
     return null;
   }
   
-  // Create renderer and transition classes (now that Taxi is loaded)
+  // Create renderer and transition classes (now that taxi is loaded)
   const DefaultRenderer = createDefaultRenderer();
   const HomeRenderer = createHomeRenderer();
   const CollectionsRenderer = createCollectionsRenderer();
@@ -28,8 +28,8 @@ export function initTaxi() {
   const DefaultTransition = createDefaultTransition();
   const MorphTransition = createMorphTransition();
   
-  // Initialize Taxi (using global Taxi from CDN)
-  const taxi = new window.Taxi.Core({
+  // Initialize Taxi (using global taxi from CDN - lowercase!)
+  const taxiInstance = new window.taxi.Core({
     // Links to intercept (exclude external, anchors, etc.)
     links: 'a:not([target]):not([href^="#"]):not([data-no-taxi])',
     

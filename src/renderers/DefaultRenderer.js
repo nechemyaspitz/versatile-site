@@ -2,12 +2,12 @@
 // Factory function to create renderer class when Taxi.js is loaded
 
 export default function createDefaultRenderer() {
-  if (!window.Taxi) {
-    console.error('Taxi.js not loaded!');
+  if (!window.taxi) {
+    console.error('taxi not loaded!');
     return class {}; // Return empty class as fallback
   }
   
-  return class DefaultRenderer extends window.Taxi.Renderer {
+  return class DefaultRenderer extends window.taxi.Renderer {
     // Called when content is added to DOM (before transition in)
     onEnter() {
       console.log('📄 Page entering:', this.content.dataset.taxiView);
