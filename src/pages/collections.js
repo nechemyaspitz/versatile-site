@@ -208,23 +208,30 @@ export async function initCollections(nsCtx) {
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
-        el.style.opacity = '0';
         fragment.appendChild(el);
       });
       
       // Single DOM append (batch write)
       this.productContainer.appendChild(fragment);
       
-      // Force GPU layers BEFORE animation (prevents jank)
-      const gridItems = this.productContainer.querySelectorAll('.collection_grid-item');
-      gridItems.forEach(item => forceGPULayer(item));
+      // Get all items for animation
+      const allItems = this.productContainer.querySelectorAll('.w-dyn-item');
       
-      // Initialize features synchronously (they're needed!)
+      // Set initial state CLEANLY (no transitions, pure GSAP control)
+      if (window.gsap) {
+        gsap.set(allItems, {
+          opacity: 0,
+          y: 15,
+          clearProps: 'transition', // Remove any CSS transitions
+        });
+      }
+      
+      // Initialize features (needed for hover, images, etc)
       this.initImageHover();
       this.updateProductImages();
       this.updateProductLinks();
       
-      // Start animation AFTER everything is ready
+      // Animate in next frame (ensures everything is ready)
       requestAnimationFrame(() => {
         this.animateItemsIn();
       });
@@ -234,7 +241,6 @@ export async function initCollections(nsCtx) {
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
-        el.style.opacity = '0';
         fragment.appendChild(el);
       });
       
@@ -245,25 +251,33 @@ export async function initCollections(nsCtx) {
         -items.length
       );
       
-      // Force GPU layers before animation
-      newItems.forEach(item => {
-        const gridItem = item.querySelector('.collection_grid-item');
-        if (gridItem) forceGPULayer(gridItem);
-      });
+      // Set clean initial state
+      if (window.gsap) {
+        gsap.set(newItems, {
+          opacity: 0,
+          y: 12,
+          clearProps: 'transition',
+        });
+      }
       
-      // Initialize features synchronously
+      // Initialize features
       this.initImageHover();
       this.updateProductImages();
       this.updateProductLinks();
       
-      // Then animate
+      // Animate in next frame
       requestAnimationFrame(() => {
-        staggerFadeIn(newItems, {
-          duration: 0.35,
-          stagger: 0.15,
-          y: 8,
-          ease: 'power2.out',
-        });
+        if (window.gsap) {
+          gsap.to(newItems, {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            stagger: 0.015, // Per-item delay (fast for appended items)
+            ease: 'power2.out',
+            force3D: true,
+            clearProps: 'transform',
+          });
+        }
       });
     }
 
@@ -277,7 +291,7 @@ export async function initCollections(nsCtx) {
       const productItem = document.createElement('div');
       productItem.setAttribute('role', 'listitem');
       productItem.className = 'w-dyn-item';
-      productItem.style.opacity = '1';
+      // Don't set any inline opacity - let GSAP control it completely
 
       productItem.innerHTML = `
         <div class="collection_grid-item" data-base-url="${baseUrl}" style="opacity: 1; view-transition-name: ${productSlug};" data-hover-initialized="false">
@@ -600,15 +614,26 @@ export async function initCollections(nsCtx) {
 
     animateItemsIn() {
       const items = this.productContainer.querySelectorAll('.w-dyn-item');
-      if (items.length === 0) return;
+      if (items.length === 0 || !window.gsap) return;
       
-      // Animate ALL items with optimized stagger
-      // Key: shorter total stagger time = faster, smoother appearance
-      staggerFadeIn(items, {
-        duration: 0.4,
-        stagger: 0.18, // Total stagger time: 0.18s (was causing "twice" effect)
-        y: 10,
+      // Kill any existing animations on these elements
+      gsap.killTweensOf(items);
+      
+      // Ultra-smooth stagger animation with GPU acceleration
+      gsap.to(items, {
+        opacity: 1,
+        y: 0,
+        duration: 0.45,
+        stagger: {
+          each: 0.02, // 20ms per item (smooth wave)
+          ease: 'power1.inOut',
+        },
         ease: 'power2.out',
+        force3D: true, // GPU acceleration
+        onComplete: () => {
+          // Clean up transforms after animation
+          gsap.set(items, { clearProps: 'transform' });
+        },
       });
     }
 

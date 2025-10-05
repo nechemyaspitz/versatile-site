@@ -48,6 +48,7 @@ export function getDuration(base) {
 
 /**
  * Optimized stagger animation for lists
+ * CLEANED UP: No double GPU layer forcing
  */
 export function staggerFadeIn(elements, options = {}) {
   if (!window.gsap || !elements || elements.length === 0) return;
@@ -60,26 +61,21 @@ export function staggerFadeIn(elements, options = {}) {
     clearProps = true,
   } = options;
   
-  // Force GPU layers before animation
-  elements.forEach(el => forceGPULayer(el));
+  // Kill any existing animations
+  gsap.killTweensOf(elements);
   
-  return gsap.fromTo(elements,
-    { 
-      opacity: 0,
-      y: y,
+  return gsap.to(elements, {
+    opacity: 1,
+    y: 0,
+    duration: getDuration(duration),
+    ease: ease,
+    stagger: {
+      amount: getDuration(stagger),
+      from: 'start',
     },
-    {
-      opacity: 1,
-      y: 0,
-      duration: getDuration(duration),
-      ease: ease,
-      stagger: {
-        amount: getDuration(stagger),
-        from: 'start',
-      },
-      clearProps: clearProps ? 'transform,will-change' : '',
-    }
-  );
+    force3D: true, // GPU acceleration built-in
+    clearProps: clearProps ? 'transform' : '',
+  });
 }
 
 /**
