@@ -130,7 +130,10 @@ export function morphToProduct() {
  */
 export function morphBackToCollections() {
   return new Promise((resolve) => {
+    console.log('🔄 morphBackToCollections() called');
+    
     if (!window.gsap) {
+      console.warn('❌ GSAP not available');
       resolve();
       return;
     }
@@ -138,7 +141,14 @@ export function morphBackToCollections() {
     const productWrap = document.querySelector('.slider-wrap');
     const targetGrid = document.querySelector('.product-grid');
     
+    console.log('🔍 Elements:', {
+      productWrap: !!productWrap,
+      targetGrid: !!targetGrid,
+      productSlug: productSlug,
+    });
+    
     if (!productWrap || !targetGrid) {
+      console.warn('❌ Missing elements for reverse morph');
       resolve();
       return;
     }
@@ -147,8 +157,10 @@ export function morphBackToCollections() {
     const slug = getProductSlugFromURL();
     const targetItem = targetGrid.querySelector(`[data-base-url="/collections/${slug}"]`);
     
+    console.log('🎯 Target item found:', !!targetItem, 'for slug:', slug);
+    
     if (!targetItem) {
-      console.warn('No matching collection item found for reverse morph');
+      console.warn('❌ No matching collection item found for reverse morph');
       resolve();
       return;
     }

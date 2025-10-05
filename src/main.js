@@ -2,13 +2,13 @@
 import { initBarba } from './core/barbaManager.js';
 
 // Version tracking for deployment verification
-const VERSION = '1.7.2';
+const VERSION = '1.7.3';
 const DEPLOY_TIME = new Date().toISOString();
 
 console.log(`%c🚀 Versatile Site SPA v${VERSION}`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
 console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold;');
 console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
-console.log(`%c✨ v1.7.2: REVERSE MORPH FIXED - Snapshot now restores BEFORE morph!`, 'color: #ff6600; font-weight: bold;');
+console.log(`%c✨ v1.7.3: REVERSE MORPH TIMING FIX - Morph in ENTER hook while both containers exist!`, 'color: #ff6600; font-weight: bold;');
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

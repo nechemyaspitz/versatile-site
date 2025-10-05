@@ -76,7 +76,8 @@ export function initBarba() {
         to: {
           namespace: ['collections']
         },
-        leave({ current }) {
+        async leave({ current }) {
+          console.log('🚀 product-reverse-morph LEAVE hook');
           // DON'T fade out - let the morph handle visibility
           // Just hide other content
           const otherContent = current.container.querySelectorAll(':scope > *:not([data-barba]):not(.slider-wrap)');
@@ -88,13 +89,15 @@ export function initBarba() {
             });
           }
         },
-        enter({ next, trigger }) {
+        async enter({ next, trigger, current }) {
+          console.log('🎯 product-reverse-morph ENTER hook', { trigger });
+          
           // CRITICAL: Restore snapshot BEFORE morph runs
           // This ensures the target items exist for morphing
           if (trigger === 'back') {
             const restored = restoreCollectionsSnapshotIfPossible();
+            console.log('📦 Snapshot restored:', restored);
             if (restored) {
-              console.log('✅ Snapshot restored before morph');
               // Mark that we restored snapshot (so afterEnter doesn't re-init)
               next.container.dataset.snapshotRestored = 'true';
             }
@@ -102,10 +105,15 @@ export function initBarba() {
           
           // Keep container visible, let morph handle items
           next.container.style.opacity = 1;
+          
+          // CRITICAL FIX: Morph needs to happen NOW while both containers exist
+          // The old container (product) is still in DOM during enter hook
+          console.log('⏰ Calling morphBackToCollections in ENTER hook');
+          await morphBackToCollections();
         },
         async after({ next }) {
-          // Wait for reverse morph to complete
-          await morphBackToCollections();
+          console.log('✅ product-reverse-morph AFTER hook');
+          // Morph already completed in enter hook
         },
       },
       {
