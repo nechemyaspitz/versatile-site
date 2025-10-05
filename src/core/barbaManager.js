@@ -88,7 +88,18 @@ export function initBarba() {
             });
           }
         },
-        enter({ next }) {
+        enter({ next, trigger }) {
+          // CRITICAL: Restore snapshot BEFORE morph runs
+          // This ensures the target items exist for morphing
+          if (trigger === 'back') {
+            const restored = restoreCollectionsSnapshotIfPossible();
+            if (restored) {
+              console.log('✅ Snapshot restored before morph');
+              // Mark that we restored snapshot (so afterEnter doesn't re-init)
+              next.container.dataset.snapshotRestored = 'true';
+            }
+          }
+          
           // Keep container visible, let morph handle items
           next.container.style.opacity = 1;
         },
@@ -141,14 +152,26 @@ export function initBarba() {
           clearState('collections');
         },
         async afterEnter(ctx) {
-          // Try to restore from snapshot if coming back
-          if (ctx.trigger === 'back' && restoreCollectionsSnapshotIfPossible()) {
-            // Snapshot restored, just reinit Webflow and bail
+          // Check if snapshot was already restored in transition's enter hook
+          const snapshotRestored = ctx.next.container.dataset.snapshotRestored === 'true';
+          
+          if (snapshotRestored) {
+            // Snapshot was restored during transition, just reinit listeners
+            console.log('✅ Skipping re-init (snapshot already restored)');
+            delete ctx.next.container.dataset.snapshotRestored;
             reinitWebflow();
-            // Re-initialize click listeners for Flip
             initCollectionItemListeners();
             return;
           }
+          
+          // Try to restore from snapshot if coming back (fallback)
+          if (ctx.trigger === 'back' && restoreCollectionsSnapshotIfPossible()) {
+            // Snapshot restored, just reinit Webflow and bail
+            reinitWebflow();
+            initCollectionItemListeners();
+            return;
+          }
+          
           // Fresh entry: normal init (will fetch)
           await initCollections();
           // Initialize click listeners for Flip morphing
