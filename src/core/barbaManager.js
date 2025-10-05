@@ -43,15 +43,10 @@ export function initBarba() {
           // Show clone to maintain visual continuity
           showCloneDuringTransition();
           
-          // Fast fade out all items (don't wait, run parallel)
-          const allItems = current.container.querySelectorAll('.collection_grid-item');
-          if (window.gsap && allItems.length > 0) {
-            gsap.to(allItems, {
-              opacity: 0,
-              duration: 0.2,
-              ease: 'power2.out',
-            });
-          }
+          // DON'T fade out all items - leave them visible!
+          // The clone covers the clicked item, and the page will transition naturally
+          // This ensures items are still there when we navigate back
+          console.log('🎬 Forward transition: Clone shown, other items remain visible');
         },
         enter({ next }) {
           // Prepare container but keep it visible
