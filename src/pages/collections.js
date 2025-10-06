@@ -434,7 +434,7 @@ export async function initCollections(nsCtx) {
           src="${imageSrc}" 
           alt="${imageAlt}" 
           loading="lazy"
-          class="thumbnail-cover-img overlay-img"
+          class="img-2 overlay-img"
           style="opacity: 0; transition: opacity 0.3s ease;"
         >
       `;
@@ -451,7 +451,7 @@ export async function initCollections(nsCtx) {
       }
 
       const overlayHTML = this.createImageOverlay(imageSrc, imageAlt);
-      const mainImg = imageContainer.querySelector('.thumbnail-cover-img');
+      const mainImg = imageContainer.querySelector('.img-2:not(.overlay-img)');
       if (!mainImg) return;
       
       mainImg.insertAdjacentHTML('afterend', overlayHTML);
@@ -487,7 +487,7 @@ export async function initCollections(nsCtx) {
     }
 
     replaceMainImage(product, imageSrc, imageAlt) {
-      const mainImg = product.querySelector('.thumbnail-cover-img:not(.overlay-img)');
+      const mainImg = product.querySelector('.img-2:not(.overlay-img)');
       if (mainImg) {
         mainImg.src = imageSrc;
         mainImg.alt = imageAlt;
@@ -495,7 +495,7 @@ export async function initCollections(nsCtx) {
     }
 
     restoreOriginalImage(product) {
-      const mainImg = product.querySelector('.thumbnail-cover-img:not(.overlay-img)');
+      const mainImg = product.querySelector('.img-2:not(.overlay-img)');
       const permanentOverlay = product.querySelector('.overlay-img[data-permanent]');
       if (!mainImg) return;
 
@@ -568,7 +568,7 @@ export async function initCollections(nsCtx) {
                 hideTimeout = null;
               }
               const permanentOverlay = product.querySelector(
-                '.blur-img.top[data-permanent]'
+                '.overlay-img[data-permanent]'
               );
               if (!permanentOverlay) {
                 this.showImageOverlay(product, thumb.src, thumb.alt, false);

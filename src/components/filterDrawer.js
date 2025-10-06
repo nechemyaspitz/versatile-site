@@ -14,6 +14,11 @@ export function setupFilterListeners() {
   // GSAP required
   if (!window.gsap) return;
 
+  // Clear any existing GSAP properties first (important for page revisits)
+  gsap.set(drawer, { clearProps: 'all' });
+  gsap.set(controls, { clearProps: 'all' });
+  
+  // Then set initial state
   gsap.set(drawer, { display: 'none', opacity: 0 });
   gsap.set(controls, { xPercent: 100 });
 
