@@ -1,5 +1,6 @@
 // Taxi.js initialization - MUCH simpler than Barba!
 import { reinitWebflow } from './utils/webflow.js';
+import { resetScroll, initLenis, getLenis } from './utils/lenis.js';
 
 // Import renderer factories
 import createDefaultRenderer from './renderers/DefaultRenderer.js';
@@ -55,12 +56,15 @@ export function initTaxi() {
   });
   
   // Global hooks using official event names
-  taxiInstance.on('NAVIGATE_IN', ({ to }) => {
-    console.log('📥 NAVIGATE_IN:', to.page?.dataset?.taxiView || 'unknown');
-  });
-  
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
     console.log('📤 NAVIGATE_OUT:', from.page?.dataset?.taxiView || 'unknown');
+  });
+  
+  taxiInstance.on('NAVIGATE_IN', ({ to }) => {
+    console.log('📥 NAVIGATE_IN:', to.page?.dataset?.taxiView || 'unknown');
+    
+    // Reset scroll position for new page
+    resetScroll();
   });
 
   taxiInstance.on('NAVIGATE_END', ({ to, trigger }) => {
@@ -68,6 +72,13 @@ export function initTaxi() {
     
     // Re-initialize Webflow interactions after every navigation
     reinitWebflow();
+    
+    // Ensure Lenis is working (reinitialize if needed)
+    const lenis = getLenis();
+    if (!lenis) {
+      console.log('🔄 Reinitializing Lenis...');
+      initLenis();
+    }
     
     // Log navigation type
     if (trigger === 'popstate') {

@@ -1,4 +1,6 @@
 // Filter drawer (GSAP animations)
+import { stopLenis, startLenis } from '../utils/lenis.js';
+
 export function setupFilterListeners() {
   setupFilterListeners._ac?.abort?.();
   const ac = new AbortController();
@@ -26,6 +28,9 @@ export function setupFilterListeners() {
     openBtn.addEventListener(
       'click',
       () => {
+        // Stop Lenis scrolling when drawer opens
+        stopLenis();
+        
         gsap.set(drawer, { display: 'flex' });
         const tl = gsap.timeline({ defaults: { ease: 'power1.inOut' } });
         tl.to(drawer, { opacity: 1, duration: 0.1 }).to(
@@ -44,7 +49,11 @@ export function setupFilterListeners() {
       () => {
         const tl = gsap.timeline({
           defaults: { ease: 'power1.inOut', duration: 0.1 },
-          onComplete: () => gsap.set(drawer, { display: 'none' }),
+          onComplete: () => {
+            gsap.set(drawer, { display: 'none' });
+            // Resume Lenis scrolling when drawer closes
+            startLenis();
+          },
         });
         tl.to(controls, { xPercent: 100, ease: 'power4.in', duration: 0.2 }).to(
           drawer,
