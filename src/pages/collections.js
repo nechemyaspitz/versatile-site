@@ -3,6 +3,12 @@ import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 import { setupFilterListeners } from '../components/filterDrawer.js';
 
+// Polyfill for Safari (doesn't support requestIdleCallback)
+const safeRequestIdleCallback = window.requestIdleCallback || function(callback, options) {
+  const timeout = options?.timeout || 2000;
+  return setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 50 }), 1);
+};
+
 export async function initCollections(nsCtx) {
   // GSAP for filter drawer, Nice Select assets
   if (!window.gsap) {
@@ -212,7 +218,7 @@ export async function initCollections(nsCtx) {
       this.productContainer.appendChild(fragment);
       
       // Initialize features immediately
-      requestIdleCallback(() => {
+      safeRequestIdleCallback(() => {
         this.initImageHover();
         this.updateProductImages();
         this.updateProductLinks();
@@ -230,7 +236,7 @@ export async function initCollections(nsCtx) {
       this.productContainer.appendChild(fragment);
       
       // Initialize features for new items
-      requestIdleCallback(() => {
+      safeRequestIdleCallback(() => {
         this.initImageHover();
         this.updateProductImages();
         this.updateProductLinks();
