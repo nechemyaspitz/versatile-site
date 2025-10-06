@@ -8,6 +8,7 @@ export default function createCollectionsRenderer() {
   return class CollectionsRenderer extends DefaultRenderer {
     // Instance variables
     filterInstance = null;
+    isInitialized = false;
   
     /**
      * Initial load - set up persistent features
@@ -19,14 +20,22 @@ export default function createCollectionsRenderer() {
     }
     
     /**
-     * Enter: Initialize filter BEFORE transition
+     * Enter: Initialize filter BEFORE transition (only if not cached)
      */
     async onEnter() {
       console.log('🛍️ Collections page entering');
+      
+      // Check if this page was cached (already initialized)
+      if (this.isInitialized && this.filterInstance) {
+        console.log('✅ Collections: Page cached, skipping re-initialization');
+        return;
+      }
+      
       console.log('🛍️ Collections: Initializing filter BEFORE transition...');
       
       // Initialize product filter & infinite scroll BEFORE transition
       this.filterInstance = await initCollections();
+      this.isInitialized = true;
       console.log('✅ Collections filter initialized');
     }
     
@@ -45,15 +54,12 @@ export default function createCollectionsRenderer() {
     }
     
     /**
-     * Leave completed: Cleanup filter
+     * Leave completed: Keep filter alive (page is cached)
      */
     onLeaveCompleted() {
-      // Cleanup filter instance
-      if (this.filterInstance?.destroy) {
-        this.filterInstance.destroy();
-        this.filterInstance = null;
-        console.log('🗑️ Collections filter destroyed');
-      }
+      // DON'T destroy filter - we're caching the page for instant back button!
+      // The filter instance will be reused when navigating back
+      console.log('💾 Collections: Keeping filter alive (page cached)');
     }
   };
 }

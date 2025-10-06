@@ -32,8 +32,8 @@ export function initTaxi() {
     // Links to intercept (exclude external, anchors, etc.)
     links: 'a:not([target]):not([href^="#"]):not([data-taxi-ignore])',
     
-    // Remove old content after transition
-    removeOldContent: true,
+    // CACHE PAGES! Don't remove old content - keep for instant back button
+    removeOldContent: false,
     
     // Allow navigation interruption
     allowInterruption: false,
@@ -59,6 +59,14 @@ export function initTaxi() {
   initScalingHamburgerNavigation();
   updateActiveNavLinks();
   
+  // Scroll position cache for restoring on back/forward
+  const scrollPositions = new Map();
+  
+  // Disable native scroll restoration (we'll handle it)
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  
   // Global hooks using official event names
   taxiInstance.on('NAVIGATE_IN', ({ to }) => {
     console.log('📥 NAVIGATE_IN:', to.page?.dataset?.taxiView || 'unknown');
@@ -66,6 +74,13 @@ export function initTaxi() {
   
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
     console.log('📤 NAVIGATE_OUT:', from.page?.dataset?.taxiView || 'unknown');
+    
+    // Save current scroll position before leaving
+    const currentUrl = window.location.href;
+    const scrollY = window.scrollY || window.pageYOffset;
+    scrollPositions.set(currentUrl, scrollY);
+    console.log(`💾 Saved scroll position: ${scrollY}px for ${currentUrl}`);
+    
     // Close navigation when leaving page
     closeNav();
   });
@@ -79,9 +94,21 @@ export function initTaxi() {
     // Re-initialize Webflow interactions after every navigation
     reinitWebflow();
     
-    // Log navigation type
+    // Handle scroll position based on navigation type
     if (trigger === 'popstate') {
-      console.log('⬅️ Back/Forward navigation');
+      // Back/Forward button: restore saved scroll position
+      const currentUrl = window.location.href;
+      const savedScrollY = scrollPositions.get(currentUrl) || 0;
+      console.log(`⬅️ Back/Forward: Restoring scroll to ${savedScrollY}px`);
+      
+      // Small delay to ensure page is rendered
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollY);
+      });
+    } else {
+      // Normal navigation: scroll to top
+      console.log('🔝 Normal navigation: Scrolling to top');
+      window.scrollTo(0, 0);
     }
   });
   
