@@ -40,6 +40,12 @@ export default function createDefaultTransition() {
         return;
       }
       
+      // Scroll to top immediately (while page is invisible)
+      // Skip if back button (scroll will be restored by snapshot)
+      if (trigger !== 'popstate') {
+        window.scrollTo(0, 0);
+      }
+      
       // Start hidden
       gsap.set(to, { opacity: 0 });
       

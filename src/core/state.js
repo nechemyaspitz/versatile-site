@@ -145,6 +145,17 @@ export function restoreCollectionsSnapshotIfPossible() {
 
   window.productFilter = f;
   console.log('✅ Filter state restored successfully');
+  
+  // Restore scroll position
+  if (snap.scrollY !== undefined) {
+    console.log(`📜 Restoring scroll position to ${snap.scrollY}px`);
+    // Use a small delay to ensure DOM is fully rendered
+    requestAnimationFrame(() => {
+      window.scrollTo(0, snap.scrollY);
+      console.log('✅ Scroll position restored');
+    });
+  }
+  
   return true;
 }
 

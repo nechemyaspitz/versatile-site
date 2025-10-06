@@ -59,10 +59,7 @@ export function initTaxi() {
   initScalingHamburgerNavigation();
   updateActiveNavLinks();
   
-  // Scroll position cache for restoring on back/forward
-  const scrollPositions = new Map();
-  
-  // Disable native scroll restoration (we'll handle it)
+  // Disable native scroll restoration (we handle it manually)
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
@@ -74,12 +71,6 @@ export function initTaxi() {
   
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
     console.log('📤 NAVIGATE_OUT:', from.page?.dataset?.taxiView || 'unknown');
-    
-    // Save current scroll position before leaving
-    const currentUrl = window.location.href;
-    const scrollY = window.scrollY || window.pageYOffset;
-    scrollPositions.set(currentUrl, scrollY);
-    console.log(`💾 Saved scroll position: ${scrollY}px for ${currentUrl}`);
     
     // Close navigation when leaving page
     closeNav();
@@ -94,27 +85,9 @@ export function initTaxi() {
     // Re-initialize Webflow interactions after every navigation
     reinitWebflow();
     
-    // Handle scroll position
-    if (trigger === 'popstate') {
-      // Back/Forward button: restore saved scroll position
-      const currentUrl = window.location.href;
-      const savedScrollY = scrollPositions.get(currentUrl);
-      
-      if (savedScrollY !== undefined) {
-        console.log(`⬅️ Back/Forward: Restoring scroll to ${savedScrollY}px`);
-        
-        // Small delay to ensure page is rendered
-        requestAnimationFrame(() => {
-          window.scrollTo(0, savedScrollY);
-        });
-      } else {
-        // No saved position, let browser handle it
-        console.log('⬅️ Back/Forward: No saved scroll position');
-      }
-    } else {
-      // Normal navigation: scroll to top
-      window.scrollTo(0, 0);
-    }
+    // Note: Scroll handling is done in:
+    // - DefaultTransition.onEnter() for normal navigation (scroll to top)
+    // - state.js restoreCollectionsSnapshotIfPossible() for back button
   });
   
   taxiInstance.on('NAVIGATE_ERROR', (error) => {
