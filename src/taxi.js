@@ -32,8 +32,8 @@ export function initTaxi() {
     // Links to intercept (exclude external, anchors, etc.)
     links: 'a:not([target]):not([href^="#"]):not([data-taxi-ignore])',
     
-    // CACHE PAGES! Don't remove old content - keep for instant back button
-    removeOldContent: false,
+    // Remove old content after transition (clean DOM)
+    removeOldContent: true,
     
     // Allow navigation interruption
     allowInterruption: false,
@@ -94,20 +94,25 @@ export function initTaxi() {
     // Re-initialize Webflow interactions after every navigation
     reinitWebflow();
     
-    // Handle scroll position based on navigation type
+    // Handle scroll position
     if (trigger === 'popstate') {
       // Back/Forward button: restore saved scroll position
       const currentUrl = window.location.href;
-      const savedScrollY = scrollPositions.get(currentUrl) || 0;
-      console.log(`⬅️ Back/Forward: Restoring scroll to ${savedScrollY}px`);
+      const savedScrollY = scrollPositions.get(currentUrl);
       
-      // Small delay to ensure page is rendered
-      requestAnimationFrame(() => {
-        window.scrollTo(0, savedScrollY);
-      });
+      if (savedScrollY !== undefined) {
+        console.log(`⬅️ Back/Forward: Restoring scroll to ${savedScrollY}px`);
+        
+        // Small delay to ensure page is rendered
+        requestAnimationFrame(() => {
+          window.scrollTo(0, savedScrollY);
+        });
+      } else {
+        // No saved position, let browser handle it
+        console.log('⬅️ Back/Forward: No saved scroll position');
+      }
     } else {
       // Normal navigation: scroll to top
-      console.log('🔝 Normal navigation: Scrolling to top');
       window.scrollTo(0, 0);
     }
   });
