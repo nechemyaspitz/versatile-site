@@ -16,30 +16,23 @@ export default function createCollectionsRenderer() {
      */
     async initialLoad() {
       console.log('🎬 Collections: Initial load');
-      // Pass empty object for initial load (no trigger)
-      await this.onEnter({});
+      await this.onEnter();
       this.onEnterCompleted();
     }
     
     /**
      * Enter: Try to restore snapshot, or initialize fresh
      */
-    async onEnter({ trigger }) {
-      console.log('🛍️ Collections page entering', { trigger });
-      this.navigationTrigger = trigger;
+    async onEnter() {
+      console.log('🛍️ Collections page entering');
       
-      // If back button and we have a snapshot, restore it
-      if (trigger === 'popstate') {
-        console.log('⬅️ Back button detected, attempting snapshot restore...');
-        const restored = restoreCollectionsSnapshotIfPossible();
-        
-        if (restored) {
-          console.log('✅ Snapshot restored successfully');
-          // Scroll position is restored in NAVIGATE_END hook
-          return; // Don't re-initialize
-        }
-        
-        console.log('⚠️ No snapshot found, will initialize fresh');
+      // Check if we have a snapshot (indicates back button navigation)
+      const hasSnapshot = restoreCollectionsSnapshotIfPossible();
+      
+      if (hasSnapshot) {
+        console.log('✅ Snapshot restored successfully (back button)');
+        // Scroll position is restored in NAVIGATE_END hook
+        return; // Don't re-initialize
       }
       
       // Fresh initialization (first load or no snapshot)
@@ -58,14 +51,13 @@ export default function createCollectionsRenderer() {
     /**
      * Leave: Save snapshot before exiting
      */
-    onLeave({ trigger, to }) {
-      console.log('👋 Collections page leaving', { trigger, toPage: to?.page?.dataset?.taxiView });
+    onLeave() {
+      console.log('👋 Collections page leaving');
       
-      // Save snapshot when navigating to product page (not on back button)
-      if (to?.page?.dataset?.taxiView === 'product' && trigger !== 'popstate') {
-        console.log('💾 Saving collections snapshot before navigating to product...');
-        saveCollectionsSnapshot(window.location.href);
-      }
+      // Always save snapshot when leaving collections page
+      // (Will be restored if user clicks back button)
+      console.log('💾 Saving collections snapshot...');
+      saveCollectionsSnapshot(window.location.href);
     }
     
     /**
