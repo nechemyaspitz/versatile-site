@@ -2,9 +2,6 @@
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 import { setupFilterListeners } from '../components/filterDrawer.js';
-import { staggerFadeIn, forceGPULayer, deferToIdle } from '../utils/animationOptimizer.js';
-import { initLazyLoader, observeElements, cleanupLazyLoader } from '../utils/lazyLoader.js';
-import { batchToNextFrame } from '../utils/domBatcher.js';
 
 export async function initCollections(nsCtx) {
   // GSAP for filter drawer, Nice Select assets
@@ -211,55 +208,15 @@ export async function initCollections(nsCtx) {
         fragment.appendChild(el);
       });
       
-      // Single DOM append (batch write)
+      // Single DOM append (batch write) - no animations!
       this.productContainer.appendChild(fragment);
       
-      // Get all items for animation
-      const allItems = this.productContainer.querySelectorAll('.w-dyn-item');
-      
-      if (!window.gsap || allItems.length === 0) return;
-      
-      // CRITICAL FIX: Set initial state on BOTH parent AND child
-      // This prevents the "double animation" effect
-      gsap.set(allItems, {
-        opacity: 0,
-        clearProps: 'transition,transform',
-      });
-      
-      // Also set child elements (prevent flash)
-      const gridItems = this.productContainer.querySelectorAll('.collection_grid-item');
-      gsap.set(gridItems, {
-        opacity: 0,
-        clearProps: 'transition',
-      });
-      
-      // Start animation IMMEDIATELY
-      requestAnimationFrame(() => {
-        // Animate parent containers
-        gsap.to(allItems, {
-          opacity: 1,
-          duration: 0.6,
-          stagger: 0.03,
-          ease: 'power2.out',
-        });
-        
-        // Animate children (slightly delayed for depth)
-        gsap.to(gridItems, {
-          opacity: 1,
-          duration: 0.5,
-          stagger: 0.03,
-          ease: 'power2.out',
-        });
-      });
-      
-      // Defer feature initialization
-      setTimeout(() => {
-        requestIdleCallback(() => {
-          this.initImageHover();
-          this.updateProductImages();
-          this.updateProductLinks();
-        }, { timeout: 2000 });
-      }, 100);
+      // Initialize features immediately
+      requestIdleCallback(() => {
+        this.initImageHover();
+        this.updateProductImages();
+        this.updateProductLinks();
+      }, { timeout: 1000 });
     }
 
     appendItems(items) {
@@ -269,57 +226,15 @@ export async function initCollections(nsCtx) {
         fragment.appendChild(el);
       });
       
-      // Batch DOM append
+      // Batch DOM append - no animations!
       this.productContainer.appendChild(fragment);
-
-      const newItems = Array.from(this.productContainer.children).slice(
-        -items.length
-      );
       
-      if (!window.gsap || newItems.length === 0) return;
-      
-      // Set initial state on containers AND children
-      gsap.set(newItems, {
-        opacity: 0,
-        clearProps: 'transition',
-      });
-      
-      const newGridItems = [];
-      newItems.forEach(item => {
-        const gridItem = item.querySelector('.collection_grid-item');
-        if (gridItem) newGridItems.push(gridItem);
-      });
-      
-      gsap.set(newGridItems, {
-        opacity: 0,
-        clearProps: 'transition',
-      });
-      
-      // Animate both
-      requestAnimationFrame(() => {
-        gsap.to(newItems, {
-          opacity: 1,
-          duration: 0.5,
-          stagger: 0.025,
-          ease: 'power2.out',
-        });
-        
-        gsap.to(newGridItems, {
-          opacity: 1,
-          duration: 0.45,
-          stagger: 0.025,
-          ease: 'power2.out',
-        });
-      });
-      
-      // Defer features
-      setTimeout(() => {
-        requestIdleCallback(() => {
-          this.initImageHover();
-          this.updateProductImages();
-          this.updateProductLinks();
-        }, { timeout: 2000 });
-      }, 100);
+      // Initialize features for new items
+      requestIdleCallback(() => {
+        this.initImageHover();
+        this.updateProductImages();
+        this.updateProductLinks();
+      }, { timeout: 1000 });
     }
 
     createProductElement(item) {
@@ -335,15 +250,14 @@ export async function initCollections(nsCtx) {
       // Don't set any inline opacity - let GSAP control it completely
 
       productItem.innerHTML = `
-        <div class="collection_grid-item" data-base-url="${baseUrl}" style="view-transition-name: ${productSlug};" data-hover-initialized="false">
-          <a href="${baseUrl}" class="collection_image-cover" style="display: block; color: inherit; text-decoration: none;">
-            <img src="https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg" loading="lazy" alt="" class="thumbnail-cover-img overlay-1">
-            <img src="https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg" loading="lazy" alt="" class="thumbnail-cover-img overlay-2">
-            ${this.createProgressiveBlurHTML(mainImage, productName)}
+        <div class="collection_grid-item" data-base-url="${baseUrl}" data-hover-initialized="false">
+          <a href="${baseUrl}" class="collection_image-cover">
+            <div class="collection-image-wrapper">
+              ${this.createImageHTML(mainImage, productName)}
+            </div>
           </a>
-          <div class="gradient-cover"></div>
           <div class="collection-overlay">
-            <a href="${baseUrl}" class="collection_details" style="display: block; text-decoration: none;">
+            <a href="${baseUrl}" class="collection_details">
               <div class="truncate">${productName}</div>
             </a>
             ${this.createProductMetaHTML(item)}
@@ -354,37 +268,22 @@ export async function initCollections(nsCtx) {
       return productItem;
     }
 
-    createProgressiveBlurHTML(imageSrc, imageAlt) {
+    createImageHTML(imageSrc, imageAlt) {
       const safeImageSrc =
         imageSrc ||
         'https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg';
       const safeImageAlt = imageAlt || 'product-image';
       
-      // Keep inline styles - they're needed for the progressive blur to work
+      // Simple, performant image - no heavy blur layers
       return `
-        <div class="progressive-img-blur w-embed">
-          <div class="blur-img">
-            <div class="progressive-blur" style="--bg: url('${safeImageSrc}');" data-original-bg="${safeImageSrc}">
-              <div class="blur"></div>
-              <div class="blur"></div>
-              <div class="blur"></div>
-              <div class="blur"></div>
-            </div>
-            <img src="${safeImageSrc}" alt="${safeImageAlt}" data-original-src="${safeImageSrc}" data-original-alt="${safeImageAlt}">
-          </div>
-          <style>
-            .blur-img { position: absolute; inset: 0; overflow: hidden; border-radius: 0px; width: 100%; height: 100%; z-index: 0; transition: opacity 0.2s; }
-            .blur-img.top { z-index: 1; }
-            .blur-img img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); }
-            .progressive-blur { position: absolute; z-index: 6; width: 100%; height: 100%; pointer-events: none; inset: auto 0 0 0; transform: scale(1.06); }
-            .blur { background: var(--bg); background-size: cover; position: absolute; background-position: center center; inset: 0; }
-            .progressive-blur>div:nth-child(1) { filter: blur(2px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 70%, rgba(0,0,0,1) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 88%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 70%, rgba(0,0,0,1) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,0) 88%); z-index: 1; }
-            .progressive-blur>div:nth-child(2) { filter: blur(4px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 94%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 76%, rgba(0,0,0,1) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 94%); z-index: 2; }
-            .progressive-blur>div:nth-child(3) { filter: blur(8px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 82%, rgba(0,0,0,1) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,0) 100%); z-index: 3; }
-            .progressive-blur>div:nth-child(4) { filter: blur(16px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,1) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 88%, rgba(0,0,0,1) 94%, rgba(0,0,0,1) 100%); z-index: 4; }
-            .progressive-blur>div:nth-child(5) { filter: blur(32px); mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 94%, rgba(0,0,0,1) 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 94%, rgba(0,0,0,1) 100%); z-index: 5; }
-          </style>
-        </div>
+        <img 
+          src="${safeImageSrc}" 
+          alt="${safeImageAlt}" 
+          loading="lazy"
+          class="collection-main-image"
+          data-original-src="${safeImageSrc}" 
+          data-original-alt="${safeImageAlt}"
+        >
       `;
     }
 
@@ -542,62 +441,50 @@ export async function initCollections(nsCtx) {
       return null;
     }
 
-    createBlurImageOverlay(imageSrc, imageAlt) {
+    createImageOverlay(imageSrc, imageAlt) {
       return `
-        <div class="blur-img top" style="opacity: 0; transition: opacity 0.3s ease;">
-          <div class="progressive-blur" style="--bg: url('${imageSrc}');">
-            <div class="blur"></div>
-            <div class="blur"></div>
-            <div class="blur"></div>
-            <div class="blur"></div>
-          </div>
-          <img src="${imageSrc}" alt="${imageAlt}">
-        </div>
+        <img 
+          src="${imageSrc}" 
+          alt="${imageAlt}"
+          loading="lazy"
+          class="collection-overlay-image"
+          style="opacity: 0; transition: opacity 0.3s ease;"
+        >
       `;
     }
 
     showImageOverlay(product, imageSrc, imageAlt, isPermanent = false) {
-      const imageContainer =
-        product.querySelector('.progressive-img-blur');
-      if (!imageContainer) return;
+      const imageWrapper = product.querySelector('.collection-image-wrapper');
+      if (!imageWrapper) return;
 
-      const existingOverlay = imageContainer.querySelector('.blur-img.top');
+      const existingOverlay = imageWrapper.querySelector('.collection-overlay-image');
       if (existingOverlay) {
         existingOverlay.style.opacity = '0';
-        setTimeout(() => existingOverlay.remove(), 10);
+        setTimeout(() => existingOverlay.remove(), 300);
       }
 
-      setTimeout(() => {
-        const overlayHTML = this.createBlurImageOverlay(
-          imageSrc,
-          imageAlt
-        );
-        const mainBlurImg = imageContainer.querySelector(
-          '.blur-img:not(.top)'
-        );
-        if (!mainBlurImg) return;
-        mainBlurImg.insertAdjacentHTML('afterend', overlayHTML);
-        const newOverlay = imageContainer.querySelector('.blur-img.top');
-        if (newOverlay) {
-          requestAnimationFrame(() => {
-            newOverlay.style.opacity = '1';
-            product.dataset.hasOverlay = 'true';
-            if (isPermanent) {
-              newOverlay.dataset.permanent = 'true';
-              setTimeout(() => {
-                this.replaceMainImage(product, imageSrc, imageAlt);
-              }, 300);
-            }
-          });
-        }
-      }, isPermanent ? 0 : 50);
+      const overlayHTML = this.createImageOverlay(imageSrc, imageAlt);
+      imageWrapper.insertAdjacentHTML('beforeend', overlayHTML);
+      
+      const newOverlay = imageWrapper.querySelector('.collection-overlay-image');
+      if (newOverlay) {
+        requestAnimationFrame(() => {
+          newOverlay.style.opacity = '1';
+          product.dataset.hasOverlay = 'true';
+          if (isPermanent) {
+            newOverlay.dataset.permanent = 'true';
+            setTimeout(() => {
+              this.replaceMainImage(product, imageSrc, imageAlt);
+            }, 300);
+          }
+        });
+      }
     }
 
     hideImageOverlay(product) {
-      const imageContainer =
-        product.querySelector('.progressive-img-blur');
-      if (!imageContainer) return;
-      const overlay = imageContainer.querySelector('.blur-img.top');
+      const imageWrapper = product.querySelector('.collection-image-wrapper');
+      if (!imageWrapper) return;
+      const overlay = imageWrapper.querySelector('.collection-overlay-image');
       if (overlay && !overlay.dataset.permanent) {
         overlay.style.opacity = '0';
         setTimeout(() => {
@@ -610,34 +497,23 @@ export async function initCollections(nsCtx) {
     }
 
     replaceMainImage(product, imageSrc, imageAlt) {
-      const mainImg = product.querySelector('.blur-img:not(.top) img');
-      const progressiveBlur = product.querySelector(
-        '.blur-img:not(.top) .progressive-blur'
-      );
+      const mainImg = product.querySelector('.collection-main-image');
       if (mainImg) {
         mainImg.src = imageSrc;
         mainImg.alt = imageAlt;
       }
-      if (progressiveBlur) {
-        progressiveBlur.style.setProperty('--bg', `url('${imageSrc}')`);
-      }
     }
 
     restoreOriginalImage(product) {
-      const mainImg = product.querySelector('.blur-img:not(.top) img');
-      const progressiveBlur = product.querySelector(
-        '.blur-img:not(.top) .progressive-blur'
-      );
-      const permanentOverlay = product.querySelector(
-        '.blur-img.top[data-permanent]'
-      );
-      if (!mainImg || !progressiveBlur) return;
+      const mainImg = product.querySelector('.collection-main-image');
+      const permanentOverlay = product.querySelector('.collection-overlay-image[data-permanent]');
+      
+      if (!mainImg) return;
 
       const originalSrc = mainImg.dataset.originalSrc;
       const originalAlt = mainImg.dataset.originalAlt;
-      const originalBg = progressiveBlur.dataset.originalBg;
 
-      if (originalSrc && originalBg) {
+      if (originalSrc) {
         if (permanentOverlay) {
           permanentOverlay.style.opacity = '0';
           setTimeout(() => {
@@ -653,11 +529,6 @@ export async function initCollections(nsCtx) {
       }
     }
 
-    animateItemsIn() {
-      // This method is now called directly in renderItems
-      // Keeping it here for consistency but it's a no-op
-      return;
-    }
 
     initImageHover() {
       const currentProducts = document.querySelectorAll(

@@ -2,13 +2,13 @@
 import { initTaxi } from './taxi.js';
 
 // Version tracking
-const VERSION = '2.2.1';
+const VERSION = '3.0.0';
 const DEPLOY_TIME = new Date().toISOString();
 
 console.log(`%c🚕 Versatile Site v${VERSION} - Powered by Taxi.js`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
 console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold;');
 console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
-console.log(`%c🎉 v2.2.1: FIXED - Initialize content BEFORE transitions (morph has images!)`, 'color: #ff6600; font-weight: bold;');
+console.log(`%c🎉 v3.0.0: PERFORMANCE OVERHAUL - Removed heavy animations, progressive blur, simplified transitions!`, 'color: #ff6600; font-weight: bold;');
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

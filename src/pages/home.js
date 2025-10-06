@@ -155,14 +155,7 @@ export async function initHome(nsCtx) {
   function introFirstSlide(sw) {
     if (introPlayed || prefersReduced) return;
     const active = sw.slides[sw.activeIndex];
-    const img = active?.querySelector('.slider-img');
-    if (img) {
-      gsap.fromTo(
-        img,
-        { scale: 1.12 },
-        { scale: 1, duration: 1.0, ease: 'power2.out' }
-      );
-    }
+    // No intro animation - just show the text
     animateTextIn(active);
     introPlayed = true;
   }

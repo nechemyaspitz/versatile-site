@@ -9,7 +9,6 @@ import createProductRenderer from './renderers/ProductRenderer.js';
 
 // Import transition factories
 import createDefaultTransition from './transitions/DefaultTransition.js';
-import createMorphTransition from './transitions/MorphTransition.js';
 
 export function initTaxi() {
   console.log('🚕 Taxi.js initializing...');
@@ -26,7 +25,6 @@ export function initTaxi() {
   const CollectionsRenderer = createCollectionsRenderer();
   const ProductRenderer = createProductRenderer();
   const DefaultTransition = createDefaultTransition();
-  const MorphTransition = createMorphTransition();
   
   // Initialize Taxi (using global taxi from CDN - lowercase!)
   const taxiInstance = new window.taxi.Core({
@@ -42,10 +40,9 @@ export function initTaxi() {
     // Enable built-in prefetch on hover/focus
     enablePrefetch: true,
     
-    // Transitions
+    // Transitions - simple fade for all
     transitions: {
       default: DefaultTransition,
-      morph: MorphTransition,
     },
     
     // Renderers (page-specific logic)
@@ -56,15 +53,6 @@ export function initTaxi() {
       product: ProductRenderer,
     },
   });
-  
-  // Set up routing for morph transitions
-  // Collections → Product (forward morph)
-  taxiInstance.addRoute('/collections', '/collections/.*', 'morph');
-  
-  // Product → Collections via back button is handled automatically by MorphTransition
-  // checking for trigger === 'popstate'
-  
-  console.log('✅ Routing configured for morph transitions');
   
   // Global hooks using official event names
   taxiInstance.on('NAVIGATE_IN', ({ to }) => {
