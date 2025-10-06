@@ -25,18 +25,21 @@ export default function createCollectionsRenderer() {
      */
     async onEnter() {
       console.log('🛍️ Collections page entering');
+      console.log('📍 Current URL:', window.location.href);
+      console.log('📍 Current scroll:', window.scrollY);
       
       // Check if we have a snapshot (indicates back button navigation)
       const hasSnapshot = restoreCollectionsSnapshotIfPossible();
       
       if (hasSnapshot) {
         console.log('✅ Snapshot restored successfully (back button)');
-        // Scroll position is restored in NAVIGATE_END hook
+        console.log('📍 Scroll after restore:', window.scrollY);
+        // Scroll position is restored inside restoreCollectionsSnapshotIfPossible
         return; // Don't re-initialize
       }
       
       // Fresh initialization (first load or no snapshot)
-      console.log('🛍️ Collections: Initializing filter...');
+      console.log('🆕 No snapshot, initializing fresh...');
       this.filterInstance = await initCollections();
       console.log('✅ Collections filter initialized');
     }

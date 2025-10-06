@@ -33,21 +33,29 @@ export default function createDefaultTransition() {
      * @param {{ to: HTMLElement, trigger: string|HTMLElement|false, done: Function }} props
      */
     onEnter({ to, trigger, done }) {
-      console.log('📥 Default transition: entering', { trigger });
+      console.log('📥 Default transition: entering', { 
+        trigger, 
+        triggerType: typeof trigger,
+        isPopstate: trigger === 'popstate',
+        currentScroll: window.scrollY 
+      });
       
       if (!window.gsap) {
         done();
         return;
       }
       
+      // Start hidden FIRST (before any scrolling)
+      gsap.set(to, { opacity: 0 });
+      
       // Scroll to top immediately (while page is invisible)
       // Skip if back button (scroll will be restored by snapshot)
       if (trigger !== 'popstate') {
+        console.log('🔝 Scrolling to top (not back button)');
         window.scrollTo(0, 0);
+      } else {
+        console.log('⬅️ Back button detected, NOT scrolling to top');
       }
-      
-      // Start hidden
-      gsap.set(to, { opacity: 0 });
       
       // Fade in
       gsap.to(to, {
