@@ -5,18 +5,39 @@ const NAV_CLOSE_SEL = '[data-navigation-toggle="close"]';
 const NAV_LINK_SEL =
   '[data-navigation] a[href]:not([target="_blank"]):not([data-no-barba])';
 
+// Store scroll position for restoration
+let scrollPosition = 0;
+
 function navEl() {
   return document.querySelector(NAV_STATUS_SEL);
 }
 
 export function openNav() {
   const el = navEl();
-  if (el) el.setAttribute('data-navigation-status', 'active');
+  if (el) {
+    el.setAttribute('data-navigation-status', 'active');
+    
+    // Lock body scroll and preserve scroll position
+    scrollPosition = window.pageYOffset;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollPosition}px`;
+    document.body.style.width = '100%';
+  }
 }
 
 export function closeNav() {
   const el = navEl();
-  if (el) el.setAttribute('data-navigation-status', 'not-active');
+  if (el) {
+    el.setAttribute('data-navigation-status', 'not-active');
+    
+    // Unlock body scroll and restore scroll position
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollPosition);
+  }
 }
 
 function toggleNav() {

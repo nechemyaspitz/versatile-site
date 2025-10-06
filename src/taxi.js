@@ -1,5 +1,6 @@
 // Taxi.js initialization - MUCH simpler than Barba!
 import { reinitWebflow } from './utils/webflow.js';
+import { closeNav, updateActiveNavLinks, initScalingHamburgerNavigation } from './components/navigation.js';
 
 // Import renderer factories
 import createDefaultRenderer from './renderers/DefaultRenderer.js';
@@ -54,6 +55,10 @@ export function initTaxi() {
     },
   });
   
+  // Initialize navigation (hamburger menu)
+  initScalingHamburgerNavigation();
+  updateActiveNavLinks();
+  
   // Global hooks using official event names
   taxiInstance.on('NAVIGATE_IN', ({ to }) => {
     console.log('📥 NAVIGATE_IN:', to.page?.dataset?.taxiView || 'unknown');
@@ -61,10 +66,15 @@ export function initTaxi() {
   
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
     console.log('📤 NAVIGATE_OUT:', from.page?.dataset?.taxiView || 'unknown');
+    // Close navigation when leaving page
+    closeNav();
   });
 
   taxiInstance.on('NAVIGATE_END', ({ to, trigger }) => {
     console.log('✅ NAVIGATE_END:', to.page?.dataset?.taxiView || 'unknown', { trigger });
+    
+    // Update active navigation links based on current page
+    updateActiveNavLinks(window.location.pathname);
     
     // Re-initialize Webflow interactions after every navigation
     reinitWebflow();
