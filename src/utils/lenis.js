@@ -29,6 +29,15 @@ export function initLenis() {
     touchMultiplier: 2,
     infinite: false,
     autoResize: true,
+    // Prevent Lenis from affecting dropdowns and select elements
+    prevent: (node) => {
+      return (
+        node.classList.contains('nice-select') ||
+        node.classList.contains('nice-select-dropdown') ||
+        node.closest('.nice-select') ||
+        node.tagName === 'SELECT'
+      );
+    },
   });
 
   // Start the animation loop
@@ -110,5 +119,31 @@ export function resetScroll() {
     lenisInstance.scrollTo(0, { immediate: true, force: true });
   }
   window.scrollTo(0, 0);
+}
+
+/**
+ * Resize/update Lenis (call when content changes, like infinite scroll)
+ */
+export function updateLenis() {
+  if (lenisInstance) {
+    lenisInstance.resize();
+    console.log('🔄 Lenis resized/updated');
+  }
+}
+
+/**
+ * Recalculate Lenis dimensions (for dynamic content)
+ */
+export function recalculateLenis() {
+  if (lenisInstance) {
+    // Force Lenis to recalculate page dimensions
+    lenisInstance.resize();
+    // Small delay to ensure DOM has updated
+    setTimeout(() => {
+      if (lenisInstance) {
+        lenisInstance.resize();
+      }
+    }, 100);
+  }
 }
 
