@@ -1,24 +1,19 @@
 // Main entry point - Taxi.js SPA (SIMPLER & FASTER!)
 import { initTaxi } from './taxi.js';
-import { initLenis } from './utils/lenis.js';
 
 // Version tracking
-const VERSION = '3.1.0';
+const VERSION = '3.0.0';
 const DEPLOY_TIME = new Date().toISOString();
 
-console.log(`%c🚕 Versatile Site v${VERSION} - Powered by Taxi.js + Lenis`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
+console.log(`%c🚕 Versatile Site v${VERSION} - Powered by Taxi.js`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
 console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold;');
 console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
-console.log(`%c🎉 v3.1.0: Added Lenis smooth scrolling!`, 'color: #ff6600; font-weight: bold;');
+console.log(`%c🎉 v3.0.0: PERFORMANCE OVERHAUL - Removed heavy animations, progressive blur, simplified transitions!`, 'color: #ff6600; font-weight: bold;');
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c🎯 Initializing application...', 'color: #ff00ff;');
+  console.log('%c🎯 Initializing Taxi.js...', 'color: #ff00ff;');
   
-  // Initialize Lenis smooth scrolling
-  const lenis = initLenis();
-  
-  // Initialize Taxi.js
   const taxi = initTaxi();
   
   if (taxi) {
@@ -29,5 +24,4 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Expose for debugging
   window.taxi = taxi;
-  window.lenis = lenis;
 });

@@ -2,7 +2,6 @@
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 import { setupFilterListeners } from '../components/filterDrawer.js';
-import { recalculateLenis } from '../utils/lenis.js';
 
 export async function initCollections(nsCtx) {
   // GSAP for filter drawer, Nice Select assets
@@ -212,9 +211,6 @@ export async function initCollections(nsCtx) {
       // Single DOM append (batch write) - no animations!
       this.productContainer.appendChild(fragment);
       
-      // Update Lenis to recognize new content height
-      recalculateLenis();
-      
       // Initialize features immediately
       requestIdleCallback(() => {
         this.initImageHover();
@@ -232,9 +228,6 @@ export async function initCollections(nsCtx) {
       
       // Batch DOM append - no animations!
       this.productContainer.appendChild(fragment);
-      
-      // Update Lenis to recognize new content (critical for infinite scroll!)
-      recalculateLenis();
       
       // Initialize features for new items
       requestIdleCallback(() => {
