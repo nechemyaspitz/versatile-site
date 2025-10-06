@@ -251,8 +251,8 @@ export async function initCollections(nsCtx) {
       productItem.innerHTML = `
         <div class="collection_grid-item" data-base-url="${baseUrl}" data-hover-initialized="false">
           <a href="${baseUrl}" class="collection_image-cover">
-            <img src="${mainImage}" loading="lazy" alt="${productName}" class="thumbnail-cover-img" data-original-src="${mainImage}">
-            <div class="progressive-img-blur">
+            <img src="${mainImage}" loading="lazy" alt="${productName}" class="img-2" data-original-src="${mainImage}">
+            <div class="progressive-blur">
               <div class="blur"></div>
               <div class="blur"></div>
               <div class="blur"></div>
