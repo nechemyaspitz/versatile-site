@@ -52,15 +52,11 @@ export default function createCollectionsRenderer() {
     }
     
     /**
-     * Leave: Save snapshot before exiting
+     * Leave: Cleanup (snapshot already saved in NAVIGATE_OUT)
      */
     onLeave() {
       console.log('👋 Collections page leaving');
-      
-      // Always save snapshot when leaving collections page
-      // (Will be restored if user clicks back button)
-      console.log('💾 Saving collections snapshot...');
-      saveCollectionsSnapshot(window.location.href);
+      // Note: Snapshot is saved in NAVIGATE_OUT hook (before any scrolling)
     }
     
     /**

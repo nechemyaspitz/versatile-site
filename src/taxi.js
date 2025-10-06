@@ -1,6 +1,7 @@
 // Taxi.js initialization - MUCH simpler than Barba!
 import { reinitWebflow } from './utils/webflow.js';
 import { closeNav, updateActiveNavLinks, initScalingHamburgerNavigation } from './components/navigation.js';
+import { saveCollectionsSnapshot } from './core/state.js';
 
 // Import renderer factories
 import createDefaultRenderer from './renderers/DefaultRenderer.js';
@@ -70,7 +71,15 @@ export function initTaxi() {
   });
   
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
-    console.log('📤 NAVIGATE_OUT:', from.page?.dataset?.taxiView || 'unknown');
+    const pageType = from.page?.dataset?.taxiView || 'unknown';
+    console.log('📤 NAVIGATE_OUT:', pageType);
+    
+    // Save collections snapshot IMMEDIATELY (before any scrolling)
+    if (pageType === 'collections') {
+      const currentScrollY = window.scrollY || window.pageYOffset;
+      console.log(`💾 [EARLY SAVE] Saving collections snapshot at scroll position: ${currentScrollY}px`);
+      saveCollectionsSnapshot(window.location.href);
+    }
     
     // Close navigation when leaving page
     closeNav();
