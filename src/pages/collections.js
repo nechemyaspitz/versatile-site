@@ -240,22 +240,27 @@ export async function initCollections(nsCtx) {
     createProductElement(item) {
       const productName =
         item.name || item['actual-product-name'] || 'Untitled';
-      const mainImage = item.image?.url || null;
+      const mainImage = item.image?.url || 'https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg';
       const productSlug = item.slug || item.webflow_item_id || '';
       const baseUrl = `/collections/${productSlug}`;
 
       const productItem = document.createElement('div');
       productItem.setAttribute('role', 'listitem');
       productItem.className = 'w-dyn-item';
-      // Don't set any inline opacity - let GSAP control it completely
 
       productItem.innerHTML = `
         <div class="collection_grid-item" data-base-url="${baseUrl}" data-hover-initialized="false">
           <a href="${baseUrl}" class="collection_image-cover">
-            <div class="collection-image-wrapper">
-              ${this.createImageHTML(mainImage, productName)}
+            <img src="${mainImage}" loading="lazy" alt="${productName}" class="thumbnail-cover-img" data-original-src="${mainImage}">
+            <div class="progressive-img-blur">
+              <div class="blur"></div>
+              <div class="blur"></div>
+              <div class="blur"></div>
+              <div class="blur"></div>
+              <div class="blur"></div>
             </div>
           </a>
+          <div class="gradient-cover"></div>
           <div class="collection-overlay">
             <a href="${baseUrl}" class="collection_details">
               <div class="truncate">${productName}</div>
@@ -268,24 +273,6 @@ export async function initCollections(nsCtx) {
       return productItem;
     }
 
-    createImageHTML(imageSrc, imageAlt) {
-      const safeImageSrc =
-        imageSrc ||
-        'https://cdn.prod.website-files.com/plugins/Basic/assets/placeholder.60f9b1840c.svg';
-      const safeImageAlt = imageAlt || 'product-image';
-      
-      // Simple, performant image - no heavy blur layers
-      return `
-        <img 
-          src="${safeImageSrc}" 
-          alt="${safeImageAlt}" 
-          loading="lazy"
-          class="collection-main-image"
-          data-original-src="${safeImageSrc}" 
-          data-original-alt="${safeImageAlt}"
-        >
-      `;
-    }
 
     createProductMetaHTML(item) {
       const thickness = item.thickness || '';
@@ -445,28 +432,31 @@ export async function initCollections(nsCtx) {
       return `
         <img 
           src="${imageSrc}" 
-          alt="${imageAlt}"
+          alt="${imageAlt}" 
           loading="lazy"
-          class="collection-overlay-image"
+          class="thumbnail-cover-img overlay-img"
           style="opacity: 0; transition: opacity 0.3s ease;"
         >
       `;
     }
 
     showImageOverlay(product, imageSrc, imageAlt, isPermanent = false) {
-      const imageWrapper = product.querySelector('.collection-image-wrapper');
-      if (!imageWrapper) return;
+      const imageContainer = product.querySelector('.collection_image-cover');
+      if (!imageContainer) return;
 
-      const existingOverlay = imageWrapper.querySelector('.collection-overlay-image');
+      const existingOverlay = imageContainer.querySelector('.overlay-img');
       if (existingOverlay) {
         existingOverlay.style.opacity = '0';
-        setTimeout(() => existingOverlay.remove(), 300);
+        setTimeout(() => existingOverlay.remove(), 10);
       }
 
       const overlayHTML = this.createImageOverlay(imageSrc, imageAlt);
-      imageWrapper.insertAdjacentHTML('beforeend', overlayHTML);
+      const mainImg = imageContainer.querySelector('.thumbnail-cover-img');
+      if (!mainImg) return;
       
-      const newOverlay = imageWrapper.querySelector('.collection-overlay-image');
+      mainImg.insertAdjacentHTML('afterend', overlayHTML);
+      const newOverlay = imageContainer.querySelector('.overlay-img');
+      
       if (newOverlay) {
         requestAnimationFrame(() => {
           newOverlay.style.opacity = '1';
@@ -482,9 +472,9 @@ export async function initCollections(nsCtx) {
     }
 
     hideImageOverlay(product) {
-      const imageWrapper = product.querySelector('.collection-image-wrapper');
-      if (!imageWrapper) return;
-      const overlay = imageWrapper.querySelector('.collection-overlay-image');
+      const imageContainer = product.querySelector('.collection_image-cover');
+      if (!imageContainer) return;
+      const overlay = imageContainer.querySelector('.overlay-img');
       if (overlay && !overlay.dataset.permanent) {
         overlay.style.opacity = '0';
         setTimeout(() => {
@@ -497,7 +487,7 @@ export async function initCollections(nsCtx) {
     }
 
     replaceMainImage(product, imageSrc, imageAlt) {
-      const mainImg = product.querySelector('.collection-main-image');
+      const mainImg = product.querySelector('.thumbnail-cover-img:not(.overlay-img)');
       if (mainImg) {
         mainImg.src = imageSrc;
         mainImg.alt = imageAlt;
@@ -505,13 +495,12 @@ export async function initCollections(nsCtx) {
     }
 
     restoreOriginalImage(product) {
-      const mainImg = product.querySelector('.collection-main-image');
-      const permanentOverlay = product.querySelector('.collection-overlay-image[data-permanent]');
-      
+      const mainImg = product.querySelector('.thumbnail-cover-img:not(.overlay-img)');
+      const permanentOverlay = product.querySelector('.overlay-img[data-permanent]');
       if (!mainImg) return;
 
       const originalSrc = mainImg.dataset.originalSrc;
-      const originalAlt = mainImg.dataset.originalAlt;
+      const originalAlt = mainImg.alt;
 
       if (originalSrc) {
         if (permanentOverlay) {
