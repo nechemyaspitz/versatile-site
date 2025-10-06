@@ -9,6 +9,79 @@ const safeRequestIdleCallback = window.requestIdleCallback || function(callback,
   return setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 50 }), 1);
 };
 
+// Setup filter accordion interactions
+function setupFilterAccordions() {
+  if (!window.gsap) return;
+  
+  const filterHeaders = document.querySelectorAll('.filter-header');
+  
+  filterHeaders.forEach((header) => {
+    // Skip if already initialized
+    if (header.dataset.accordionInit === 'true') return;
+    
+    const filterGroup = header.closest('.filter-group');
+    const icon = header.querySelector('.icon-sm');
+    
+    if (!filterGroup || !icon) return;
+    
+    // Create timeline for this specific accordion (paused initially)
+    const tl = gsap.timeline({ 
+      paused: true,
+      onComplete: () => { header._isOpen = true; },
+      onReverseComplete: () => { header._isOpen = false; }
+    });
+    
+    // Action 1: Animate filter group height
+    tl.fromTo(filterGroup, 
+      { height: '2em' },
+      { 
+        height: 'auto',
+        duration: 0.25,
+        ease: 'power3.inOut'
+      },
+      0 // Start at time 0
+    );
+    
+    // Action 2: Animate icon rotation (in parallel)
+    tl.fromTo(icon,
+      { rotation: -90 },
+      { 
+        rotation: 0,
+        duration: 0.25,
+        ease: 'power3.inOut'
+      },
+      0 // Start at time 0 (parallel with action 1)
+    );
+    
+    // Store timeline on the header element
+    header._timeline = tl;
+    header._isOpen = false;
+    
+    // Click handler with toggle and mid-animation reversal support
+    header.addEventListener('click', () => {
+      // Check if animation is currently running
+      if (tl.isActive()) {
+        // Reverse from current position
+        tl.reversed(!tl.reversed());
+      } else {
+        // Not playing, toggle based on current state
+        if (header._isOpen) {
+          // Close: reverse the animation
+          tl.reverse();
+          header._isOpen = false;
+        } else {
+          // Open: play the animation forward
+          tl.play();
+          header._isOpen = true;
+        }
+      }
+    });
+    
+    // Mark as initialized
+    header.dataset.accordionInit = 'true';
+  });
+}
+
 export async function initCollections(nsCtx) {
   // GSAP for filter drawer, Nice Select assets
   if (!window.gsap) {
@@ -35,6 +108,9 @@ export async function initCollections(nsCtx) {
 
   // Filter drawer listeners (idempotent)
   setupFilterListeners();
+  
+  // Filter accordion interactions
+  setupFilterAccordions();
 
   // InfiniteScrollProductFilter class with response caching
   class InfiniteScrollProductFilter {
