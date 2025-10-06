@@ -48,14 +48,37 @@ function toggleNav() {
 }
 
 export function updateActiveNavLinks(pathname = location.pathname) {
-  const links = document.querySelectorAll(NAV_LINK_SEL);
+  // Try primary selector first (with data-navigation wrapper)
+  let links = document.querySelectorAll(NAV_LINK_SEL);
+  
+  // Fallback: if no links found, try broader selector (all nav links in hamburger menu)
+  if (links.length === 0) {
+    links = document.querySelectorAll('.hamburger-nav a[href]:not([target="_blank"])');
+  }
+  
+  // Another fallback: any link with taxi-ignore=false or no taxi-ignore
+  if (links.length === 0) {
+    links = document.querySelectorAll('nav a[href]:not([target="_blank"]):not([data-taxi-ignore])');
+  }
+  
+  console.log(`🔗 Updating ${links.length} navigation links for path: ${pathname}`);
+  
   links.forEach((a) => {
     const href = a.getAttribute('href') || '';
-    const url = new URL(href, location.origin);
-    const isActive = url.pathname === pathname;
-    a.classList.toggle('w--current', isActive);
-    if (isActive) a.setAttribute('aria-current', 'page');
-    else a.removeAttribute('aria-current');
+    try {
+      const url = new URL(href, location.origin);
+      const isActive = url.pathname === pathname;
+      a.classList.toggle('w--current', isActive);
+      if (isActive) {
+        a.setAttribute('aria-current', 'page');
+        console.log(`✅ Active link: ${href}`);
+      } else {
+        a.removeAttribute('aria-current');
+      }
+    } catch (e) {
+      // Invalid URL, skip
+      console.warn(`⚠️ Invalid URL: ${href}`);
+    }
   });
 }
 
