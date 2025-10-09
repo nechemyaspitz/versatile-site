@@ -1,7 +1,6 @@
 // Taxi.js initialization
 import { reinitWebflow } from './utils/webflow.js';
 import { closeNav, updateActiveNavLinks, initScalingHamburgerNavigation } from './components/navigation.js';
-import { saveCollectionsSnapshot } from './core/state.js';
 
 // Import renderer factories
 import createDefaultRenderer from './renderers/DefaultRenderer.js';
@@ -56,18 +55,14 @@ export function initTaxi() {
   
   // Global hooks
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
-    const pageType = from.page?.dataset?.taxiView || 'unknown';
-    
-    // Save collections snapshot before leaving
-    if (pageType === 'collections') {
-      saveCollectionsSnapshot(window.location.href);
-    }
-    
     // Close navigation when leaving page (skip scroll restore during navigation)
     closeNav(true);
   });
 
   taxiInstance.on('NAVIGATE_END', ({ to }) => {
+    // Always scroll to top on any navigation
+    window.scrollTo(0, 0);
+    
     // Update active navigation links
     updateActiveNavLinks(window.location.pathname);
     
