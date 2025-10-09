@@ -1141,27 +1141,54 @@ export async function initCollections(nsCtx) {
           this.renderItems(this._allLoadedItems);
           this.updateResultsCounter(this.totalItems);
           
-          // FIX #3: Scroll to clicked product with Lenis (better timing + method)
-          if (this._clickedProductId && window.lenis) {
-            // Wait for DOM + images to settle, then scroll
-            setTimeout(() => {
-              // Force Lenis to recalculate before scrolling
-              window.lenis.resize();
-              
-              const productEl = document.querySelector(`[data-product-id="${this._clickedProductId}"]`);
-              if (productEl) {
-                console.log('🎯 Scrolling to clicked product:', this._clickedProductId);
-                
-                // Use Lenis scrollTo with element (like the example)
-                window.lenis.scrollTo(productEl, {
-                  duration: 1.2,
-                  offset: -100,
-                  easing: (x) => (x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2)
+          // FIX #3: Scroll to clicked product with Lenis
+          if (this._clickedProductId) {
+            console.log('🔍 DEBUG: Attempting scroll restoration...');
+            console.log('  - Clicked product ID:', this._clickedProductId);
+            console.log('  - Lenis available?', !!window.lenis);
+            console.log('  - Current scroll:', window.scrollY);
+            
+            if (window.lenis) {
+              // Use requestAnimationFrame for better timing with render cycle
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  // Wait for 2 frames, then try to scroll
+                  setTimeout(() => {
+                    // Force Lenis to recalculate before scrolling
+                    window.lenis.resize();
+                    
+                    const productEl = document.querySelector(`[data-product-id="${this._clickedProductId}"]`);
+                    console.log('  - Product element found?', !!productEl);
+                    
+                    if (productEl) {
+                      console.log('🎯 Scrolling to clicked product:', this._clickedProductId);
+                      console.log('  - Element position:', productEl.getBoundingClientRect().top);
+                      
+                      // Use Lenis scrollTo with element (like the example)
+                      window.lenis.scrollTo(productEl, {
+                        duration: 1.2,
+                        offset: -100,
+                        easing: (x) => (x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2),
+                        onComplete: () => {
+                          console.log('✅ Scroll complete! Final position:', window.scrollY);
+                        }
+                      });
+                    } else {
+                      console.warn('⚠️ Product element not found for scroll:', this._clickedProductId);
+                      console.warn('  - Available product IDs:', 
+                        Array.from(document.querySelectorAll('[data-product-id]'))
+                          .map(el => el.dataset.productId)
+                          .slice(0, 5)
+                      );
+                    }
+                  }, 800); // Even longer delay for images
                 });
-              } else {
-                console.warn('⚠️ Product element not found for scroll:', this._clickedProductId);
-              }
-            }, 500); // Longer delay for images to load
+              });
+            } else {
+              console.warn('⚠️ Lenis not available for scroll restoration');
+            }
+          } else {
+            console.log('ℹ️ No clicked product to scroll to');
           }
           
           return true;
@@ -1205,17 +1232,30 @@ export async function initCollections(nsCtx) {
       // Track clicks on product links
       const productLinks = this.productContainer.querySelectorAll('.collection_image-cover, .collection_details');
       
+      console.log(`🔧 Setting up click tracking for ${productLinks.length} product links`);
+      
       productLinks.forEach((link) => {
         link.addEventListener('click', (e) => {
           // Get product ID from the parent grid item
           const gridItem = e.currentTarget.closest('.collection_grid-item');
           if (gridItem) {
-            const productId = gridItem.dataset.baseUrl || gridItem.querySelector('a')?.getAttribute('href');
+            // Use data-product-id attribute (matches what we query for)
+            const productId = gridItem.dataset.productId || gridItem.dataset.baseUrl;
+            console.log('🖱️ Product clicked!');
+            console.log('  - Grid item:', gridItem);
+            console.log('  - Product ID from data-product-id:', gridItem.dataset.productId);
+            console.log('  - Product ID from data-base-url:', gridItem.dataset.baseUrl);
+            console.log('  - Final product ID:', productId);
+            
             if (productId) {
               this._clickedProductId = productId;
               this.saveToSession();
-              console.log('🖱️ Clicked product:', productId);
+              console.log('✅ Saved clicked product to session:', productId);
+            } else {
+              console.warn('⚠️ Could not extract product ID from clicked element');
             }
+          } else {
+            console.warn('⚠️ Could not find grid item parent');
           }
         });
       });
