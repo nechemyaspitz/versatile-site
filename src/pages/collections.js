@@ -128,7 +128,7 @@ export async function initCollections(nsCtx) {
       this.activeFilters = {};
       this.currentSort = 'recommended';
       this.currentPage = 1;
-      this.itemsPerPage = 30;
+      this.itemsPerPage = 10; // Testing: 10 items per page for easier testing
       this.isLoading = false;
       this.hasMorePages = true;
       this.totalItems = 0;
