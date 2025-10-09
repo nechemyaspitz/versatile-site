@@ -308,9 +308,12 @@ export async function initCollections(nsCtx) {
       // Single DOM append (batch write) - no animations!
       this.productContainer.appendChild(fragment);
       
-      // CRITICAL: Tell Lenis page height changed (prevents jittery scroll)
+      // FIX #4: Immediate Lenis resize + continued monitoring
       if (window.lenis) {
         window.lenis.resize();
+        // Resize again after a moment (for any delayed renders)
+        setTimeout(() => window.lenis.resize(), 50);
+        setTimeout(() => window.lenis.resize(), 200);
       }
       
       // Initialize features immediately
@@ -338,9 +341,13 @@ export async function initCollections(nsCtx) {
       // Batch DOM append - no animations!
       this.productContainer.appendChild(fragment);
       
-      // CRITICAL: Tell Lenis page height changed (prevents jittery scroll)
+      // FIX #4: Aggressive Lenis resize after adding items
       if (window.lenis) {
         window.lenis.resize();
+        // Multiple resize calls for smooth scroll
+        setTimeout(() => window.lenis.resize(), 50);
+        setTimeout(() => window.lenis.resize(), 200);
+        setTimeout(() => window.lenis.resize(), 500);
       }
       
       // Initialize features for new items
@@ -1088,39 +1095,73 @@ export async function initCollections(nsCtx) {
         
         const state = JSON.parse(saved);
         const now = Date.now();
+        const timeSinceCache = now - state.timestamp;
         
-        // Check if cache is still fresh (5 minutes)
-        if (now - state.timestamp > 300000) {
-          sessionStorage.removeItem('collections_state');
-          return false;
+        // FIX #1: Smart cache expiration
+        // Detect if this is a page refresh vs back button
+        const isPageRefresh = window.performance && 
+          (performance.navigation?.type === 1 || performance.getEntriesByType('navigation')[0]?.type === 'reload');
+        
+        if (isPageRefresh) {
+          // On refresh: only restore if <30 seconds old
+          if (timeSinceCache > 30000) {
+            console.log('🔄 Page refresh + cache expired (>30s), fetching fresh data');
+            sessionStorage.removeItem('collections_state');
+            return false;
+          }
+          console.log('🔄 Page refresh but cache is fresh (<30s), restoring');
+        } else {
+          // On navigation (back button): restore if <10 minutes old
+          if (timeSinceCache > 600000) {
+            console.log('⏰ Cache expired (>10min), fetching fresh data');
+            sessionStorage.removeItem('collections_state');
+            return false;
+          }
+          console.log('⬅️ Back button navigation, restoring from cache');
         }
         
-        // Restore state
+        // FIX #2: Restore ALL state including pagination
         this._allLoadedItems = state.allLoadedItems || [];
         this.activeFilters = state.activeFilters || {};
         this.currentSort = state.currentSort || 'recommended';
         this.currentPage = state.currentPage || 1;
         this.totalItems = state.totalItems || 0;
+        this.hasMorePages = state.hasMorePages !== undefined ? state.hasMorePages : true;
         this._clickedProductId = state.clickedProductId || null;
+        
+        console.log('📦 Restored state:', {
+          items: this._allLoadedItems.length,
+          totalItems: this.totalItems,
+          hasMorePages: this.hasMorePages,
+          currentPage: this.currentPage
+        });
         
         // Render all items
         if (this._allLoadedItems.length > 0) {
           this.renderItems(this._allLoadedItems);
           this.updateResultsCounter(this.totalItems);
           
-          // Scroll to clicked product with Lenis (smooth!)
+          // FIX #3: Scroll to clicked product with Lenis (better timing + method)
           if (this._clickedProductId && window.lenis) {
+            // Wait for DOM + images to settle, then scroll
             setTimeout(() => {
+              // Force Lenis to recalculate before scrolling
+              window.lenis.resize();
+              
               const productEl = document.querySelector(`[data-product-id="${this._clickedProductId}"]`);
               if (productEl) {
                 console.log('🎯 Scrolling to clicked product:', this._clickedProductId);
+                
+                // Use Lenis scrollTo with element (like the example)
                 window.lenis.scrollTo(productEl, {
                   duration: 1.2,
                   offset: -100,
                   easing: (x) => (x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2)
                 });
+              } else {
+                console.warn('⚠️ Product element not found for scroll:', this._clickedProductId);
               }
-            }, 100); // Small delay to ensure DOM is ready
+            }, 500); // Longer delay for images to load
           }
           
           return true;
@@ -1142,6 +1183,7 @@ export async function initCollections(nsCtx) {
           currentSort: this.currentSort,
           currentPage: this.currentPage,
           totalItems: this.totalItems,
+          hasMorePages: this.hasMorePages, // FIX #2: Save pagination state
           clickedProductId: this._clickedProductId,
           timestamp: Date.now()
         };
@@ -1149,6 +1191,8 @@ export async function initCollections(nsCtx) {
         sessionStorage.setItem('collections_state', JSON.stringify(state));
         console.log('💾 Saved to session:', {
           items: this._allLoadedItems.length,
+          totalItems: this.totalItems,
+          hasMorePages: this.hasMorePages,
           page: this.currentPage,
           clickedProduct: this._clickedProductId
         });
@@ -1178,19 +1222,29 @@ export async function initCollections(nsCtx) {
     }
     
     waitForImagesToLoad() {
-      // Fix jittery scroll: Tell Lenis to resize after images load
+      // FIX #4: Aggressive Lenis resize to prevent jittery scroll
       const images = this.productContainer.querySelectorAll('img');
       let loadedCount = 0;
       const totalImages = images.length;
       
-      if (totalImages === 0) return;
+      if (totalImages === 0) {
+        // No images, but still resize after a moment
+        setTimeout(() => {
+          if (window.lenis) window.lenis.resize();
+        }, 100);
+        return;
+      }
       
       const checkAllLoaded = () => {
         loadedCount++;
-        if (loadedCount === totalImages && window.lenis) {
-          // All images loaded - recalculate scroll height
+        
+        // Resize on EVERY image load (aggressive but smooth)
+        if (window.lenis) {
           window.lenis.resize();
-          console.log('📸 All images loaded, Lenis resized');
+        }
+        
+        if (loadedCount === totalImages) {
+          console.log('📸 All images loaded, Lenis fully resized');
         }
       };
       
