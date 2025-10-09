@@ -25,18 +25,23 @@ export function openNav() {
   }
 }
 
-export function closeNav() {
+export function closeNav(skipScrollRestore = false) {
   const el = navEl();
   if (el) {
     el.setAttribute('data-navigation-status', 'not-active');
     
-    // CRITICAL FIX: Only restore scroll if nav was actually open!
+    // Only restore scroll if nav was actually open AND we're not navigating
     if (navIsOpen) {
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
-      window.scrollTo(0, scrollPosition);
+      
+      // Only restore scroll if NOT navigating (e.g., ESC key, close button)
+      if (!skipScrollRestore) {
+        window.scrollTo(0, scrollPosition);
+      }
+      
       navIsOpen = false;
     }
   }
@@ -99,6 +104,6 @@ export function initScalingHamburgerNavigation() {
   );
 
   document.querySelectorAll(NAV_LINK_SEL).forEach((a) => {
-    a.addEventListener('click', () => closeNav(), { signal: ac.signal });
+    a.addEventListener('click', () => closeNav(true), { signal: ac.signal });
   });
 }

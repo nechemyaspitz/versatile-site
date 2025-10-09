@@ -63,8 +63,8 @@ export function initTaxi() {
       saveCollectionsSnapshot(window.location.href);
     }
     
-    // Close navigation when leaving page
-    closeNav();
+    // Close navigation when leaving page (skip scroll restore during navigation)
+    closeNav(true);
   });
 
   taxiInstance.on('NAVIGATE_END', ({ to }) => {
