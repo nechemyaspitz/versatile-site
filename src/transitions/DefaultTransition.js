@@ -24,7 +24,17 @@ export default function createDefaultTransition() {
         opacity: 0,
         duration: 0.3,
         ease: 'power2.out',
-        onComplete: done,
+        onComplete: () => {
+          // Scroll to top AFTER fade-out completes (while invisible)
+          // Skip if back button (scroll will be restored by snapshot)
+          if (trigger !== 'popstate') {
+            console.log('🔝 Scrolling to top after fade-out (page invisible)');
+            window.scrollTo(0, 0);
+          } else {
+            console.log('⬅️ Back button detected, NOT scrolling to top');
+          }
+          done();
+        },
       });
     }
     
@@ -45,19 +55,10 @@ export default function createDefaultTransition() {
         return;
       }
       
-      // Start hidden FIRST (before any scrolling)
+      // Start hidden
       gsap.set(to, { opacity: 0 });
       
-      // Scroll to top immediately (while page is invisible)
-      // Skip if back button (scroll will be restored by snapshot)
-      if (trigger !== 'popstate') {
-        console.log('🔝 Scrolling to top (not back button)');
-        window.scrollTo(0, 0);
-      } else {
-        console.log('⬅️ Back button detected, NOT scrolling to top');
-      }
-      
-      // Fade in
+      // Fade in (scroll already happened in onLeave)
       gsap.to(to, {
         opacity: 1,
         duration: 0.3,
