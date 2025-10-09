@@ -7,7 +7,7 @@ export default function createCollectionsRenderer() {
   
   return class CollectionsRenderer extends DefaultRenderer {
     initialLoad() {
-      initCollections();
+      // Don't call initCollections() here - let onEnter() handle it
       this.onEnter();
       this.onEnterCompleted();
     }
