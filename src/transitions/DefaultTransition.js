@@ -25,14 +25,9 @@ export default function createDefaultTransition() {
         duration: 0.3,
         ease: 'power2.out',
         onComplete: () => {
-          // Scroll to top AFTER fade-out completes (while invisible)
-          // Skip if back button (scroll will be restored by snapshot)
-          if (trigger !== 'popstate') {
-            console.log('🔝 Scrolling to top after fade-out (page invisible)');
-            window.scrollTo(0, 0);
-          } else {
-            console.log('⬅️ Back button detected, NOT scrolling to top');
-          }
+          // Scroll is now locked via body position:fixed in NAVIGATE_OUT
+          // No need to manually scroll here
+          console.log('✅ Fade-out complete (scroll locked during transition)');
           done();
         },
       });

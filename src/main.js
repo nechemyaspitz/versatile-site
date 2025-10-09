@@ -2,14 +2,14 @@
 import { initTaxi } from './taxi.js';
 
 // Version tracking
-const VERSION = '3.1.8-DIAGNOSTIC';
+const VERSION = '3.2.0';
 const DEPLOY_TIME = new Date().toISOString();
 
 console.log(`%c🚕 Versatile Site v${VERSION} - Powered by Taxi.js`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
 console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold;');
 console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
-console.log(`%c🔍 DIAGNOSTIC MODE: Tracking all clicks and scroll behavior`, 'color: #ff6600; font-weight: bold;');
-console.log(`%c📖 Watch console when clicking links to diagnose scroll jump issue`, 'color: #ffaa00;');
+console.log(`%c🎉 v3.2.0: FIXED SCROLL JUMP! Body scroll locked during transitions.`, 'color: #00ff00; font-weight: bold;');
+console.log(`%c✨ Smooth transitions without ANY scroll jumping!`, 'color: #ffaa00;');
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

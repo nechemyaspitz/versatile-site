@@ -81,37 +81,42 @@ export function initTaxi() {
     history.scrollRestoration = 'manual';
   }
   
-  // DIAGNOSTIC: Track ALL link clicks to see if Taxi.js intercepts them
+  // CRITICAL FIX: Save scroll position BEFORE navigation starts
+  let savedScrollPosition = 0;
+  
+  // Intercept clicks BEFORE Taxi.js to save scroll position
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a[href]');
-    if (link && !link.hasAttribute('target') && !link.getAttribute('href').startsWith('#')) {
-      const scrollBefore = window.scrollY;
-      console.log('🖱️ LINK CLICKED:', {
-        href: link.getAttribute('href'),
-        scrollBefore,
-        timestamp: Date.now()
-      });
-      
-      // Check if scroll changes immediately (would indicate browser default behavior)
-      setTimeout(() => {
-        const scrollAfter = window.scrollY;
-        if (scrollAfter !== scrollBefore) {
-          console.error('❌ SCROLL JUMPED IMMEDIATELY! Browser default behavior is running!');
-          console.error('   This means Taxi.js did NOT intercept the click!');
-          console.error('   scrollBefore:', scrollBefore, 'scrollAfter:', scrollAfter);
-        }
-      }, 10);
+    if (link && !link.hasAttribute('target') && !link.getAttribute('href').startsWith('#') && !link.hasAttribute('data-taxi-ignore')) {
+      savedScrollPosition = window.scrollY;
+      console.log('💾 Saved scroll position on click:', savedScrollPosition);
     }
-  }, true); // Use capture phase
+  }, true); // Capture phase - runs BEFORE Taxi.js
   
   // Global hooks using official event names
   taxiInstance.on('NAVIGATE_IN', ({ to }) => {
     console.log('📥 NAVIGATE_IN:', to.page?.dataset?.taxiView || 'unknown');
+    
+    // Unlock scroll after new page is added
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
   });
   
-  taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
+  taxiInstance.on('NAVIGATE_OUT', ({ from, trigger }) => {
     const pageType = from.page?.dataset?.taxiView || 'unknown';
     console.log('📤 NAVIGATE_OUT:', pageType);
+    
+    // CRITICAL FIX: Lock scroll position IMMEDIATELY to prevent jump
+    // Skip for back button (scroll will be restored)
+    if (trigger !== 'popstate' && savedScrollPosition !== undefined) {
+      console.log('🔒 Locking scroll at position:', savedScrollPosition);
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${savedScrollPosition}px`;
+      document.body.style.width = '100%';
+    }
     
     // Save collections snapshot IMMEDIATELY (before any scrolling)
     if (pageType === 'collections') {
