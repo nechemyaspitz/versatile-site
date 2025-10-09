@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.5.2-DEBUG';
+const VERSION = '3.5.3';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔍 DEBUG: Extensive logging for scroll restoration issue', 'color: #ffaa00;');
+console.log('%c✅ Fixed: Wait for Lenis before scroll restoration', 'color: #ffaa00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
