@@ -1272,46 +1272,48 @@ export async function initCollections(nsCtx) {
         if (window.lenis) {
           console.log(`✅ Lenis found after ${attempts} attempts (${attempts * 100}ms)`);
           
-          // Wait a bit more for DOM to settle
+          // Wait for DOM to settle, then instant jump
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              setTimeout(() => {
-                // Force Lenis to recalculate before scrolling
-                window.lenis.resize();
+              // Force Lenis to recalculate before scrolling
+              window.lenis.resize();
+              
+              const productEl = document.querySelector(`[data-product-id="${productId}"]`);
+              console.log('  - Product element found?', !!productEl);
+              
+              if (productEl) {
+                console.log('🎯 Instantly jumping to clicked product:', productId);
                 
-                const productEl = document.querySelector(`[data-product-id="${productId}"]`);
-                console.log('  - Product element found?', !!productEl);
+                // OPTION 1: Instant jump with Lenis (no animation)
+                window.lenis.scrollTo(productEl, {
+                  immediate: true,  // ← INSTANT jump!
+                  offset: -100
+                });
                 
-                if (productEl) {
-                  console.log('🎯 Scrolling to clicked product:', productId);
-                  console.log('  - Element position:', productEl.getBoundingClientRect().top);
-                  
-                  // Use Lenis scrollTo with element (like the example)
-                  window.lenis.scrollTo(productEl, {
-                    duration: 1.2,
-                    offset: -100,
-                    easing: (x) => (x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2),
-                    onComplete: () => {
-                      console.log('✅ Scroll complete! Final position:', window.scrollY);
-                    }
-                  });
-                } else {
-                  console.warn('⚠️ Product element not found for scroll:', productId);
-                  console.warn('  - Available product IDs:', 
-                    Array.from(document.querySelectorAll('[data-product-id]'))
-                      .map(el => el.dataset.productId)
-                      .slice(0, 5)
-                  );
-                }
-              }, 300); // Extra delay for images
+                console.log('✅ Jumped to position:', window.scrollY);
+              } else {
+                console.warn('⚠️ Product element not found for scroll:', productId);
+                console.warn('  - Available product IDs:', 
+                  Array.from(document.querySelectorAll('[data-product-id]'))
+                    .map(el => el.dataset.productId)
+                    .slice(0, 5)
+                );
+              }
             });
           });
         } else if (attempts < maxAttempts) {
           // Lenis not ready yet, try again in 100ms
-          console.log(`⏳ Waiting for Lenis... (attempt ${attempts}/${maxAttempts})`);
           setTimeout(checkLenis, 100);
         } else {
-          console.error('❌ Lenis not available after 5 seconds, giving up on scroll restoration');
+          // Fallback: Use native scroll if Lenis never loads
+          console.warn('⚠️ Lenis not available, using native scroll fallback');
+          const productEl = document.querySelector(`[data-product-id="${productId}"]`);
+          if (productEl) {
+            const rect = productEl.getBoundingClientRect();
+            const scrollTop = window.pageYOffset + rect.top - 100;
+            window.scrollTo(0, scrollTop);
+            console.log('✅ Native scroll to position:', scrollTop);
+          }
         }
       };
       
