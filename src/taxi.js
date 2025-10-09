@@ -60,9 +60,6 @@ export function initTaxi() {
   });
 
   taxiInstance.on('NAVIGATE_END', ({ to }) => {
-    // Always scroll to top on any navigation
-    window.scrollTo(0, 0);
-    
     // Update active navigation links
     updateActiveNavLinks(window.location.pathname);
     

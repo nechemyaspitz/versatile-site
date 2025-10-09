@@ -20,11 +20,15 @@ export default function createDefaultTransition() {
       });
     }
     
-    onEnter({ to, done }) {
+    onEnter({ to, trigger, done }) {
       if (!window.gsap) {
         done();
         return;
       }
+      
+      // Scroll to top BEFORE the fade-in animation starts
+      // This ensures new page is at top when it becomes visible
+      window.scrollTo(0, 0);
       
       gsap.set(to, { opacity: 0 });
       
