@@ -6,22 +6,13 @@ export const getState = (ns) => PageState.get(ns) || {};
 export const clearState = (ns) => PageState.delete(ns);
 
 // Collections page snapshots for back/forward caching
-export const pageSnapshots = new Map(); // key: href, value: { html, state, scrollY }
+export const pageSnapshots = new Map();
 
 export function saveCollectionsSnapshot(url = null) {
   const grid = document.querySelector('.product-grid');
+  const href = url || location.href;
   
-  // CRITICAL: Use provided URL or extract from container's data attribute
-  // DO NOT use location.href as it may have already changed during transition
-  const href = url || document.querySelector('[data-barba-namespace="collections"]')?.dataset?.barbaUrl || location.href;
-  
-  console.log('💾 Saving collections snapshot for:', href);
-  console.log('📍 Current location.href:', location.href);
-  
-  if (!grid) {
-    console.warn('❌ No product-grid found, cannot save snapshot');
-    return;
-  }
+  if (!grid) return;
   
   const state = window.productFilter
     ? {
@@ -40,72 +31,38 @@ export function saveCollectionsSnapshot(url = null) {
   };
   
   pageSnapshots.set(href, snapshot);
-  console.log('✅ Snapshot saved:', {
-    url: href,
-    itemCount: grid.querySelectorAll('.collection_grid-item').length,
-    hasState: !!state,
-  });
 }
 
 export function restoreCollectionsSnapshotIfPossible() {
   const href = location.href;
-  console.log('🔍 Attempting to restore snapshot for:', href);
-  console.log('📦 Available snapshots:', Array.from(pageSnapshots.keys()));
-  
   const snap = pageSnapshots.get(href);
-  if (!snap) {
-    console.warn('❌ No snapshot found for this URL');
-    return false;
-  }
   
-  console.log('✅ Snapshot found:', {
-    hasHTML: !!snap.html,
-    hasState: !!snap.state,
-  });
+  if (!snap) return false;
 
   const grid = document.querySelector('.product-grid');
   const form = document.getElementById('filters');
   
-  if (!grid) {
-    console.warn('❌ No product-grid element found');
-    return false;
-  }
-  
-  if (!form) {
-    console.warn('❌ No filters form found');
-    return false;
-  }
+  if (!grid || !form) return false;
 
   // Restore the DOM
   grid.innerHTML = snap.html;
-  console.log('✅ DOM restored, item count:', grid.querySelectorAll('.collection_grid-item').length);
   
-  // CRITICAL FIX: Make items visible immediately (no blank screen)
-  // The morph animation will handle the specific target item
+  // Make items visible immediately
   const items = grid.querySelectorAll('.w-dyn-item, .collection_grid-item');
   items.forEach(item => {
     item.style.opacity = '1';
     item.style.transform = 'none';
   });
-  
-  console.log('✅ Items made visible:', items.length);
 
-  // Re-create the filter instance without fetching
-  // Check if we have a reference to the filter class
-  if (!window.productFilter) {
-    console.warn('⚠️ No window.productFilter reference, skipping state restoration');
-    return true; // Still return true since we restored the DOM
-  }
-  
-  if (!window.InfiniteScrollProductFilter) {
-    console.warn('⚠️ No window.InfiniteScrollProductFilter constructor, skipping state restoration');
-    return true; // Still return true since we restored the DOM
+  // Re-create the filter instance
+  if (!window.productFilter || !window.InfiniteScrollProductFilter) {
+    return true; // DOM restored, but can't restore state
   }
   
   const FilterClass = window.InfiniteScrollProductFilter.constructor;
   const f = Object.create(FilterClass.prototype);
   
-  // Set state without initializing
+  // Set state
   f.productContainer = grid;
   f.filterForm = form;
   f.sortDropdown = document.getElementById('sort-select');
@@ -128,7 +85,7 @@ export function restoreCollectionsSnapshotIfPossible() {
   f.hasMorePages = !!snap.state?.hasMorePages;
   f.totalItems = snap.state?.totalItems || 0;
 
-  // Re-bind UI behaviors for existing DOM (these methods need to be copied)
+  // Re-bind UI behaviors
   if (window.productFilter) {
     f.initImageHover = window.productFilter.initImageHover.bind(f);
     f.updateProductImages = window.productFilter.updateProductImages.bind(f);
@@ -144,18 +101,13 @@ export function restoreCollectionsSnapshotIfPossible() {
   }
 
   window.productFilter = f;
-  console.log('✅ Filter state restored successfully');
   
   // Restore scroll position
   if (snap.scrollY !== undefined) {
-    console.log(`📜 Restoring scroll position to ${snap.scrollY}px`);
-    // Use a small delay to ensure DOM is fully rendered
     requestAnimationFrame(() => {
       window.scrollTo(0, snap.scrollY);
-      console.log('✅ Scroll position restored');
     });
   }
   
   return true;
 }
-

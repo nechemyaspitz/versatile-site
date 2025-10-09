@@ -1,12 +1,11 @@
-// Persistent navigation (outside Barba container)
+// Persistent navigation
 const NAV_STATUS_SEL = '[data-navigation-status]';
 const NAV_TOGGLE_SEL = '[data-navigation-toggle="toggle"]';
 const NAV_CLOSE_SEL = '[data-navigation-toggle="close"]';
-const NAV_LINK_SEL =
-  '[data-navigation] a[href]:not([target="_blank"]):not([data-no-barba])';
+const NAV_LINK_SEL = '[data-navigation] a[href]:not([target="_blank"]):not([data-no-barba])';
 
-// Store scroll position for restoration
 let scrollPosition = 0;
+let navIsOpen = false;
 
 function navEl() {
   return document.querySelector(NAV_STATUS_SEL);
@@ -16,8 +15,8 @@ export function openNav() {
   const el = navEl();
   if (el) {
     el.setAttribute('data-navigation-status', 'active');
+    navIsOpen = true;
     
-    // Lock body scroll and preserve scroll position
     scrollPosition = window.pageYOffset;
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
@@ -31,12 +30,15 @@ export function closeNav() {
   if (el) {
     el.setAttribute('data-navigation-status', 'not-active');
     
-    // Unlock body scroll and restore scroll position
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    window.scrollTo(0, scrollPosition);
+    // CRITICAL FIX: Only restore scroll if nav was actually open!
+    if (navIsOpen) {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollPosition);
+      navIsOpen = false;
+    }
   }
 }
 
@@ -48,20 +50,15 @@ function toggleNav() {
 }
 
 export function updateActiveNavLinks(pathname = location.pathname) {
-  // Try primary selector first (with data-navigation wrapper)
   let links = document.querySelectorAll(NAV_LINK_SEL);
   
-  // Fallback: if no links found, try broader selector (all nav links in hamburger menu)
   if (links.length === 0) {
     links = document.querySelectorAll('.hamburger-nav a[href]:not([target="_blank"])');
   }
   
-  // Another fallback: any link with taxi-ignore=false or no taxi-ignore
   if (links.length === 0) {
     links = document.querySelectorAll('nav a[href]:not([target="_blank"]):not([data-taxi-ignore])');
   }
-  
-  console.log(`🔗 Updating ${links.length} navigation links for path: ${pathname}`);
   
   links.forEach((a) => {
     const href = a.getAttribute('href') || '';
@@ -71,13 +68,11 @@ export function updateActiveNavLinks(pathname = location.pathname) {
       a.classList.toggle('w--current', isActive);
       if (isActive) {
         a.setAttribute('aria-current', 'page');
-        console.log(`✅ Active link: ${href}`);
       } else {
         a.removeAttribute('aria-current');
       }
     } catch (e) {
       // Invalid URL, skip
-      console.warn(`⚠️ Invalid URL: ${href}`);
     }
   });
 }
@@ -90,6 +85,7 @@ export function initScalingHamburgerNavigation() {
   document.querySelectorAll(NAV_TOGGLE_SEL).forEach((btn) => {
     btn.addEventListener('click', toggleNav, { signal: ac.signal });
   });
+  
   document.querySelectorAll(NAV_CLOSE_SEL).forEach((btn) => {
     btn.addEventListener('click', closeNav, { signal: ac.signal });
   });
@@ -102,9 +98,7 @@ export function initScalingHamburgerNavigation() {
     { signal: ac.signal }
   );
 
-  // Close on nav link click (Barba will handle SPA navigation)
   document.querySelectorAll(NAV_LINK_SEL).forEach((a) => {
     a.addEventListener('click', () => closeNav(), { signal: ac.signal });
   });
 }
-

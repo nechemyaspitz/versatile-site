@@ -1,28 +1,17 @@
-// Main entry point - Taxi.js SPA (SIMPLER & FASTER!)
+// Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-// Version tracking
-const VERSION = '3.2.1-AGGRESSIVE';
-const DEPLOY_TIME = new Date().toISOString();
+const VERSION = '3.3.0';
 
-console.log(`%c🚕 Versatile Site v${VERSION} - Powered by Taxi.js`, 'color: #00ff00; font-weight: bold; font-size: 16px;');
-console.log(`%c✅ Loaded from GitHub Pages`, 'color: #00aaff; font-weight: bold;');
-console.log(`%c📦 Deploy time: ${DEPLOY_TIME}`, 'color: #ffaa00;');
-console.log(`%c🛑 v3.2.1: AGGRESSIVE preventDefault() + immediate scroll lock!`, 'color: #ff0000; font-weight: bold;');
-console.log(`%c✨ Manually intercepting ALL link clicks before any browser behavior`, 'color: #ffaa00;');
+console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
 
-// Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c🎯 Initializing Taxi.js...', 'color: #ff00ff;');
-  
   const taxi = initTaxi();
   
   if (taxi) {
-    console.log('%c🚀 Taxi.js ready! Navigation enabled.', 'color: #00ff00; font-weight: bold;');
+    console.log('%c✅ Taxi.js ready', 'color: #00ff00;');
+    window.taxi = taxi; // Expose for debugging
   } else {
-    console.error('%c❌ Taxi.js failed to initialize!', 'color: #ff0000; font-weight: bold;');
+    console.error('%c❌ Taxi.js failed to initialize', 'color: #ff0000;');
   }
-  
-  // Expose for debugging
-  window.taxi = taxi;
 });
