@@ -138,13 +138,25 @@ export async function initCollections(nsCtx) {
       this._ac = new AbortController();
       this._observer = null;
       this._sentinel = null;
-      this._respCache = new Map(); // URL -> response data
+      this._respCache = new Map(); // URL -> response data (API cache)
+      this._allLoadedItems = []; // Track ALL items across all pages
+      this._clickedProductId = null; // For scroll restoration
 
       this.init();
     }
 
     async init() {
       try {
+        // Check if we should restore from session (back button)
+        if (this.tryRestoreFromSession()) {
+          console.log('✅ Restored from session cache');
+          this.initNiceSelect();
+          this.initEventListeners();
+          this.initInfiniteScroll();
+          return; // Don't fetch - we restored!
+        }
+        
+        // Fresh load
         this.initNiceSelect();
         this.loadFromURLParams();
         this.initEventListeners();
@@ -283,6 +295,9 @@ export async function initCollections(nsCtx) {
       // Clear container
       this.productContainer.innerHTML = '';
       
+      // Reset all loaded items (fresh render)
+      this._allLoadedItems = [...items];
+      
       // Build all elements in fragment (off-DOM for performance)
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
@@ -303,10 +318,17 @@ export async function initCollections(nsCtx) {
         this.initImageHover();
         this.updateProductImages();
         this.updateProductLinks();
+        this.setupProductClickTracking(); // Track clicks for scroll restoration
+        
+        // Fix jittery scroll: resize after images load
+        this.waitForImagesToLoad();
       }, { timeout: 1000 });
     }
 
     appendItems(items) {
+      // Add to all loaded items
+      this._allLoadedItems.push(...items);
+      
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
@@ -326,6 +348,10 @@ export async function initCollections(nsCtx) {
         this.initImageHover();
         this.updateProductImages();
         this.updateProductLinks();
+        this.setupProductClickTracking(); // Track clicks for scroll restoration
+        
+        // Fix jittery scroll: resize after images load
+        this.waitForImagesToLoad();
       }, { timeout: 1000 });
     }
 
@@ -341,7 +367,7 @@ export async function initCollections(nsCtx) {
       productItem.className = 'w-dyn-item';
 
       productItem.innerHTML = `
-        <div class="collection_grid-item" data-base-url="${baseUrl}" data-hover-initialized="false">
+        <div class="collection_grid-item" data-base-url="${baseUrl}" data-product-id="${baseUrl}" data-hover-initialized="false">
           <a href="${baseUrl}" class="collection_image-cover">
             <img src="${mainImage}" loading="lazy" alt="${productName}" class="img-2" data-original-src="${mainImage}">
           </a>
@@ -1053,7 +1079,135 @@ export async function initCollections(nsCtx) {
       }
     }
 
+    // ====== SESSION RESTORATION METHODS ======
+    
+    tryRestoreFromSession() {
+      try {
+        const saved = sessionStorage.getItem('collections_state');
+        if (!saved) return false;
+        
+        const state = JSON.parse(saved);
+        const now = Date.now();
+        
+        // Check if cache is still fresh (5 minutes)
+        if (now - state.timestamp > 300000) {
+          sessionStorage.removeItem('collections_state');
+          return false;
+        }
+        
+        // Restore state
+        this._allLoadedItems = state.allLoadedItems || [];
+        this.activeFilters = state.activeFilters || {};
+        this.currentSort = state.currentSort || 'recommended';
+        this.currentPage = state.currentPage || 1;
+        this.totalItems = state.totalItems || 0;
+        this._clickedProductId = state.clickedProductId || null;
+        
+        // Render all items
+        if (this._allLoadedItems.length > 0) {
+          this.renderItems(this._allLoadedItems);
+          this.updateResultsCounter(this.totalItems);
+          
+          // Scroll to clicked product with Lenis (smooth!)
+          if (this._clickedProductId && window.lenis) {
+            setTimeout(() => {
+              const productEl = document.querySelector(`[data-product-id="${this._clickedProductId}"]`);
+              if (productEl) {
+                console.log('🎯 Scrolling to clicked product:', this._clickedProductId);
+                window.lenis.scrollTo(productEl, {
+                  duration: 1.2,
+                  offset: -100,
+                  easing: (x) => (x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2)
+                });
+              }
+            }, 100); // Small delay to ensure DOM is ready
+          }
+          
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        console.error('Failed to restore from session:', error);
+        sessionStorage.removeItem('collections_state');
+        return false;
+      }
+    }
+    
+    saveToSession() {
+      try {
+        const state = {
+          allLoadedItems: this._allLoadedItems,
+          activeFilters: this.activeFilters,
+          currentSort: this.currentSort,
+          currentPage: this.currentPage,
+          totalItems: this.totalItems,
+          clickedProductId: this._clickedProductId,
+          timestamp: Date.now()
+        };
+        
+        sessionStorage.setItem('collections_state', JSON.stringify(state));
+        console.log('💾 Saved to session:', {
+          items: this._allLoadedItems.length,
+          page: this.currentPage,
+          clickedProduct: this._clickedProductId
+        });
+      } catch (error) {
+        console.error('Failed to save to session:', error);
+      }
+    }
+    
+    setupProductClickTracking() {
+      // Track clicks on product links
+      const productLinks = this.productContainer.querySelectorAll('.collection_image-cover, .collection_details');
+      
+      productLinks.forEach((link) => {
+        link.addEventListener('click', (e) => {
+          // Get product ID from the parent grid item
+          const gridItem = e.currentTarget.closest('.collection_grid-item');
+          if (gridItem) {
+            const productId = gridItem.dataset.baseUrl || gridItem.querySelector('a')?.getAttribute('href');
+            if (productId) {
+              this._clickedProductId = productId;
+              this.saveToSession();
+              console.log('🖱️ Clicked product:', productId);
+            }
+          }
+        });
+      });
+    }
+    
+    waitForImagesToLoad() {
+      // Fix jittery scroll: Tell Lenis to resize after images load
+      const images = this.productContainer.querySelectorAll('img');
+      let loadedCount = 0;
+      const totalImages = images.length;
+      
+      if (totalImages === 0) return;
+      
+      const checkAllLoaded = () => {
+        loadedCount++;
+        if (loadedCount === totalImages && window.lenis) {
+          // All images loaded - recalculate scroll height
+          window.lenis.resize();
+          console.log('📸 All images loaded, Lenis resized');
+        }
+      };
+      
+      images.forEach((img) => {
+        if (img.complete) {
+          checkAllLoaded();
+        } else {
+          img.addEventListener('load', checkAllLoaded, { once: true });
+          img.addEventListener('error', checkAllLoaded, { once: true }); // Count errors too
+        }
+      });
+    }
+
     destroy() {
+      // Save state before destroying
+      this.saveToSession();
+      
       try {
         this._ac?.abort?.();
       } catch (e) {}
