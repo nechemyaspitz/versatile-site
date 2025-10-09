@@ -28,6 +28,22 @@ export function initTaxi() {
   const ProductRenderer = createProductRenderer();
   const DefaultTransition = createDefaultTransition();
   
+  // CRITICAL DEBUG: Check if HTML structure is correct
+  const taxiWrapper = document.querySelector('[data-taxi]');
+  const taxiView = document.querySelector('[data-taxi-view]');
+  
+  console.log('🔍 HTML Structure Check:');
+  console.log('  data-taxi element:', taxiWrapper ? '✅ FOUND' : '❌ NOT FOUND');
+  console.log('  data-taxi-view element:', taxiView ? '✅ FOUND' : '❌ NOT FOUND');
+  
+  if (!taxiWrapper || !taxiView) {
+    console.error('⚠️⚠️⚠️ CRITICAL ERROR ⚠️⚠️⚠️');
+    console.error('Your Webflow HTML is missing data-taxi or data-taxi-view!');
+    console.error('This is WHY the page jumps - Taxi.js cannot work without proper HTML structure!');
+    console.error('See TAXI-WEBFLOW-SETUP.md for instructions.');
+    console.error('⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️');
+  }
+  
   // Initialize Taxi (using global taxi from CDN - lowercase!)
   const taxiInstance = new window.taxi.Core({
     // Links to intercept (exclude external, anchors, etc.)
@@ -64,6 +80,29 @@ export function initTaxi() {
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
+  
+  // DIAGNOSTIC: Track ALL link clicks to see if Taxi.js intercepts them
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href]');
+    if (link && !link.hasAttribute('target') && !link.getAttribute('href').startsWith('#')) {
+      const scrollBefore = window.scrollY;
+      console.log('🖱️ LINK CLICKED:', {
+        href: link.getAttribute('href'),
+        scrollBefore,
+        timestamp: Date.now()
+      });
+      
+      // Check if scroll changes immediately (would indicate browser default behavior)
+      setTimeout(() => {
+        const scrollAfter = window.scrollY;
+        if (scrollAfter !== scrollBefore) {
+          console.error('❌ SCROLL JUMPED IMMEDIATELY! Browser default behavior is running!');
+          console.error('   This means Taxi.js did NOT intercept the click!');
+          console.error('   scrollBefore:', scrollBefore, 'scrollAfter:', scrollAfter);
+        }
+      }, 10);
+    }
+  }, true); // Use capture phase
   
   // Global hooks using official event names
   taxiInstance.on('NAVIGATE_IN', ({ to }) => {
