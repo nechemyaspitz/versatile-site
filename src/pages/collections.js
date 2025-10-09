@@ -293,6 +293,11 @@ export async function initCollections(nsCtx) {
       // Single DOM append (batch write) - no animations!
       this.productContainer.appendChild(fragment);
       
+      // CRITICAL: Tell Lenis page height changed (prevents jittery scroll)
+      if (window.lenis) {
+        window.lenis.resize();
+      }
+      
       // Initialize features immediately
       safeRequestIdleCallback(() => {
         this.initImageHover();
@@ -310,6 +315,11 @@ export async function initCollections(nsCtx) {
       
       // Batch DOM append - no animations!
       this.productContainer.appendChild(fragment);
+      
+      // CRITICAL: Tell Lenis page height changed (prevents jittery scroll)
+      if (window.lenis) {
+        window.lenis.resize();
+      }
       
       // Initialize features for new items
       safeRequestIdleCallback(() => {
