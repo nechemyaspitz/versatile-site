@@ -10,7 +10,6 @@ import createProductRenderer from './renderers/ProductRenderer.js';
 
 // Import transition factories
 import createDefaultTransition from './transitions/DefaultTransition.js';
-import createHomeTransition from './transitions/HomeTransition.js';
 
 export function initTaxi() {
   // Check if taxi is available (loaded via CDN)
@@ -25,7 +24,6 @@ export function initTaxi() {
   const CollectionsRenderer = createCollectionsRenderer();
   const ProductRenderer = createProductRenderer();
   const DefaultTransition = createDefaultTransition();
-  const HomeTransition = createHomeTransition();
   
   // Initialize Taxi
   const taxiInstance = new window.taxi.Core({
@@ -36,7 +34,6 @@ export function initTaxi() {
     
     transitions: {
       default: DefaultTransition,
-      homeExit: HomeTransition,
     },
     
     renderers: {
@@ -46,10 +43,6 @@ export function initTaxi() {
       product: ProductRenderer,
     },
   });
-  
-  // Add custom transition routes for home page exit
-  // Use homeExit transition when leaving FROM home renderer TO any page
-  taxiInstance.addRoute('*', 'homeExit', { from: 'home' });
   
   // Initialize navigation
   initScalingHamburgerNavigation();

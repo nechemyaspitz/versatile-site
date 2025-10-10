@@ -66,7 +66,6 @@ export async function initHome(nsCtx) {
           duration: 1,
           ease: 'expo.inOut',
           transformOrigin: 'top left',
-          clearProps: 'transform,opacity', // Clear inline styles after animation
         },
         0 // Start at 0s
       );
@@ -83,7 +82,6 @@ export async function initHome(nsCtx) {
           duration: 1,
           ease: 'expo.inOut',
           stagger: 0.05,
-          clearProps: 'transform', // Clear inline styles after animation
         },
         0.1 // Start 0.1s into animation
       );
@@ -107,9 +105,6 @@ export async function initHome(nsCtx) {
     // 4. Small premium text: split chars, opacity 0→1, stagger 0.02s
     const smPremium = document.querySelector('.sm-premium');
     if (smPremium && window.SplitText) {
-      // First, ensure the parent is visible (remove CSS initial state)
-      gsap.set(smPremium, { opacity: 1 });
-      
       const split = new SplitText(smPremium, { type: 'chars' });
       enterTL.fromTo(
         split.chars,
@@ -133,7 +128,6 @@ export async function initHome(nsCtx) {
           scale: 1,
           duration: 1.25,
           ease: 'expo.out',
-          clearProps: 'transform', // Clear inline styles after animation
         },
         0.5 // Start 0.5s into animation
       );
