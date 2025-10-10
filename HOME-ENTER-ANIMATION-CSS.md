@@ -24,17 +24,15 @@ Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to
   width: 100%;
 }
 
-/* 4. Small premium text - hidden */
-.sm-premium {
-  opacity: 0;
-}
+/* 4. Small premium text - parent stays visible, chars will be animated */
+/* DO NOT set opacity on .sm-premium as GSAP will handle char opacity */
 
 /* 5. Swiper - scaled up (will animate to 1) */
 .swiper {
   transform: scale(1.1);
 }
 
-/* Optional: Ensure button group has overflow hidden to clip children */
+/* Required: Button group must have overflow hidden to clip children */
 .btn-group {
   overflow: hidden;
 }
