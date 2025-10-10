@@ -1,6 +1,6 @@
 // Collections page: InfiniteScrollProductFilter + Nice Select + filter drawer
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
-import { setState } from '../core/state.js';
+import { setState, getState } from '../core/state.js';
 import { setupFilterListeners } from '../components/filterDrawer.js';
 
 // Polyfill for Safari (doesn't support requestIdleCallback)
@@ -210,6 +210,12 @@ export async function initCollections(isBackButton = false) {
     });
     return;
   }
+
+  // Set up state IMMEDIATELY (before any async operations)
+  setState('collections', {
+    playExitAnimation: () => playPageExitAnimation(),
+    destroy: () => {}, // Will be updated later with actual destroy function
+  });
 
   // Play page enter animation
   const enterAnimation = playPageEnterAnimation();
@@ -1406,8 +1412,10 @@ export async function initCollections(isBackButton = false) {
   window.productFilter = filterInstance;
   window.InfiniteScrollProductFilter = filterInstance;
 
+  // Update state with actual destroy function
+  const existingState = getState('collections');
   setState('collections', {
-    playExitAnimation: () => playPageExitAnimation(),
+    ...existingState,
     destroy: () => {
       try {
         filterInstance.destroy();
