@@ -275,21 +275,23 @@ export async function initCollections(isBackButton = false) {
 
     async init(isBackButton = false) {
       try {
+        // Always load URL params first (important for refresh with filters)
+        this.loadFromURLParams();
+        
         // Try to restore cached data if available
         const restored = this.tryRestoreFromSession(isBackButton);
         
+        // Always initialize UI components
+        this.initNiceSelect();
+        this.initEventListeners();
+        this.initInfiniteScroll();
+        
         if (restored) {
-          this.initNiceSelect();
-          this.initEventListeners();
-          this.initInfiniteScroll();
+          // Cache restored successfully
           return;
         }
         
         // No cache or expired - fetch fresh
-        this.initNiceSelect();
-        this.loadFromURLParams();
-        this.initEventListeners();
-        this.initInfiniteScroll();
         await this.loadInitialData();
       } catch (error) {
         console.error('Error initializing filter:', error);
@@ -319,6 +321,7 @@ export async function initCollections(isBackButton = false) {
           this.updatePagination(data.pagination);
           this.updateResultsCounter(data.pagination.total);
           this.updateClearButton();
+          this.saveToSession(); // FIX: Save after using cache too
           this.isLoading = false;
           return;
         }
@@ -334,7 +337,7 @@ export async function initCollections(isBackButton = false) {
           this.showSkeletonLoaders(skeletonsToShow);
         }
 
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: this._ac.signal }); // FIX: Add abort signal
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -358,8 +361,11 @@ export async function initCollections(isBackButton = false) {
         // Save to session after every successful fetch
         this.saveToSession();
       } catch (error) {
-        console.error('Fetch error:', error);
-        this.handleError(error);
+        // Don't log abort errors (they're intentional)
+        if (error.name !== 'AbortError') {
+          console.error('Fetch error:', error);
+          this.handleError(error);
+        }
       } finally {
         this.isLoading = false;
       }
@@ -1231,9 +1237,12 @@ export async function initCollections(isBackButton = false) {
 
     updateClearButton() {
       if (this.clearButton) {
-        const has = Object.keys(this.activeFilters).length > 0;
-        this.clearButton.style.opacity = has ? '1' : '0.5';
-        this.clearButton.disabled = !has;
+        // FIX: Check if any filter actually has values (not just empty arrays)
+        const hasActiveFilters = Object.values(this.activeFilters).some(
+          filterValues => Array.isArray(filterValues) && filterValues.length > 0
+        );
+        this.clearButton.style.opacity = hasActiveFilters ? '1' : '0.5';
+        this.clearButton.disabled = !hasActiveFilters;
       }
     }
 
