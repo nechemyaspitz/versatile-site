@@ -88,8 +88,9 @@ function playPageEnterAnimation() {
   
   const tl = gsap.timeline();
   
-  // 0. Reveal page immediately (hidden by CSS to prevent FOUC)
-  gsap.set('[data-taxi]', { opacity: 1 });
+  // 0. Reveal page immediately (hidden by transition to prevent FOUC)
+  const view = document.querySelector('[data-taxi-view="collections"]');
+  if (view) gsap.set(view, { opacity: 1 });
   
   // 1. Heading: splitText by chars with mask, y: 100% → 0%
   const heading = document.querySelector('.font-color-primary');

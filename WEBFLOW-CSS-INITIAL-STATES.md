@@ -7,17 +7,17 @@
 ```html
 <style>
 /* ============================================
-   ANIMATION INITIAL STATES - v3.15.0
-   Universal solution: Hide entire page until animations start
+   ANIMATION INITIAL STATES - v3.15.1
+   Prevents FOUC on initial load
    ============================================ */
 
-/* Hide page content until GSAP reveals it (prevents FOUC) */
-[data-taxi] {
+/* Hide page content on initial load (before JS executes) */
+[data-taxi-view] {
   opacity: 0;
 }
 
-/* Optional: Ensure smooth rendering */
-[data-taxi] * {
+/* Optional: Ensure smooth rendering (recommended) */
+[data-taxi-view] * {
   backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -29,18 +29,20 @@
 ## ✅ HOW IT WORKS
 
 ### The Problem:
-Individual element initial states (like `transform: translateY(102%)`) cause conflicts between CSS and GSAP, leading to elements staying in their transformed state.
+Individual element initial states cause conflicts between CSS and GSAP, and generic page hiding still caused flashes when transitioning between pages.
 
 ### The Solution:
-1. **CSS hides the entire page** with `[data-taxi] { opacity: 0; }`
-2. **GSAP reveals it instantly** at the start of each animation with `gsap.set('[data-taxi]', { opacity: 1 })`
-3. **No conflicts!** Each element's animation starts from its natural state
+1. **CSS hides initial page load** with `[data-taxi-view] { opacity: 0; }` - prevents FOUC before JS loads
+2. **SmartTransition hides during navigation** with `gsap.set(to, { opacity: 0 })` - no flash between pages
+3. **Page animations reveal at perfect moment** with `gsap.set(view, { opacity: 1 })` - works for both scenarios
+4. **No conflicts!** Each element's animation starts from its natural state
 
 ### Benefits:
-- ✅ **No FOUC** (Flash of Unstyled Content)
-- ✅ **No CSS/GSAP conflicts**
-- ✅ **Simple & universal** - works for all pages
-- ✅ **Easy to maintain** - just 2 lines of CSS!
+- ✅ **No FOUC on initial load** - CSS hides before JS executes
+- ✅ **No flashes between pages** - SmartTransition + animations handle it
+- ✅ **No CSS/GSAP conflicts** - only opacity hiding, no transforms
+- ✅ **Simple & universal** - one CSS rule covers everything
+- ✅ **Minimal CSS** - just one line to prevent initial FOUC!
 
 ---
 
@@ -61,8 +63,10 @@ After adding the CSS to Webflow:
 
 ## 📝 TECHNICAL NOTES
 
-### Why `[data-taxi]`?
-This is the main container that wraps each page's content in the Taxi.js setup. By hiding this, we hide everything that gets swapped between page transitions.
+### Why CSS + JavaScript Hiding?
+- **CSS is essential for initial page load** - Without it, there's a guaranteed flash before JavaScript executes
+- **SmartTransition handles navigation** - After initial load, JavaScript controls all page swaps
+- **Together they're perfect** - No gaps, no flashes, works in all scenarios
 
 ### Why `backface-visibility: hidden`?
 This CSS property forces GPU acceleration, which can make animations smoother, especially on mobile devices.
@@ -90,14 +94,23 @@ Ensures text remains crisp during animations, particularly on macOS/iOS.
 
 ### ✅ NEW (Simple, No Conflicts):
 ```css
-[data-taxi] { opacity: 0; }
+/* One CSS rule prevents initial FOUC */
+[data-taxi-view] { opacity: 0; }
+```
+
+```javascript
+// SmartTransition hides incoming pages during navigation
+gsap.set(to, { opacity: 0 });
+
+// Page animations reveal at the perfect moment (both scenarios)
+gsap.set(view, { opacity: 1 });
 ```
 
 ---
 
 ## 🚀 VERSION
 
-Current implementation: **v3.15.0**  
+Current implementation: **v3.15.1**  
 Last updated: 2025-10-10
 
-**Previous approach deprecated:** Individual element CSS initial states removed in favor of universal page-level hiding.
+**Change from v3.15.0:** Removed CSS-based hiding. SmartTransition now handles initial page hiding, eliminating flashes during navigation.

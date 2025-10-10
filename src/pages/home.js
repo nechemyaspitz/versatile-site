@@ -54,8 +54,9 @@ export async function initHome(nsCtx) {
   function playPageEnterAnimation(swiperInstance) {
     const enterTL = gsap.timeline();
     
-    // 0. Reveal page immediately (hidden by CSS to prevent FOUC)
-    gsap.set('[data-taxi]', { opacity: 1 });
+    // 0. Reveal page immediately (hidden by transition to prevent FOUC)
+    const view = document.querySelector('[data-taxi-view="home"]');
+    if (view) gsap.set(view, { opacity: 1 });
 
     // 1. Hero heading: opacity 0→1, scale 0.8→1
     const heroHeading = document.querySelector('.hero-heading');

@@ -58,17 +58,14 @@ export default function createSmartTransition() {
         return;
       }
       
-      // Scroll to top BEFORE the fade-in animation starts
+      // Scroll to top
       window.scrollTo(0, 0);
       
+      // Keep page hidden - let page animations control the reveal
       gsap.set(to, { opacity: 0 });
       
-      gsap.to(to, {
-        opacity: 1,
-        duration: 0.15,
-        ease: 'power2.in',
-        onComplete: done,
-      });
+      // Transition complete - renderer will handle page animations
+      done();
     }
   };
 }
