@@ -74,9 +74,11 @@ export async function initHome(nsCtx) {
     // 2. Button group children: y 102%→0%, stagger 0.045s
     const btnGroupChildren = document.querySelectorAll('.btn-group > *');
     if (btnGroupChildren.length > 0) {
-      enterTL.fromTo(
+      // Set initial state via GSAP (CSS has set it, but we need GSAP to control it)
+      gsap.set(btnGroupChildren, { yPercent: 102 });
+      
+      enterTL.to(
         btnGroupChildren,
-        { yPercent: 102 },
         {
           yPercent: 0,
           duration: 0.85,
@@ -105,10 +107,14 @@ export async function initHome(nsCtx) {
     // 4. Small premium text: split chars, opacity 0→1, stagger 0.017s
     const smPremium = document.querySelector('.sm-premium');
     if (smPremium && window.SplitText) {
+      // Set parent to visible so we can see the chars animate
+      gsap.set(smPremium, { opacity: 1 });
+      
       const split = new SplitText(smPremium, { type: 'chars' });
-      enterTL.fromTo(
+      gsap.set(split.chars, { opacity: 0 });
+      
+      enterTL.to(
         split.chars,
-        { opacity: 0 },
         {
           opacity: 1,
           duration: 1.05,
