@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.10.1';
+const VERSION = '3.10.2';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🚀 testing scroll with progressive blur commented out', 'color: #00ff00;');
+console.log('%c🚀 testing scroll with a bit of progressive blur brought back"', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
