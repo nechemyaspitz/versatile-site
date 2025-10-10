@@ -53,7 +53,16 @@ export function initTaxi() {
     history.scrollRestoration = 'manual';
   }
   
+  // Store navigation trigger globally so renderers can access it
+  window.__taxiNavigationTrigger = null;
+  
   // Global hooks
+  taxiInstance.on('NAVIGATE_IN', ({ trigger }) => {
+    // Store trigger for renderers to access
+    window.__taxiNavigationTrigger = trigger;
+    console.log('🚕 NAVIGATE_IN - trigger:', trigger);
+  });
+  
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
     // Close navigation when leaving page (skip scroll restore during navigation)
     closeNav(true);

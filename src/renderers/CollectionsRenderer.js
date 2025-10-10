@@ -12,8 +12,9 @@ export default function createCollectionsRenderer() {
       this.onEnterCompleted();
     }
     
-    async onEnter({ trigger } = {}) {
-      // Detect back button: trigger will be 'popstate' for back/forward
+    async onEnter() {
+      // Get trigger from global variable set by NAVIGATE_IN hook
+      const trigger = window.__taxiNavigationTrigger;
       const isBackButton = trigger === 'popstate';
       console.log('🎬 CollectionsRenderer onEnter - trigger:', trigger, 'isBackButton:', isBackButton);
       
