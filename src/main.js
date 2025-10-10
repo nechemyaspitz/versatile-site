@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.14.3';
+const VERSION = '3.15.0';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔧 Fixed: Button transforms - clear CSS first, then GSAP controls', 'color: #00ff00;');
+console.log('%c✨ Universal fix: Hide [data-taxi] until GSAP ready - no more conflicts!', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

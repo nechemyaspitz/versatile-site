@@ -7,127 +7,97 @@
 ```html
 <style>
 /* ============================================
-   ANIMATION INITIAL STATES - v3.14.1
-   Prevents flash of unstyled content (FOUC)
+   ANIMATION INITIAL STATES - v3.15.0
+   Universal solution: Hide entire page until animations start
    ============================================ */
 
-/* HOME PAGE ANIMATIONS */
-.hero-heading {
-  opacity: 0;
-  transform: scale(0.8);
-  transform-origin: top left;
-}
-
-.btn-group > * {
-  /* Removed - GSAP handles this to avoid conflicts */
-  /* transform: translateY(102%); */
-}
-
-.hero-cover {
-  width: 100%;
-}
-
-.sm-premium {
+/* Hide page content until GSAP reveals it (prevents FOUC) */
+[data-taxi] {
   opacity: 0;
 }
 
-.swiper {
-  transform: scale(1.1);
-}
-
-/* COLLECTIONS PAGE ANIMATIONS */
-.font-color-primary {
-  overflow: hidden;
-}
-
-#filters-open {
-  /* Removed - GSAP handles this to avoid conflicts */
-  /* transform: translateY(100%); */
-}
-
-/* PRODUCT PAGE ANIMATIONS */
-.product-description {
-  overflow: hidden;
-}
-
-.variant-buttons,
-.variant-sizes,
-.variant-finishes,
-#material,
-#thickness,
-#applications {
-  opacity: 0;
-  transform: translateY(20%);
+/* Optional: Ensure smooth rendering */
+[data-taxi] * {
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 </style>
 ```
 
 ---
 
-## ✅ VERIFICATION CHECKLIST
+## ✅ HOW IT WORKS
+
+### The Problem:
+Individual element initial states (like `transform: translateY(102%)`) cause conflicts between CSS and GSAP, leading to elements staying in their transformed state.
+
+### The Solution:
+1. **CSS hides the entire page** with `[data-taxi] { opacity: 0; }`
+2. **GSAP reveals it instantly** at the start of each animation with `gsap.set('[data-taxi]', { opacity: 1 })`
+3. **No conflicts!** Each element's animation starts from its natural state
+
+### Benefits:
+- ✅ **No FOUC** (Flash of Unstyled Content)
+- ✅ **No CSS/GSAP conflicts**
+- ✅ **Simple & universal** - works for all pages
+- ✅ **Easy to maintain** - just 2 lines of CSS!
+
+---
+
+## 🔧 VERIFICATION CHECKLIST
 
 After adding the CSS to Webflow:
 
 - [ ] Publish the site
 - [ ] Clear browser cache (Cmd+Shift+R / Ctrl+Shift+F5)
 - [ ] Test each page:
-  - [ ] Home page: Hero heading, buttons, cover, premium text, swiper all animate in
-  - [ ] Collections page: Heading chars and filter button slide up
-  - [ ] Product page: Title, description, variants, specs all animate in
-- [ ] Check that there's no FOUC (flash before animation)
-- [ ] Verify animations work on first load AND when navigating via Taxi.js
+  - [ ] Home page: Should be blank, then animate in smoothly
+  - [ ] Collections page: Should be blank, then animate in smoothly
+  - [ ] Product page: Should be blank, then animate in smoothly
+- [ ] Verify no flash of content before animations start
+- [ ] Check that navigation between pages feels smooth
 
 ---
 
-## 📝 MINIFIED VERSION (OPTIONAL)
+## 📝 TECHNICAL NOTES
 
-If you prefer a minified version to save bytes:
+### Why `[data-taxi]`?
+This is the main container that wraps each page's content in the Taxi.js setup. By hiding this, we hide everything that gets swapped between page transitions.
 
-```html
-<style>.hero-heading{opacity:0;transform:scale(.8);transform-origin:top left}.btn-group>*{transform:translateY(102%)}.hero-cover{width:100%}.sm-premium{opacity:0}.swiper{transform:scale(1.1)}.font-color-primary{overflow:hidden}#filters-open{transform:translateY(100%)}.product-description{overflow:hidden}.variant-buttons,.variant-sizes,.variant-finishes,#material,#thickness,#applications{opacity:0;transform:translateY(20%)}</style>
-```
+### Why `backface-visibility: hidden`?
+This CSS property forces GPU acceleration, which can make animations smoother, especially on mobile devices.
+
+### Why `-webkit-font-smoothing: antialiased`?
+Ensures text remains crisp during animations, particularly on macOS/iOS.
 
 ---
 
-## 🔧 ADVANCED: Per-Page Optimization (OPTIONAL)
+## 🎯 COMPARISON WITH OLD APPROACH
 
-If you want to reduce CSS on pages that don't need certain styles, you can add page-specific CSS in Webflow's **Page Settings → Custom Code → Head Code** for each page:
-
-### Home Page Only:
-```html
-<style>
-.hero-heading { opacity: 0; transform: scale(0.8); transform-origin: top left; }
+### ❌ OLD (Complex, Conflicts):
+```css
+.hero-heading { opacity: 0; transform: scale(0.8); }
 .btn-group > * { transform: translateY(102%); }
 .hero-cover { width: 100%; }
 .sm-premium { opacity: 0; }
 .swiper { transform: scale(1.1); }
-</style>
-```
-
-### Collections Page Only:
-```html
-<style>
 .font-color-primary { overflow: hidden; }
 #filters-open { transform: translateY(100%); }
-</style>
-```
-
-### Product Page Only:
-```html
-<style>
-.hero-cover { width: 100%; }
 .product-description { overflow: hidden; }
-.variant-buttons,
-.variant-sizes,
-.variant-finishes,
-#material,
-#thickness,
-#applications {
-  opacity: 0;
-  transform: translateY(20%);
-}
-</style>
+.variant-buttons { opacity: 0; transform: translateY(20%); }
+/* ... 10+ more rules ... */
 ```
 
-**Note:** The global approach (all styles in Project Settings) is simpler and recommended unless you're optimizing for very slow connections.
+### ✅ NEW (Simple, No Conflicts):
+```css
+[data-taxi] { opacity: 0; }
+```
 
+---
+
+## 🚀 VERSION
+
+Current implementation: **v3.15.0**  
+Last updated: 2025-10-10
+
+**Previous approach deprecated:** Individual element CSS initial states removed in favor of universal page-level hiding.

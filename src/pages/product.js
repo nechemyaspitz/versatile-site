@@ -8,7 +8,10 @@ function playPageEnterAnimation() {
   
   const tl = gsap.timeline();
   
-  // 0. Hero cover: width 100% → 0%
+  // 0. Reveal page immediately (hidden by CSS to prevent FOUC)
+  gsap.set('[data-taxi]', { opacity: 1 });
+  
+  // 1. Hero cover: width 100% → 0%
   const heroCover = document.querySelector('.hero-cover');
   if (heroCover) {
     gsap.set(heroCover, { width: '100%' });
@@ -19,7 +22,7 @@ function playPageEnterAnimation() {
     }, 0);
   }
   
-  // 1. Product title: chars split, opacity + y offset
+  // 2. Product title: chars split, opacity + y offset
   const title = document.querySelector('#product-title');
   if (title && window.SplitText) {
     const split = new SplitText(title, { type: 'chars' });
@@ -34,7 +37,7 @@ function playPageEnterAnimation() {
     }, 0.17);
   }
   
-  // 2. Product description: lines split with mask
+  // 3. Product description: lines split with mask
   const description = document.querySelector('.product-description');
   if (description && window.SplitText) {
     const split = new SplitText(description, { 
@@ -60,7 +63,7 @@ function playPageEnterAnimation() {
     }, 0.3);
   }
   
-  // 3-8. Variant sections and specs
+  // 4-9. Variant sections and specs
   const elements = [
     { selector: '.variant-buttons', start: 0.45 },
     { selector: '.variant-sizes', start: 0.51 },
