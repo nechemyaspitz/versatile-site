@@ -82,15 +82,68 @@ function setupFilterAccordions() {
   });
 }
 
+// Page enter animation
+function playPageEnterAnimation() {
+  if (!window.gsap) return Promise.resolve();
+  
+  const tl = gsap.timeline();
+  
+  // 1. Heading: splitText by chars with mask, y: 100% → 0%
+  const heading = document.querySelector('.font-color-primary');
+  if (heading && window.SplitText) {
+    const split = new SplitText(heading, { 
+      type: 'chars',
+      charsClass: 'char',
+    });
+    
+    // Mask the chars
+    gsap.set(split.chars, { 
+      yPercent: 100,
+      willChange: 'transform',
+    });
+    
+    tl.to(split.chars, {
+      yPercent: 0,
+      duration: 1,
+      ease: 'expo.out',
+      stagger: 0.01,
+    }, 0);
+  }
+  
+  // 2. Filter button: y: 100% → 0%
+  const filterButton = document.querySelector('#filters-open');
+  if (filterButton) {
+    tl.fromTo(filterButton,
+      { yPercent: 100 },
+      {
+        yPercent: 0,
+        duration: 1,
+        ease: 'expo.out',
+      },
+      0.2 // Start 0.2s into animation
+    );
+  }
+  
+  return tl;
+}
+
 export async function initCollections(isBackButton = false) {
   console.log('🎬 initCollections called with isBackButton:', isBackButton);
   
-  // GSAP for filter drawer, Nice Select assets
+  // GSAP + SplitText for animations
   if (!window.gsap) {
     await loadScript(
       'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js'
     );
   }
+  
+  // Load SplitText for text animations
+  if (!window.SplitText) {
+    await loadScript(
+      'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js'
+    );
+  }
+  
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/nice-select2@2.1.0/dist/css/nice-select2.css'
   );
@@ -107,6 +160,9 @@ export async function initCollections(isBackButton = false) {
     setState('collections', { destroy: () => {} });
     return;
   }
+
+  // Play page enter animation
+  const enterAnimation = playPageEnterAnimation();
 
   // Filter drawer listeners (idempotent)
   setupFilterListeners();
