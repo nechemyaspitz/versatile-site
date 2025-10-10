@@ -1109,6 +1109,17 @@ export async function initCollections(isBackButton = false) {
         const now = Date.now();
         const timeSinceCache = now - state.timestamp;
         
+        // Detect page refresh (not SPA navigation)
+        const isPageRefresh = window.performance && 
+          (performance.navigation?.type === 1 || 
+           performance.getEntriesByType('navigation')[0]?.type === 'reload');
+        
+        if (isPageRefresh) {
+          console.log('🔄 Page refresh detected - clearing cache for fresh data');
+          sessionStorage.removeItem('collections_state');
+          return false;
+        }
+        
         // Check cache expiration (10 minutes for all navigations)
         if (timeSinceCache > 600000) {
           console.log('⏰ Cache expired (>10min), need fresh data');

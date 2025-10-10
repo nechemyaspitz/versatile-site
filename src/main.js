@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.6.2';
+const VERSION = '3.6.3';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c💾 Save to session after every fetch + destroy', 'color: #ffaa00;');
+console.log('%c🔄 Clear cache on page refresh, restore on SPA navigation', 'color: #ffaa00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
