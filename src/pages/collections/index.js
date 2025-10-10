@@ -32,13 +32,15 @@ export class CollectionsPage {
     // 0. Reveal page immediately (hidden by CSS/transition to prevent FOUC)
     const view = document.querySelector('[data-taxi-view="collections"]');
     if (view) {
+      // CRITICAL: Use vanilla JS for immediate effect (GSAP batches changes)
+      view.style.opacity = '1';
+      
+      // Force GSAP to apply immediately
       if (window.gsap) {
-        window.gsap.set(view, { opacity: 1 });
-      } else {
-        // Fallback if GSAP not loaded yet
-        view.style.opacity = '1';
+        window.gsap.set(view, { opacity: 1, force3D: false });
       }
-      console.log('  👁️  Page revealed (from playPageEnterAnimation)');
+      
+      console.log('  👁️  Page revealed (opacity forced to 1)');
     }
     
     if (!window.gsap) return Promise.resolve();
@@ -371,10 +373,18 @@ export class CollectionsPage {
 
 // Export init function for compatibility with existing code
 export async function initCollections(isBackButton = false) {
-  const page = new CollectionsPage();
+  // CRITICAL: Reveal page IMMEDIATELY before creating any modules
+  // This must happen synchronously before any async operations
+  const view = document.querySelector('[data-taxi-view="collections"]');
+  if (view) {
+    view.style.opacity = '1';
+    if (window.gsap) {
+      window.gsap.set(view, { opacity: 1, force3D: false });
+    }
+    console.log('  👁️  Page revealed IMMEDIATELY (before CollectionsPage)');
+  }
   
-  // Note: Page reveal is handled by CollectionsRenderer.onEnter()
-  // to ensure proper timing with SmartTransition
+  const page = new CollectionsPage();
   
   // Initialize (async)
   await page.init(isBackButton);
