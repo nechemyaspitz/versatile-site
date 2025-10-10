@@ -549,8 +549,11 @@ export async function initCollections(isBackButton = false) {
         this.productContainer.appendChild(fragment);
       }
       
-      // Reset all loaded items (fresh render)
-      this._allLoadedItems = [...items];
+      // FIX: Only reset loaded items if NOT from cache restore
+      // Cache restore already has the correct _allLoadedItems
+      if (!fromCache) {
+        this._allLoadedItems = [...items];
+      }
       
       // Animate items in (staggered) - GSAP will handle initial state
       this.animateItemsIn(this.productContainer.querySelectorAll('.collection_grid-item'));
@@ -1369,9 +1372,19 @@ export async function initCollections(isBackButton = false) {
           return false;
         }
         
+        // FIX: Clean up activeFilters - remove empty arrays
+        const cleanedFilters = {};
+        if (state.activeFilters) {
+          Object.entries(state.activeFilters).forEach(([key, values]) => {
+            if (Array.isArray(values) && values.length > 0) {
+              cleanedFilters[key] = values;
+            }
+          });
+        }
+        
         // Restore ALL state including pagination
         this._allLoadedItems = state.allLoadedItems || [];
-        this.activeFilters = state.activeFilters || {};
+        this.activeFilters = cleanedFilters;
         this.currentSort = state.currentSort || 'recommended';
         this.currentPage = state.currentPage || 1;
         this.totalItems = state.totalItems || 0;
@@ -1387,10 +1400,11 @@ export async function initCollections(isBackButton = false) {
           this.saveToSession();
         }
         
-        // Render all items
+        // Render all items (pass fromCache=true to preserve _allLoadedItems)
         if (this._allLoadedItems.length > 0) {
-          this.renderItems(this._allLoadedItems);
+          this.renderItems(this._allLoadedItems, true); // FIX: Pass fromCache flag
           this.updateResultsCounter(this.totalItems);
+          this.updateClearButton(); // FIX: Update button state after restore
           
           // Schedule scroll restoration if back button + clicked product
           if (isBackButton && this._clickedProductId) {
@@ -1403,7 +1417,7 @@ export async function initCollections(isBackButton = false) {
         return false;
       } catch (error) {
         console.error('Failed to restore from session:', error);
-        sessionStorage.removeItem('collections_state');
+        sessionStorage.removeItem('collections_state'); // Already there, keeping it
         return false;
       }
     }
