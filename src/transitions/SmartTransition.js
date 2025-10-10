@@ -26,6 +26,9 @@ export default function createSmartTransition() {
       } else if (viewName === 'collections') {
         const collectionsState = getState('collections');
         exitAnimation = collectionsState?.playExitAnimation?.();
+      } else if (viewName === 'product') {
+        const productState = getState('product');
+        exitAnimation = productState?.playExitAnimation?.();
       }
       
       if (exitAnimation) {

@@ -2,7 +2,136 @@
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 
+// Page enter animation
+function playPageEnterAnimation() {
+  if (!window.gsap) return Promise.resolve();
+  
+  const tl = gsap.timeline();
+  
+  // 1. Product title: chars split, opacity + y offset
+  const title = document.querySelector('#product-title');
+  if (title && window.SplitText) {
+    const split = new SplitText(title, { type: 'chars' });
+    gsap.set(split.chars, { opacity: 0, yPercent: 20 });
+    
+    tl.to(split.chars, {
+      opacity: 1,
+      yPercent: 0,
+      duration: 1,
+      ease: 'expo.out',
+      stagger: 0.2 / split.chars.length, // Total stagger time: 0.2s
+    }, 0);
+  }
+  
+  // 2. Product description: lines split with mask
+  const description = document.querySelector('.product-description');
+  if (description && window.SplitText) {
+    const split = new SplitText(description, { 
+      type: 'lines',
+      linesClass: 'line-mask',
+    });
+    gsap.set(split.lines, { yPercent: 100 });
+    
+    tl.to(split.lines, {
+      yPercent: 0,
+      duration: 1,
+      ease: 'expo.out',
+      stagger: 0.1 / split.lines.length, // Total stagger time: 0.1s
+    }, 0.15);
+  }
+  
+  // 3-8. Variant sections and specs
+  const elements = [
+    { selector: '.variant-buttons', start: 0.33 },
+    { selector: '.variant-sizes', start: 0.4 },
+    { selector: '.variant-finishes', start: 0.5 },
+    { selector: '#material', start: 0.58 },
+    { selector: '#thickness', start: 0.66 },
+    { selector: '#applications', start: 0.74 },
+  ];
+  
+  elements.forEach(({ selector, start }) => {
+    const el = document.querySelector(selector);
+    if (el) {
+      gsap.set(el, { opacity: 0, yPercent: 20 });
+      tl.to(el, {
+        opacity: 1,
+        yPercent: 0,
+        duration: 0.8,
+        ease: 'expo.out',
+      }, start);
+    }
+  });
+  
+  return tl;
+}
+
+// Page exit animation (reverse, faster, tighter timing)
+function playPageExitAnimation() {
+  if (!window.gsap) return Promise.resolve();
+  
+  const tl = gsap.timeline();
+  
+  // 1. Product title chars exit
+  const title = document.querySelector('#product-title');
+  if (title && window.SplitText) {
+    const split = new SplitText(title, { type: 'chars' });
+    
+    tl.to(split.chars, {
+      opacity: 0,
+      yPercent: -20,
+      duration: 0.5,
+      ease: 'power2.in',
+      stagger: 0.08 / split.chars.length, // Tighter stagger
+    }, 0);
+  }
+  
+  // 2. Description exit
+  const description = document.querySelector('.product-description');
+  if (description && window.SplitText) {
+    const split = new SplitText(description, { type: 'lines' });
+    
+    tl.to(split.lines, {
+      yPercent: -100,
+      duration: 0.5,
+      ease: 'power2.in',
+      stagger: 0.04 / split.lines.length,
+    }, 0.05);
+  }
+  
+  // 3-8. Variant sections and specs (reverse order, tighter)
+  const elements = [
+    { selector: '#applications', start: 0 },
+    { selector: '#thickness', start: 0.04 },
+    { selector: '#material', start: 0.08 },
+    { selector: '.variant-finishes', start: 0.12 },
+    { selector: '.variant-sizes', start: 0.16 },
+    { selector: '.variant-buttons', start: 0.2 },
+  ];
+  
+  elements.forEach(({ selector, start }) => {
+    const el = document.querySelector(selector);
+    if (el) {
+      tl.to(el, {
+        opacity: 0,
+        yPercent: 20,
+        duration: 0.5,
+        ease: 'power2.in',
+      }, start);
+    }
+  });
+  
+  return tl;
+}
+
 export async function initProduct(nsCtx) {
+  // Load GSAP SplitText for animations
+  if (!window.SplitText) {
+    await loadScript(
+      'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js'
+    );
+  }
+  
   // Load styles and scripts
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/carousel/carousel.css'
@@ -42,9 +171,21 @@ export async function initProduct(nsCtx) {
   const mainImg = document.querySelector('.product-image');
   const productName = document.querySelector('[data-product-name]');
   if (!container || !mainImg || !productName) {
-    setState('product', { destroy: () => {} });
+    setState('product', { 
+      playExitAnimation: () => playPageExitAnimation(),
+      destroy: () => {} 
+    });
     return;
   }
+  
+  // Set up state IMMEDIATELY with exit animation
+  setState('product', {
+    playExitAnimation: () => playPageExitAnimation(),
+    destroy: () => {}, // Will be updated with actual destroy
+  });
+  
+  // Play page enter animation
+  playPageEnterAnimation();
 
   class ProductSlider {
     constructor() {
@@ -328,6 +469,12 @@ export async function initProduct(nsCtx) {
   }
 
   const ps = new ProductSlider();
-  setState('product', { destroy: () => ps.destroy() });
+  
+  // Update state with actual destroy function
+  const existingState = { playExitAnimation: () => playPageExitAnimation() };
+  setState('product', {
+    ...existingState,
+    destroy: () => ps.destroy(),
+  });
 }
 
