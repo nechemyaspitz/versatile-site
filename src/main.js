@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.1.0';
+const VERSION = '4.2.0';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✅ Restored: Filter drawer + accordion + scroll restoration', 'color: #00ff00;');
+console.log('%c✅ COMPLETE: All interactions restored (filters, sort, NiceSelect, image hover)', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

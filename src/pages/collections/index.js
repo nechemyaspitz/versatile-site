@@ -8,6 +8,7 @@ import { CollectionCache } from './CollectionCache.js';
 import { CollectionAPI } from './CollectionAPI.js';
 import { CollectionRenderer } from './CollectionRenderer.js';
 import { CollectionInfiniteScroll } from './CollectionInfiniteScroll.js';
+import { CollectionInteractions } from './CollectionInteractions.js';
 import { setState } from '../../core/state.js';
 import { setupFilterListeners } from '../../components/filterDrawer.js';
 
@@ -19,6 +20,7 @@ export class CollectionsPage {
     this.api = new CollectionAPI();
     this.renderer = new CollectionRenderer('.product-grid');
     this.infiniteScroll = null;
+    this.interactions = null; // Initialize after DOM is ready
     
     // Loading flag
     this.isLoading = false;
@@ -140,6 +142,10 @@ export class CollectionsPage {
     
     // Filter accordion expand/collapse
     this.setupFilterAccordions();
+    
+    // Initialize interactions module (filters, sorting, image hover)
+    this.interactions = new CollectionInteractions(this);
+    this.interactions.init();
   }
   
   /**
@@ -247,6 +253,13 @@ export class CollectionsPage {
       this.state.fromJSON(cacheData);
       await this.renderer.renderItems(this.state.getItems(), true);
       this.updateUI();
+      
+      // Initialize interactions for restored items
+      if (this.interactions) {
+        this.interactions.initImageHover();
+        this.interactions.updateProductImages();
+        this.interactions.updateProductLinks();
+      }
       
       // Schedule scroll restoration if back button
       if (isBackButton && this.state.clickedProductId) {
@@ -360,6 +373,13 @@ export class CollectionsPage {
       // Update UI
       this.updateUI();
       
+      // Initialize interactions for new items (image hover, product links)
+      if (this.interactions) {
+        this.interactions.initImageHover();
+        this.interactions.updateProductImages();
+        this.interactions.updateProductLinks();
+      }
+      
       // Increment page for next fetch
       this.state.incrementPage();
       console.log(`  📄 Next page will be: ${this.state.getCurrentPage()}`);
@@ -454,8 +474,18 @@ export class CollectionsPage {
       this.infiniteScroll.destroy();
     }
     
+    if (this.interactions) {
+      this.interactions.destroy();
+    }
+    
+    // Clear pending scroll restoration
+    window.__pendingScrollRestoration = null;
+    
     // Save one last time before leaving
     this.cache.save(this.state);
+    
+    // Clear state from global store
+    setState('collections', null);
     
     console.log('  👋 CollectionsPage destroyed');
   }
