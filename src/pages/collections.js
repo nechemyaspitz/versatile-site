@@ -1109,8 +1109,27 @@ export async function initCollections(isBackButton = false) {
         const now = Date.now();
         const timeSinceCache = now - state.timestamp;
         
+        // Detect hard refresh ONLY on initial page load (not SPA navigation)
+        // Check if this is the first time collections is loading in this session
+        const isInitialPageLoad = !sessionStorage.getItem('collections_initialized');
+        
+        if (isInitialPageLoad) {
+          // Mark as initialized for subsequent SPA navigations
+          sessionStorage.setItem('collections_initialized', 'true');
+          
+          // Check if this initial load was a page refresh
+          const wasRefresh = window.performance && 
+            (performance.navigation?.type === 1 || 
+             performance.getEntriesByType('navigation')[0]?.type === 'reload');
+          
+          if (wasRefresh) {
+            console.log('🔄 Hard refresh detected - clearing cache for fresh data');
+            sessionStorage.removeItem('collections_state');
+            return false;
+          }
+        }
+        
         // Check cache expiration (10 minutes for all navigations)
-        // Note: sessionStorage clears on tab close, so users can force refresh that way
         if (timeSinceCache > 600000) {
           console.log('⏰ Cache expired (>10min), need fresh data');
           sessionStorage.removeItem('collections_state');
