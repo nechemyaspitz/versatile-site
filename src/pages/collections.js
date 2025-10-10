@@ -145,27 +145,21 @@ export async function initCollections(isBackButton = false) {
       this._clickedProductId = null; // For scroll restoration
 
       // Don't call init() in constructor - will be called by initCollections()
-      this._isBackButton = false;
     }
 
     async init(isBackButton = false) {
       try {
-        this._isBackButton = isBackButton;
-        console.log('🔍 Navigation type:', isBackButton ? 'BACK BUTTON' : 'REGULAR LINK');
-        
-        // ALWAYS try to restore cached data if available (saves API calls)
+        // Try to restore cached data if available
         const restored = this.tryRestoreFromSession(isBackButton);
         
         if (restored) {
-          console.log('✅ Restored from session cache');
           this.initNiceSelect();
           this.initEventListeners();
           this.initInfiniteScroll();
-          return; // Don't fetch - we restored!
+          return;
         }
         
-        // No cache available or expired - fresh load
-        console.log('🆕 No cache or expired - fetching fresh data');
+        // No cache or expired - fetch fresh
         this.initNiceSelect();
         this.loadFromURLParams();
         this.initEventListeners();
@@ -1109,34 +1103,12 @@ export async function initCollections(isBackButton = false) {
         const now = Date.now();
         const timeSinceCache = now - state.timestamp;
         
-        // Detect hard refresh ONLY on initial page load (not SPA navigation)
-        // Check if this is the first time collections is loading in this session
-        const isInitialPageLoad = !sessionStorage.getItem('collections_initialized');
-        
-        if (isInitialPageLoad) {
-          // Mark as initialized for subsequent SPA navigations
-          sessionStorage.setItem('collections_initialized', 'true');
-          
-          // Check if this initial load was a page refresh
-          const wasRefresh = window.performance && 
-            (performance.navigation?.type === 1 || 
-             performance.getEntriesByType('navigation')[0]?.type === 'reload');
-          
-          if (wasRefresh) {
-            console.log('🔄 Hard refresh detected - clearing cache for fresh data');
-            sessionStorage.removeItem('collections_state');
-            return false;
-          }
-        }
-        
-        // Check cache expiration (10 minutes for all navigations)
-        if (timeSinceCache > 600000) {
-          console.log('⏰ Cache expired (>10min), need fresh data');
+        // Check cache expiration (5 minutes)
+        if (timeSinceCache > 300000) {
+          console.log('⏰ Cache expired (>5min)');
           sessionStorage.removeItem('collections_state');
           return false;
         }
-        
-        console.log(`📦 Cache is fresh (${Math.round(timeSinceCache/1000)}s old), restoring data`);
         
         // Restore ALL state including pagination
         this._allLoadedItems = state.allLoadedItems || [];
@@ -1147,29 +1119,14 @@ export async function initCollections(isBackButton = false) {
         this.hasMorePages = state.hasMorePages !== undefined ? state.hasMorePages : true;
         this._clickedProductId = state.clickedProductId || null;
         
-        console.log('📦 Restored state:', {
-          items: this._allLoadedItems.length,
-          totalItems: this.totalItems,
-          hasMorePages: this.hasMorePages,
-          currentPage: this.currentPage
-        });
-        
         // Render all items
         if (this._allLoadedItems.length > 0) {
           this.renderItems(this._allLoadedItems);
           this.updateResultsCounter(this.totalItems);
           
-          // ONLY schedule scroll restoration if this is a back button navigation
+          // Schedule scroll restoration if back button + clicked product
           if (isBackButton && this._clickedProductId) {
-            console.log('🔍 Back button + clicked product - scheduling scroll restoration');
-            console.log('  - Clicked product ID:', this._clickedProductId);
-            
-            // Store product ID for later use in NAVIGATE_END
             window.__pendingScrollRestoration = this._clickedProductId;
-          } else if (isBackButton) {
-            console.log('🔍 Back button but no clicked product - staying at top');
-          } else {
-            console.log('🔗 Regular link - data restored but staying at top');
           }
           
           return true;
@@ -1197,45 +1154,23 @@ export async function initCollections(isBackButton = false) {
         };
         
         sessionStorage.setItem('collections_state', JSON.stringify(state));
-        console.log('💾 Saved to session:', {
-          items: this._allLoadedItems.length,
-          totalItems: this.totalItems,
-          hasMorePages: this.hasMorePages,
-          page: this.currentPage,
-          clickedProduct: this._clickedProductId
-        });
       } catch (error) {
         console.error('Failed to save to session:', error);
       }
     }
     
     setupProductClickTracking() {
-      // Track clicks on product links AND variant thumbnails
       const productLinks = this.productContainer.querySelectorAll('.collection_image-cover, .collection_details, .variant-thumb-link');
-      
-      console.log(`🔧 Setting up click tracking for ${productLinks.length} links (products + variants)`);
       
       productLinks.forEach((link) => {
         link.addEventListener('click', (e) => {
-          // Get product ID from the parent grid item
           const gridItem = e.currentTarget.closest('.collection_grid-item');
           if (gridItem) {
-            // Use data-product-id attribute (matches what we query for)
             const productId = gridItem.dataset.productId || gridItem.dataset.baseUrl;
-            const linkType = e.currentTarget.classList.contains('variant-thumb-link') ? 'variant' : 'product';
-            
-            console.log(`🖱️ ${linkType} clicked!`);
-            console.log('  - Product ID:', productId);
-            
             if (productId) {
               this._clickedProductId = productId;
               this.saveToSession();
-              console.log('✅ Saved clicked product to session:', productId);
-            } else {
-              console.warn('⚠️ Could not extract product ID from clicked element');
             }
-          } else {
-            console.warn('⚠️ Could not find grid item parent');
           }
         });
       });
@@ -1278,80 +1213,7 @@ export async function initCollections(isBackButton = false) {
       });
     }
     
-    waitForLenisAndScroll(productId) {
-      // Poll for Lenis to become available, then scroll
-      let attempts = 0;
-      const maxAttempts = 50; // 5 seconds max (50 * 100ms)
-      
-      const checkLenis = () => {
-        attempts++;
-        
-        if (window.lenis) {
-          console.log(`✅ Lenis found after ${attempts} attempts (${attempts * 100}ms)`);
-          
-          // Wait for DOM to settle, then instant jump
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              // Force Lenis to recalculate before scrolling
-              window.lenis.resize();
-              
-              const productEl = document.querySelector(`[data-product-id="${productId}"]`);
-              console.log('  - Product element found?', !!productEl);
-              
-              if (productEl) {
-                // Get element position for debugging
-                const rect = productEl.getBoundingClientRect();
-                const elementTop = window.pageYOffset + rect.top;
-                
-                console.log('🎯 Instantly jumping to clicked product:', productId);
-                console.log('  - Element rect.top:', rect.top);
-                console.log('  - window.pageYOffset:', window.pageYOffset);
-                console.log('  - Calculated element position:', elementTop);
-                console.log('  - Target scroll (with -100 offset):', elementTop - 100);
-                
-                // OPTION 1: Instant jump with Lenis (no animation)
-                window.lenis.scrollTo(productEl, {
-                  immediate: true,  // ← INSTANT jump!
-                  offset: -100
-                });
-                
-                // Check position after a moment
-                setTimeout(() => {
-                  console.log('✅ Final scroll position:', window.scrollY);
-                }, 100);
-              } else {
-                console.warn('⚠️ Product element not found for scroll:', productId);
-                console.warn('  - Available product IDs:', 
-                  Array.from(document.querySelectorAll('[data-product-id]'))
-                    .map(el => el.dataset.productId)
-                    .slice(0, 5)
-                );
-              }
-            });
-          });
-        } else if (attempts < maxAttempts) {
-          // Lenis not ready yet, try again in 100ms
-          setTimeout(checkLenis, 100);
-        } else {
-          // Fallback: Use native scroll if Lenis never loads
-          console.warn('⚠️ Lenis not available, using native scroll fallback');
-          const productEl = document.querySelector(`[data-product-id="${productId}"]`);
-          if (productEl) {
-            const rect = productEl.getBoundingClientRect();
-            const scrollTop = window.pageYOffset + rect.top - 100;
-            window.scrollTo(0, scrollTop);
-            console.log('✅ Native scroll to position:', scrollTop);
-          }
-        }
-      };
-      
-      // Start polling
-      checkLenis();
-    }
-
     destroy() {
-      // Save state before destroying
-      console.log('🗑️ Collections filter destroying - saving state');
       this.saveToSession();
       
       try {
