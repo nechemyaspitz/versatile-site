@@ -454,6 +454,7 @@ export async function initCollections(isBackButton = false) {
           animation: skeleton-pulse 2s ease-in-out infinite;
           animation-delay: ${i * 0.1}s;
           border-radius: 4px;
+          opacity: 0;
         `;
         fragment.appendChild(skeleton);
       }
@@ -468,6 +469,21 @@ export async function initCollections(isBackButton = false) {
       // Add skeletons to container
       const skeletons = this.createSkeletonLoader(count);
       this.productContainer.appendChild(skeletons);
+      
+      // Animate skeletons in smoothly
+      if (window.gsap) {
+        const skeletonElements = this.productContainer.querySelectorAll('.skeleton-item');
+        gsap.to(skeletonElements, {
+          opacity: 1,
+          duration: 0.4,
+          ease: 'power2.out',
+          stagger: 0.05,
+        });
+      } else {
+        // Fallback if GSAP not loaded
+        const skeletonElements = this.productContainer.querySelectorAll('.skeleton-item');
+        skeletonElements.forEach(el => el.style.opacity = '1');
+      }
     }
 
     removeSkeletonLoaders(animate = false) {
