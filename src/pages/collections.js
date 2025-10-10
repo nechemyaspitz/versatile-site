@@ -153,21 +153,19 @@ export async function initCollections(isBackButton = false) {
         this._isBackButton = isBackButton;
         console.log('🔍 Navigation type:', isBackButton ? 'BACK BUTTON' : 'REGULAR LINK');
         
-        // ONLY restore on back button
-        if (isBackButton && this.tryRestoreFromSession()) {
-          console.log('✅ Restored from session cache (back button)');
+        // ALWAYS try to restore cached data if available (saves API calls)
+        const restored = this.tryRestoreFromSession(isBackButton);
+        
+        if (restored) {
+          console.log('✅ Restored from session cache');
           this.initNiceSelect();
           this.initEventListeners();
           this.initInfiniteScroll();
           return; // Don't fetch - we restored!
         }
         
-        // Fresh load (navbar link, direct URL, etc.) - clear old cache
-        if (!isBackButton) {
-          console.log('🆕 Fresh load - clearing old session data');
-          sessionStorage.removeItem('collections_state');
-        }
-        
+        // No cache available or expired - fresh load
+        console.log('🆕 No cache or expired - fetching fresh data');
         this.initNiceSelect();
         this.loadFromURLParams();
         this.initEventListeners();
@@ -1099,7 +1097,7 @@ export async function initCollections(isBackButton = false) {
 
     // ====== SESSION RESTORATION METHODS ======
     
-    tryRestoreFromSession() {
+    tryRestoreFromSession(isBackButton = false) {
       try {
         const saved = sessionStorage.getItem('collections_state');
         if (!saved) return false;
@@ -1108,30 +1106,16 @@ export async function initCollections(isBackButton = false) {
         const now = Date.now();
         const timeSinceCache = now - state.timestamp;
         
-        // FIX #1: Smart cache expiration
-        // Detect if this is a page refresh vs back button
-        const isPageRefresh = window.performance && 
-          (performance.navigation?.type === 1 || performance.getEntriesByType('navigation')[0]?.type === 'reload');
-        
-        if (isPageRefresh) {
-          // On refresh: only restore if <30 seconds old
-          if (timeSinceCache > 30000) {
-            console.log('🔄 Page refresh + cache expired (>30s), fetching fresh data');
-            sessionStorage.removeItem('collections_state');
-            return false;
-          }
-          console.log('🔄 Page refresh but cache is fresh (<30s), restoring');
-        } else {
-          // On navigation (back button): restore if <10 minutes old
-          if (timeSinceCache > 600000) {
-            console.log('⏰ Cache expired (>10min), fetching fresh data');
-            sessionStorage.removeItem('collections_state');
-            return false;
-          }
-          console.log('⬅️ Back button navigation, restoring from cache');
+        // Check cache expiration (10 minutes for all navigations)
+        if (timeSinceCache > 600000) {
+          console.log('⏰ Cache expired (>10min), need fresh data');
+          sessionStorage.removeItem('collections_state');
+          return false;
         }
         
-        // FIX #2: Restore ALL state including pagination
+        console.log('📦 Cache is fresh, restoring data');
+        
+        // Restore ALL state including pagination
         this._allLoadedItems = state.allLoadedItems || [];
         this.activeFilters = state.activeFilters || {};
         this.currentSort = state.currentSort || 'recommended';
@@ -1152,15 +1136,17 @@ export async function initCollections(isBackButton = false) {
           this.renderItems(this._allLoadedItems);
           this.updateResultsCounter(this.totalItems);
           
-          // FIX #3: Scroll to clicked product - DELAYED until page is fully ready
-          if (this._clickedProductId) {
-            console.log('🔍 DEBUG: Scheduling scroll restoration...');
+          // ONLY schedule scroll restoration if this is a back button navigation
+          if (isBackButton && this._clickedProductId) {
+            console.log('🔍 Back button + clicked product - scheduling scroll restoration');
             console.log('  - Clicked product ID:', this._clickedProductId);
             
-            // Store product ID for later use
+            // Store product ID for later use in NAVIGATE_END
             window.__pendingScrollRestoration = this._clickedProductId;
+          } else if (isBackButton) {
+            console.log('🔍 Back button but no clicked product - staying at top');
           } else {
-            console.log('ℹ️ No clicked product to scroll to');
+            console.log('🔗 Regular link - data restored but staying at top');
           }
           
           return true;
