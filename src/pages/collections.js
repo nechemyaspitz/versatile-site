@@ -304,6 +304,8 @@ export async function initCollections(isBackButton = false) {
       // Reset all loaded items (fresh render)
       this._allLoadedItems = [...items];
       
+      console.log('🎨 Rendering', items.length, 'items');
+      
       // Build all elements in fragment (off-DOM for performance)
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
@@ -313,6 +315,9 @@ export async function initCollections(isBackButton = false) {
       
       // Single DOM append (batch write) - no animations!
       this.productContainer.appendChild(fragment);
+      
+      // Debug: Check container height
+      console.log('📏 Container height after render:', this.productContainer.scrollHeight);
       
       // CRITICAL: Wait for images to load BEFORE resizing Lenis
       // This prevents jitter from height changes during scroll
@@ -1174,9 +1179,12 @@ export async function initCollections(isBackButton = false) {
       let loadedCount = 0;
       const totalImages = imageArray.length;
       
+      console.log('🖼️ Tracking', totalImages, 'images for load');
+      
       if (totalImages === 0) {
         // No images, resize immediately
         if (window.lenis) {
+          console.log('📐 Lenis resize (no images)');
           window.lenis.resize();
         }
         return;
@@ -1184,6 +1192,7 @@ export async function initCollections(isBackButton = false) {
       
       // Initial resize
       if (window.lenis) {
+        console.log('📐 Lenis initial resize');
         window.lenis.resize();
       }
       
@@ -1192,14 +1201,18 @@ export async function initCollections(isBackButton = false) {
         
         // Resize on EVERY image load to keep scroll smooth
         if (window.lenis) {
+          console.log(`📐 Lenis resize (${loadedCount}/${totalImages} images loaded)`);
           window.lenis.resize();
         }
         
         // Final resize when all images are done
         if (loadedCount === totalImages) {
+          console.log('✅ All images loaded!');
           setTimeout(() => {
             if (window.lenis) {
+              console.log('📐 Lenis final resize');
               window.lenis.resize();
+              console.log('📏 Final container height:', this.productContainer?.scrollHeight);
             }
           }, 50);
         }
