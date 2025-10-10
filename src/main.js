@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.12.0';
+const VERSION = '3.12.1';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✨ Collections exit animation + cleanup', 'color: #00ff00;');
+console.log('%c🔧 Fixed collections exit: faster, heading exits down, items fade', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

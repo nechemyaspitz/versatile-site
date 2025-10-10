@@ -133,7 +133,7 @@ function playPageExitAnimation() {
   
   const tl = gsap.timeline();
   
-  // 1. Heading chars: 0% → y: -100% (exit up)
+  // 1. Heading chars: 0% → y: 100% (exit down)
   const heading = document.querySelector('.font-color-primary');
   if (heading && window.SplitText) {
     const split = new SplitText(heading, { 
@@ -142,10 +142,10 @@ function playPageExitAnimation() {
     });
     
     tl.to(split.chars, {
-      yPercent: -100,
-      duration: 0.5,
+      yPercent: 100,
+      duration: 0.4,
       ease: 'power2.in',
-      stagger: 0.008,
+      stagger: 0.006,
     }, 0);
   }
   
@@ -154,9 +154,21 @@ function playPageExitAnimation() {
   if (filterButton) {
     tl.to(filterButton, {
       yPercent: 100,
-      duration: 0.5,
+      duration: 0.4,
       ease: 'power2.in',
-    }, 0.05);
+    }, 0.04);
+  }
+  
+  // 3. Items: subtle fade + slight down movement
+  const items = document.querySelectorAll('.collection_grid-item');
+  if (items.length > 0) {
+    tl.to(items, {
+      opacity: 0,
+      y: 15,
+      duration: 0.35,
+      ease: 'power2.in',
+      stagger: 0.015,
+    }, 0.08);
   }
   
   return tl;
@@ -192,7 +204,10 @@ export async function initCollections(isBackButton = false) {
   const grid = document.querySelector('.product-grid');
   const form = document.getElementById('filters');
   if (!grid || !form) {
-    setState('collections', { destroy: () => {} });
+    setState('collections', { 
+      playExitAnimation: () => playPageExitAnimation(),
+      destroy: () => {} 
+    });
     return;
   }
 
