@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.5.7';
+const VERSION = '3.5.8';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✅ Scroll restoration ONLY on back button + variant tracking', 'color: #ffaa00;');
+console.log('%c✅ Fixed: Use Taxi.js trigger (popstate) for reliable back button detection', 'color: #ffaa00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

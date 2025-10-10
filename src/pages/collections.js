@@ -142,16 +142,13 @@ export async function initCollections(nsCtx) {
       this._allLoadedItems = []; // Track ALL items across all pages
       this._clickedProductId = null; // For scroll restoration
 
-      this.init();
+      // Don't call init() in constructor - will be called by initCollections()
+      this._isBackButton = false;
     }
 
-    async init() {
+    async init(isBackButton = false) {
       try {
-        // Detect if this is a back button navigation
-        const isBackButton = window.performance && 
-          (performance.navigation?.type === 2 || 
-           performance.getEntriesByType('navigation')[0]?.type === 'back_forward');
-        
+        this._isBackButton = isBackButton;
         console.log('🔍 Navigation type:', isBackButton ? 'BACK BUTTON' : 'REGULAR LINK');
         
         // ONLY restore on back button
@@ -1349,6 +1346,9 @@ export async function initCollections(nsCtx) {
   }
 
   const filterInstance = new InfiniteScrollProductFilter();
+  // Initialize with back button flag
+  await filterInstance.init(isBackButton);
+  
   // Make available globally and store constructor for snapshot restoration
   window.productFilter = filterInstance;
   window.InfiniteScrollProductFilter = filterInstance;

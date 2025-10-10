@@ -12,9 +12,13 @@ export default function createCollectionsRenderer() {
       this.onEnterCompleted();
     }
     
-    async onEnter() {
-      // Always fresh initialization
-      await initCollections();
+    async onEnter({ trigger } = {}) {
+      // Detect back button: trigger will be 'popstate' for back/forward
+      const isBackButton = trigger === 'popstate';
+      console.log('🎬 CollectionsRenderer onEnter - trigger:', trigger, 'isBackButton:', isBackButton);
+      
+      // Pass back button flag to initCollections
+      await initCollections(isBackButton);
     }
   };
 }
