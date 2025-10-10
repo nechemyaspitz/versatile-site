@@ -304,8 +304,6 @@ export async function initCollections(isBackButton = false) {
       // Reset all loaded items (fresh render)
       this._allLoadedItems = [...items];
       
-      console.log('🎨 Rendering', items.length, 'items');
-      
       // Build all elements in fragment (off-DOM for performance)
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
@@ -316,11 +314,10 @@ export async function initCollections(isBackButton = false) {
       // Single DOM append (batch write) - no animations!
       this.productContainer.appendChild(fragment);
       
-      // Debug: Check container height
-      console.log('📏 Container height after render:', this.productContainer.scrollHeight);
+      // GPU acceleration for smooth scroll with complex DOM
+      this.optimizeForScroll();
       
-      // CRITICAL: Wait for images to load BEFORE resizing Lenis
-      // This prevents jitter from height changes during scroll
+      // Wait for images to load BEFORE resizing Lenis
       this.waitForImagesToLoad(this.productContainer.querySelectorAll('img'));
       
       // Initialize features immediately
@@ -336,9 +333,6 @@ export async function initCollections(isBackButton = false) {
       // Add to all loaded items
       this._allLoadedItems.push(...items);
       
-      // Track the starting position before adding new items
-      const beforeHeight = this.productContainer.scrollHeight;
-      
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
@@ -348,12 +342,14 @@ export async function initCollections(isBackButton = false) {
       // Batch DOM append - no animations!
       this.productContainer.appendChild(fragment);
       
+      // GPU acceleration for newly added items
+      this.optimizeForScroll();
+      
       // Get only the NEW images we just added
       const allImages = Array.from(this.productContainer.querySelectorAll('img'));
       const newImages = allImages.slice(-items.length * 4); // Approximate: ~4 images per product
       
-      // CRITICAL: Wait for NEW images to load BEFORE resizing Lenis
-      // This prevents jitter during infinite scroll
+      // Wait for NEW images to load BEFORE resizing Lenis
       this.waitForImagesToLoad(newImages);
       
       // Initialize features for new items
@@ -1173,18 +1169,25 @@ export async function initCollections(isBackButton = false) {
       });
     }
     
+    optimizeForScroll() {
+      // Force GPU acceleration on all product cards to reduce jitter
+      const products = this.productContainer.querySelectorAll('.collection_grid-item');
+      products.forEach((product) => {
+        // Use transform to create a new compositing layer (GPU accelerated)
+        product.style.transform = 'translateZ(0)';
+        product.style.willChange = 'transform';
+      });
+    }
+
     waitForImagesToLoad(images) {
       // Accept images as parameter to track specific images (not all)
       const imageArray = images ? Array.from(images) : [];
       let loadedCount = 0;
       const totalImages = imageArray.length;
       
-      console.log('🖼️ Tracking', totalImages, 'images for load');
-      
       if (totalImages === 0) {
         // No images, resize immediately
         if (window.lenis) {
-          console.log('📐 Lenis resize (no images)');
           window.lenis.resize();
         }
         return;
@@ -1192,7 +1195,6 @@ export async function initCollections(isBackButton = false) {
       
       // Initial resize
       if (window.lenis) {
-        console.log('📐 Lenis initial resize');
         window.lenis.resize();
       }
       
@@ -1201,18 +1203,14 @@ export async function initCollections(isBackButton = false) {
         
         // Resize on EVERY image load to keep scroll smooth
         if (window.lenis) {
-          console.log(`📐 Lenis resize (${loadedCount}/${totalImages} images loaded)`);
           window.lenis.resize();
         }
         
         // Final resize when all images are done
         if (loadedCount === totalImages) {
-          console.log('✅ All images loaded!');
           setTimeout(() => {
             if (window.lenis) {
-              console.log('📐 Lenis final resize');
               window.lenis.resize();
-              console.log('📏 Final container height:', this.productContainer?.scrollHeight);
             }
           }, 50);
         }
