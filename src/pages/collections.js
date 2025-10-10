@@ -480,17 +480,32 @@ export async function initCollections(isBackButton = false) {
     }
 
     animateItemsIn(items) {
-      if (!window.gsap || !items || items.length === 0) return;
+      if (!window.gsap) {
+        console.warn('⚠️ GSAP not loaded, items will not animate');
+        return;
+      }
       
-      // Wait for next frame to ensure DOM is painted with initial state
+      if (!items || items.length === 0) {
+        console.warn('⚠️ No items to animate');
+        return;
+      }
+      
+      console.log('🎬 Animating', items.length, 'items');
+      
+      // Double RAF to ensure paint + layout are complete
       requestAnimationFrame(() => {
-        gsap.to(items, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: 'power2.out',
-          stagger: 0.03, // Small stagger for smooth sequential reveal
-          clearProps: 'transform,opacity', // Clean up inline styles after animation
+        requestAnimationFrame(() => {
+          console.log('🚀 Starting GSAP animation');
+          gsap.to(items, {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            ease: 'power2.out',
+            stagger: 0.03,
+            clearProps: 'transform,opacity',
+            onStart: () => console.log('✅ Animation started'),
+            onComplete: () => console.log('✅ Animation complete'),
+          });
         });
       });
     }
