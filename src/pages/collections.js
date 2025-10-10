@@ -219,6 +219,9 @@ export async function initCollections(isBackButton = false) {
         this.updatePagination(data.pagination);
         this.updateResultsCounter(data.pagination.total);
         this.updateClearButton();
+        
+        // Save to session after every successful fetch
+        this.saveToSession();
       } catch (error) {
         console.error('Fetch error:', error);
         this.handleError(error);
@@ -1328,6 +1331,7 @@ export async function initCollections(isBackButton = false) {
 
     destroy() {
       // Save state before destroying
+      console.log('🗑️ Collections filter destroying - saving state');
       this.saveToSession();
       
       try {
