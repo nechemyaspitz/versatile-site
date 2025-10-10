@@ -275,24 +275,22 @@ export async function initCollections(isBackButton = false) {
 
     async init(isBackButton = false) {
       try {
-        // Always load URL params first (important for refresh with filters)
+        // STEP 1: Load URL params (source of truth for initial state)
         this.loadFromURLParams();
         
-        // Try to restore cached data if available
-        const restored = this.tryRestoreFromSession(isBackButton);
+        // STEP 2: Check if we can restore from cache
+        // BUT only if cache matches current URL params
+        const cacheValid = this.tryRestoreFromSession(isBackButton);
         
-        // Always initialize UI components
+        // STEP 3: Initialize UI components
         this.initNiceSelect();
         this.initEventListeners();
         this.initInfiniteScroll();
         
-        if (restored) {
-          // Cache restored successfully
-          return;
+        // STEP 4: If cache invalid or doesn't match URL, fetch fresh
+        if (!cacheValid) {
+          await this.loadInitialData();
         }
-        
-        // No cache or expired - fetch fresh
-        await this.loadInitialData();
       } catch (error) {
         console.error('Error initializing filter:', error);
         this.handleError(error);
@@ -1372,54 +1370,109 @@ export async function initCollections(isBackButton = false) {
           return false;
         }
         
-        // FIX: Clean up activeFilters - remove empty arrays
-        const cleanedFilters = {};
+        // CRITICAL FIX: Validate cache matches current URL params
+        // Clean cached filters first
+        const cachedFilters = {};
         if (state.activeFilters) {
           Object.entries(state.activeFilters).forEach(([key, values]) => {
             if (Array.isArray(values) && values.length > 0) {
-              cleanedFilters[key] = values;
+              cachedFilters[key] = values;
             }
           });
         }
         
-        // Restore ALL state including pagination
+        // Compare cached state with current URL-derived state
+        const cacheMatchesURL = this.validateCacheMatchesCurrentState(
+          cachedFilters,
+          state.currentSort || 'recommended'
+        );
+        
+        // If not back button and cache doesn't match URL, invalidate cache
+        if (!isBackButton && !cacheMatchesURL) {
+          console.log('❌ Cache doesn\'t match URL params - fetching fresh');
+          sessionStorage.removeItem('collections_state');
+          return false;
+        }
+        
+        // If back button, always restore (but might have different filters than URL)
+        // In that case, restore cache state and override URL params
+        if (isBackButton) {
+          this.activeFilters = cachedFilters;
+          this.currentSort = state.currentSort || 'recommended';
+        }
+        // If not back button and cache matches, we already have the right filters from URL
+        
+        // Restore ALL state
         this._allLoadedItems = state.allLoadedItems || [];
-        this.activeFilters = cleanedFilters;
-        this.currentSort = state.currentSort || 'recommended';
         this.currentPage = state.currentPage || 1;
         this.totalItems = state.totalItems || 0;
         this.hasMorePages = state.hasMorePages !== undefined ? state.hasMorePages : true;
         
-        // Only restore clicked product ID if back button
-        // If regular navigation, clear it to prevent stale scroll restoration
+        // Restore clicked product ID only if back button
         if (isBackButton) {
           this._clickedProductId = state.clickedProductId || null;
         } else {
           this._clickedProductId = null;
-          // Update session to clear the stale clicked product
-          this.saveToSession();
         }
         
-        // Render all items (pass fromCache=true to preserve _allLoadedItems)
-        if (this._allLoadedItems.length > 0) {
-          this.renderItems(this._allLoadedItems, true); // FIX: Pass fromCache flag
-          this.updateResultsCounter(this.totalItems);
-          this.updateClearButton(); // FIX: Update button state after restore
-          
-          // Schedule scroll restoration if back button + clicked product
-          if (isBackButton && this._clickedProductId) {
-            window.__pendingScrollRestoration = this._clickedProductId;
-          }
-          
-          return true;
+        // Validate we have items to render
+        if (this._allLoadedItems.length === 0) {
+          console.log('⚠️ Cache has no items');
+          return false;
         }
         
-        return false;
+        console.log(`✅ Restoring ${this._allLoadedItems.length} items from cache`);
+        
+        // Render all items (fromCache=true preserves _allLoadedItems)
+        this.renderItems(this._allLoadedItems, true);
+        this.updateResultsCounter(this.totalItems);
+        this.updateClearButton();
+        
+        // Schedule scroll restoration if back button + clicked product
+        if (isBackButton && this._clickedProductId) {
+          window.__pendingScrollRestoration = this._clickedProductId;
+        }
+        
+        // Save updated state (clears clicked product if not back button)
+        this.saveToSession();
+        
+        return true;
       } catch (error) {
         console.error('Failed to restore from session:', error);
-        sessionStorage.removeItem('collections_state'); // Already there, keeping it
+        sessionStorage.removeItem('collections_state');
         return false;
       }
+    }
+    
+    // Helper: Check if cached state matches current URL params
+    validateCacheMatchesCurrentState(cachedFilters, cachedSort) {
+      // Compare sort
+      if (cachedSort !== this.currentSort) {
+        console.log(`Sort mismatch: cached=${cachedSort}, current=${this.currentSort}`);
+        return false;
+      }
+      
+      // Compare filters (both keys and values)
+      const currentFilterKeys = Object.keys(this.activeFilters).sort();
+      const cachedFilterKeys = Object.keys(cachedFilters).sort();
+      
+      if (JSON.stringify(currentFilterKeys) !== JSON.stringify(cachedFilterKeys)) {
+        console.log('Filter keys mismatch');
+        return false;
+      }
+      
+      // Compare filter values
+      for (const key of currentFilterKeys) {
+        const currentValues = [...this.activeFilters[key]].sort();
+        const cachedValues = [...cachedFilters[key]].sort();
+        
+        if (JSON.stringify(currentValues) !== JSON.stringify(cachedValues)) {
+          console.log(`Filter values mismatch for ${key}`);
+          return false;
+        }
+      }
+      
+      return true;
     }
     
     saveToSession() {
