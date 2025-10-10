@@ -478,12 +478,6 @@ export async function initHome(nsCtx) {
   };
   document.addEventListener('visibilitychange', onVisChange);
 
-  const onEnter = () => clearAutoplay();
-  const onLeave = () =>
-    scheduleAutoplay(() => transitionTo(swiper, 'next'));
-  rootSwiper.addEventListener('mouseenter', onEnter);
-  rootSwiper.addEventListener('mouseleave', onLeave);
-
   setState('home', {
     playExitAnimation: () => {
       // Play exit animation and return the timeline
@@ -493,8 +487,6 @@ export async function initHome(nsCtx) {
     destroy: () => {
       try {
         document.removeEventListener('visibilitychange', onVisChange);
-        rootSwiper.removeEventListener('mouseenter', onEnter);
-        rootSwiper.removeEventListener('mouseleave', onLeave);
       } catch (e) {}
       try {
         clearAutoplay();
