@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.0.5';
+const VERSION = '4.0.6';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔧 Fix: Reveal page IMMEDIATELY at start of initCollections (vanilla JS)', 'color: #ffaa00;');
+console.log('%c🔧 Critical: SmartTransition NO LONGER sets opacity for collections', 'color: #ff0000;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
