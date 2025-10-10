@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.14.0';
+const VERSION = '3.14.1';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c⚡ Performance: ~30% faster animations across all pages', 'color: #00ff00;');
+console.log('%c⚡ Balanced timing: faster transitions, smooth animations', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

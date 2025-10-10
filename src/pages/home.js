@@ -63,7 +63,7 @@ export async function initHome(nsCtx) {
         {
           opacity: 1,
           scale: 1,
-          duration: 0.7,
+          duration: 0.85,
           ease: 'expo.inOut',
           transformOrigin: 'top left',
         },
@@ -71,7 +71,7 @@ export async function initHome(nsCtx) {
       );
     }
 
-    // 2. Button group children: y 102%→0%, stagger 0.04s
+    // 2. Button group children: y 102%→0%, stagger 0.045s
     const btnGroupChildren = document.querySelectorAll('.btn-group > *');
     if (btnGroupChildren.length > 0) {
       enterTL.fromTo(
@@ -79,11 +79,11 @@ export async function initHome(nsCtx) {
         { yPercent: 102 },
         {
           yPercent: 0,
-          duration: 0.7,
+          duration: 0.85,
           ease: 'expo.inOut',
-          stagger: 0.04,
+          stagger: 0.045,
         },
-        0.08 // Start 0.08s into animation
+        0.09 // Start 0.09s into animation
       );
     }
 
@@ -95,14 +95,14 @@ export async function initHome(nsCtx) {
         { width: '100%' },
         {
           width: '0%',
-          duration: 0.7,
+          duration: 0.85,
           ease: 'expo.inOut',
         },
-        0.24 // Start 0.24s into animation
+        0.28 // Start 0.28s into animation
       );
     }
 
-    // 4. Small premium text: split chars, opacity 0→1, stagger 0.015s
+    // 4. Small premium text: split chars, opacity 0→1, stagger 0.017s
     const smPremium = document.querySelector('.sm-premium');
     if (smPremium && window.SplitText) {
       const split = new SplitText(smPremium, { type: 'chars' });
@@ -111,11 +111,11 @@ export async function initHome(nsCtx) {
         { opacity: 0 },
         {
           opacity: 1,
-          duration: 0.9,
+          duration: 1.05,
           ease: 'power1.out',
-          stagger: 0.015,
+          stagger: 0.017,
         },
-        0.34 // Start 0.34s into animation
+        0.4 // Start 0.4s into animation
       );
     }
 
@@ -126,10 +126,10 @@ export async function initHome(nsCtx) {
         { scale: 1.1 },
         {
           scale: 1,
-          duration: 0.9,
+          duration: 1.05,
           ease: 'expo.out',
         },
-        0.36 // Start 0.36s into animation
+        0.42 // Start 0.42s into animation
       );
     }
 
@@ -160,7 +160,7 @@ export async function initHome(nsCtx) {
   function playPageExitAnimation() {
     const exitTL = gsap.timeline();
 
-    // 1. Small premium text: opacity 1→0, stagger chars 0.008s
+    // 1. Small premium text: opacity 1→0, stagger chars 0.009s
     const smPremium = document.querySelector('.sm-premium');
     if (smPremium && window.SplitText) {
       const split = new SplitText(smPremium, { type: 'chars' });
@@ -169,9 +169,9 @@ export async function initHome(nsCtx) {
         { opacity: 1 },
         {
           opacity: 0,
-          duration: 0.55,
+          duration: 0.65,
           ease: 'power1.out',
-          stagger: 0.008,
+          stagger: 0.009,
         },
         0 // Start at 0s
       );
@@ -186,7 +186,7 @@ export async function initHome(nsCtx) {
         {
           opacity: 0,
           scale: 0.8,
-          duration: 0.65,
+          duration: 0.8,
           ease: 'expo.inOut',
           transformOrigin: 'top left',
         },
@@ -194,7 +194,7 @@ export async function initHome(nsCtx) {
       );
     }
 
-    // 3. Button group children: y 0%→102%, stagger 0.04s
+    // 3. Button group children: y 0%→102%, stagger 0.045s
     const btnGroupChildren = document.querySelectorAll('.btn-group > *');
     if (btnGroupChildren.length > 0) {
       exitTL.fromTo(
@@ -202,11 +202,11 @@ export async function initHome(nsCtx) {
         { yPercent: 0 },
         {
           yPercent: 102,
-          duration: 0.65,
+          duration: 0.8,
           ease: 'expo.inOut',
-          stagger: 0.04,
+          stagger: 0.045,
         },
-        0.04 // Start 0.04s into animation
+        0.05 // Start 0.05s into animation
       );
     }
 
@@ -218,10 +218,10 @@ export async function initHome(nsCtx) {
         { width: '0%' },
         {
           width: '100%',
-          duration: 0.65,
+          duration: 0.8,
           ease: 'expo.inOut',
         },
-        0.13 // Start 0.13s into animation
+        0.16 // Start 0.16s into animation
       );
     }
 
@@ -232,10 +232,10 @@ export async function initHome(nsCtx) {
         { scale: 1 },
         {
           scale: 0.5,
-          duration: 0.65,
+          duration: 0.8,
           ease: 'expo.in',
         },
-        0.13 // Start 0.13s into animation
+        0.16 // Start 0.16s into animation
       );
     }
 
