@@ -32,6 +32,18 @@ export class CollectionsPage {
     console.log(`URL: ${window.location.href}`);
     console.log(`Back button: ${isBackButton}`);
     
+    // Step 0: Reveal page immediately (hidden by CSS to prevent FOUC)
+    const view = document.querySelector('[data-taxi-view="collections"]');
+    if (view) {
+      if (window.gsap) {
+        window.gsap.set(view, { opacity: 1 });
+      } else {
+        // Fallback if GSAP not loaded yet
+        view.style.opacity = '1';
+      }
+      console.log('  👁️  Page revealed');
+    }
+    
     // Step 1: Load URL params into state
     this.loadURLParams();
     
