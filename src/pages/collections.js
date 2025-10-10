@@ -482,13 +482,16 @@ export async function initCollections(isBackButton = false) {
     animateItemsIn(items) {
       if (!window.gsap || !items || items.length === 0) return;
       
-      gsap.to(items, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        ease: 'power2.out',
-        stagger: 0.03, // Small stagger for smooth sequential reveal
-        clearProps: 'transform,opacity', // Clean up inline styles after animation
+      // Wait for next frame to ensure DOM is painted with initial state
+      requestAnimationFrame(() => {
+        gsap.to(items, {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power2.out',
+          stagger: 0.03, // Small stagger for smooth sequential reveal
+          clearProps: 'transform,opacity', // Clean up inline styles after animation
+        });
       });
     }
 
