@@ -377,6 +377,7 @@ export async function initCollections(isBackButton = false) {
           <a href="${baseUrl}" class="collection_image-cover">
             <img src="${mainImage}" loading="lazy" alt="${productName}" class="img-2" data-original-src="${mainImage}">
           </a>
+          <!--
           <div class="progressive-blur">
               <div class="blur"></div>
               <div class="blur"></div>
@@ -384,6 +385,7 @@ export async function initCollections(isBackButton = false) {
               <div class="blur"></div>
               <div class="blur"></div>
           </div>
+          -->
           <div class="gradient-cover"></div>
           <div class="collection-overlay">
             <a href="${baseUrl}" class="collection_details">
