@@ -607,11 +607,16 @@ export async function initCollections(isBackButton = false) {
     }
 
     async appendItems(items) {
+      console.log('%c[APPEND] appendItems called', 'color: #ff00ff');
+      console.log('  - Items to append:', items.length);
+      console.log('  - Current _allLoadedItems length:', this._allLoadedItems.length);
+      
       // Fade out skeleton loaders at bottom if any
       await this.removeSkeletonLoaders(true);
       
       // Add to all loaded items
       this._allLoadedItems.push(...items);
+      console.log('  - After push, _allLoadedItems length:', this._allLoadedItems.length);
       
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
@@ -1392,11 +1397,34 @@ export async function initCollections(isBackButton = false) {
 
     // ====== SESSION RESTORATION METHODS ======
     
+    // Generate cache key from current URL state
+    getCacheKey() {
+      const params = new URLSearchParams(window.location.search);
+      
+      // Remove page/limit params (we cache all loaded items regardless)
+      params.delete('page');
+      params.delete('limit');
+      params.delete('config');
+      params.delete('collection_id');
+      
+      // Sort params alphabetically for consistent keys
+      const sortedParams = Array.from(params.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, val]) => `${key}=${val}`)
+        .join('&');
+      
+      return `collections_${sortedParams || 'default'}`;
+    }
+    
     tryRestoreFromSession(isBackButton = false) {
       try {
-        const saved = sessionStorage.getItem('collections_state');
+        const cacheKey = this.getCacheKey();
+        const saved = sessionStorage.getItem(cacheKey);
+        
+        console.log(`  🔑 Cache key: "${cacheKey}"`);
+        
         if (!saved) {
-          console.log('  ❌ No cache found');
+          console.log('  ❌ No cache found for this URL state');
           return false;
         }
         
@@ -1407,60 +1435,17 @@ export async function initCollections(isBackButton = false) {
         console.log('  📦 Cache found:', {
           age: `${Math.round(timeSinceCache / 1000)}s`,
           items: state.allLoadedItems?.length || 0,
-          filters: state.activeFilters,
-          sort: state.currentSort,
+          total: state.totalItems,
         });
         
         // Check cache expiration (5 minutes)
         if (timeSinceCache > 300000) {
           console.log('  ⏰ Cache expired (>5min)');
-          sessionStorage.removeItem('collections_state');
+          sessionStorage.removeItem(cacheKey);
           return false;
         }
         
-        // CRITICAL: Clean cached filters
-        const cachedFilters = {};
-        if (state.activeFilters) {
-          Object.entries(state.activeFilters).forEach(([key, values]) => {
-            if (Array.isArray(values) && values.length > 0) {
-              cachedFilters[key] = values;
-            }
-          });
-        }
-        
-        console.log('  🔍 Validating cache against current URL...');
-        console.log('    Current (from URL):', {
-          filters: this.activeFilters,
-          sort: this.currentSort
-        });
-        console.log('    Cached:', {
-          filters: cachedFilters,
-          sort: state.currentSort || 'recommended'
-        });
-        
-        // Compare cached state with current URL-derived state
-        const cacheMatchesURL = this.validateCacheMatchesCurrentState(
-          cachedFilters,
-          state.currentSort || 'recommended'
-        );
-        
-        console.log('  ✅ Cache matches URL?', cacheMatchesURL);
-        
-        // CRITICAL FIX: If not back button and cache doesn't match, STOP HERE
-        if (!isBackButton && !cacheMatchesURL) {
-          console.log('  ❌ Cache invalid (not back button + mismatch) - will fetch fresh');
-          sessionStorage.removeItem('collections_state');
-          return false;
-        }
-        
-        // If back button, ALWAYS restore cache state (override URL)
-        if (isBackButton) {
-          console.log('  🔄 Back button: Overriding URL with cached state');
-          this.activeFilters = cachedFilters;
-          this.currentSort = state.currentSort || 'recommended';
-        }
-        
-        // Restore ALL state
+        // Restore ALL state (no validation needed - cache key already matches URL!)
         this._allLoadedItems = state.allLoadedItems || [];
         this.currentPage = state.currentPage || 1;
         this.totalItems = state.totalItems || 0;
@@ -1479,7 +1464,7 @@ export async function initCollections(isBackButton = false) {
           return false;
         }
         
-        console.log(`  ✅ Restoring ${this._allLoadedItems.length} items from cache`);
+        console.log(`  ✅ Restoring ${this._allLoadedItems.length}/${this.totalItems} items from cache`);
         
         // Render all items (fromCache=true preserves _allLoadedItems)
         this.renderItems(this._allLoadedItems, true);
@@ -1491,60 +1476,20 @@ export async function initCollections(isBackButton = false) {
           window.__pendingScrollRestoration = this._clickedProductId;
         }
         
-        // Save updated state (clears clicked product if not back button)
+        // Update cache timestamp (keep it fresh)
         this.saveToSession();
         
         return true;
       } catch (error) {
         console.error('Failed to restore from session:', error);
-        sessionStorage.removeItem('collections_state');
+        const cacheKey = this.getCacheKey();
+        sessionStorage.removeItem(cacheKey);
         return false;
       }
-    }
-    
-    // Helper: Check if cached state matches current URL params
-    validateCacheMatchesCurrentState(cachedFilters, cachedSort) {
-      console.log('    [VALIDATE] Starting validation...');
-      
-      // Compare sort
-      console.log(`    [VALIDATE] Sort check: cached="${cachedSort}" vs current="${this.currentSort}"`);
-      if (cachedSort !== this.currentSort) {
-        console.log(`    ❌ Sort mismatch!`);
-        return false;
-      }
-      console.log(`    ✅ Sort matches`);
-      
-      // Compare filters (both keys and values)
-      const currentFilterKeys = Object.keys(this.activeFilters).sort();
-      const cachedFilterKeys = Object.keys(cachedFilters).sort();
-      
-      console.log(`    [VALIDATE] Filter keys: current=${JSON.stringify(currentFilterKeys)} vs cached=${JSON.stringify(cachedFilterKeys)}`);
-      
-      if (JSON.stringify(currentFilterKeys) !== JSON.stringify(cachedFilterKeys)) {
-        console.log(`    ❌ Filter keys mismatch!`);
-        return false;
-      }
-      console.log(`    ✅ Filter keys match`);
-      
-      // Compare filter values
-      for (const key of currentFilterKeys) {
-        const currentValues = [...this.activeFilters[key]].sort();
-        const cachedValues = [...cachedFilters[key]].sort();
-        
-        console.log(`    [VALIDATE] "${key}" values: current=${JSON.stringify(currentValues)} vs cached=${JSON.stringify(cachedValues)}`);
-        
-        if (JSON.stringify(currentValues) !== JSON.stringify(cachedValues)) {
-          console.log(`    ❌ Filter values mismatch for "${key}"!`);
-          return false;
-        }
-      }
-      console.log(`    ✅ All filter values match`);
-      
-      console.log(`    ✅ VALIDATION PASSED`);
-      return true;
     }
     
     saveToSession() {
+      const cacheKey = this.getCacheKey();
       try {
         const state = {
           allLoadedItems: this._allLoadedItems,
@@ -1552,12 +1497,13 @@ export async function initCollections(isBackButton = false) {
           currentSort: this.currentSort,
           currentPage: this.currentPage,
           totalItems: this.totalItems,
-          hasMorePages: this.hasMorePages, // FIX #2: Save pagination state
+          hasMorePages: this.hasMorePages,
           clickedProductId: this._clickedProductId,
           timestamp: Date.now()
         };
         
-        sessionStorage.setItem('collections_state', JSON.stringify(state));
+        sessionStorage.setItem(cacheKey, JSON.stringify(state));
+        console.log(`  💾 Saved to cache: "${cacheKey}" - ${this._allLoadedItems.length}/${this.totalItems} items`);
       } catch (error) {
         console.error('Failed to save to session:', error);
       }

@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.17.2-DEBUG';
+const VERSION = '3.18.0-REFACTOR';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔍 DEEP DIVE: Validation function logging + early return fix', 'color: #ffaa00;');
+console.log('%c🔥 COMPLETE REFACTOR: URL-keyed cache (one entry per filter/sort state)', 'color: #ff00ff;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
