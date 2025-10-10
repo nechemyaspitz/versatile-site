@@ -32,11 +32,11 @@ export default function createSmartTransition() {
       }
       
       if (exitAnimation) {
-        // Play custom exit animation, then fade out
+        // Play custom exit animation, then quick fade out
         exitAnimation.eventCallback('onComplete', () => {
           gsap.to(from, {
             opacity: 0,
-            duration: 0.3,
+            duration: 0.15,
             ease: 'power2.out',
             onComplete: done,
           });
@@ -45,7 +45,7 @@ export default function createSmartTransition() {
         // No custom animation - standard fade out
         gsap.to(from, {
           opacity: 0,
-          duration: 0.3,
+          duration: 0.2,
           ease: 'power2.out',
           onComplete: done,
         });
@@ -65,7 +65,7 @@ export default function createSmartTransition() {
       
       gsap.to(to, {
         opacity: 1,
-        duration: 0.3,
+        duration: 0.15,
         ease: 'power2.in',
         onComplete: done,
       });

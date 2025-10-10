@@ -14,7 +14,7 @@ function playPageEnterAnimation() {
     gsap.set(heroCover, { width: '100%' });
     tl.to(heroCover, {
       width: '0%',
-      duration: 1,
+      duration: 0.7,
       ease: 'expo.inOut',
     }, 0);
   }
@@ -28,10 +28,10 @@ function playPageEnterAnimation() {
     tl.to(split.chars, {
       opacity: 1,
       yPercent: 0,
-      duration: 1,
+      duration: 0.7,
       ease: 'expo.out',
-      stagger: 0.2 / split.chars.length, // Total stagger time: 0.2s
-    }, 0.2);
+      stagger: 0.14 / split.chars.length, // Total stagger time: 0.14s
+    }, 0.14);
   }
   
   // 2. Product description: lines split with mask
@@ -54,20 +54,20 @@ function playPageEnterAnimation() {
     
     tl.to(split.lines, {
       yPercent: 0,
-      duration: 1,
+      duration: 0.7,
       ease: 'expo.out',
-      stagger: 0.1 / split.lines.length, // Total stagger time: 0.1s
-    }, 0.35);
+      stagger: 0.07 / split.lines.length, // Total stagger time: 0.07s
+    }, 0.25);
   }
   
   // 3-8. Variant sections and specs
   const elements = [
-    { selector: '.variant-buttons', start: 0.53 },
-    { selector: '.variant-sizes', start: 0.6 },
-    { selector: '.variant-finishes', start: 0.7 },
-    { selector: '#material', start: 0.78 },
-    { selector: '#thickness', start: 0.86 },
-    { selector: '#applications', start: 0.94 },
+    { selector: '.variant-buttons', start: 0.38 },
+    { selector: '.variant-sizes', start: 0.43 },
+    { selector: '.variant-finishes', start: 0.5 },
+    { selector: '#material', start: 0.56 },
+    { selector: '#thickness', start: 0.62 },
+    { selector: '#applications', start: 0.68 },
   ];
   
   elements.forEach(({ selector, start }) => {
@@ -77,7 +77,7 @@ function playPageEnterAnimation() {
       tl.to(el, {
         opacity: 1,
         yPercent: 0,
-        duration: 0.8,
+        duration: 0.6,
         ease: 'expo.out',
       }, start);
     }
@@ -95,11 +95,11 @@ function playPageExitAnimation() {
   // 1-6. Variant sections and specs (reverse order, exit down)
   const elements = [
     { selector: '#applications', start: 0 },
-    { selector: '#thickness', start: 0.03 },
-    { selector: '#material', start: 0.06 },
-    { selector: '.variant-finishes', start: 0.09 },
-    { selector: '.variant-sizes', start: 0.12 },
-    { selector: '.variant-buttons', start: 0.15 },
+    { selector: '#thickness', start: 0.02 },
+    { selector: '#material', start: 0.04 },
+    { selector: '.variant-finishes', start: 0.06 },
+    { selector: '.variant-sizes', start: 0.08 },
+    { selector: '.variant-buttons', start: 0.1 },
   ];
   
   elements.forEach(({ selector, start }) => {
@@ -108,7 +108,7 @@ function playPageExitAnimation() {
       tl.to(el, {
         opacity: 0,
         yPercent: 20, // Exit down (same direction as enter from)
-        duration: 0.4,
+        duration: 0.3,
         ease: 'power2.in',
       }, start);
     }
@@ -131,10 +131,10 @@ function playPageExitAnimation() {
     
     tl.to(split.lines, {
       yPercent: 100, // Exit DOWN (back where it came from)
-      duration: 0.4,
+      duration: 0.3,
       ease: 'power2.in',
-      stagger: 0.03 / split.lines.length,
-    }, 0.18);
+      stagger: 0.02 / split.lines.length,
+    }, 0.12);
   }
   
   // 8. Product title chars exit down
@@ -145,10 +145,10 @@ function playPageExitAnimation() {
     tl.to(split.chars, {
       opacity: 0,
       yPercent: 20, // Exit down (same direction as enter from)
-      duration: 0.4,
+      duration: 0.3,
       ease: 'power2.in',
-      stagger: 0.06 / split.chars.length,
-    }, 0.21);
+      stagger: 0.04 / split.chars.length,
+    }, 0.14);
   }
   
   // 9. Hero cover: width 0% → 100% (last, covers everything)
@@ -156,9 +156,9 @@ function playPageExitAnimation() {
   if (heroCover) {
     tl.to(heroCover, {
       width: '100%',
-      duration: 0.5,
+      duration: 0.4,
       ease: 'expo.inOut',
-    }, 0.24);
+    }, 0.16);
   }
   
   return tl;

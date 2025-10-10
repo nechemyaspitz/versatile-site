@@ -104,9 +104,9 @@ function playPageEnterAnimation() {
     
     tl.to(split.chars, {
       yPercent: 0,
-      duration: 1,
+      duration: 0.7,
       ease: 'expo.out',
-      stagger: 0.01,
+      stagger: 0.008,
     }, 0);
   }
   
@@ -117,10 +117,10 @@ function playPageEnterAnimation() {
       { yPercent: 100 },
       {
         yPercent: 0,
-        duration: 1,
+        duration: 0.7,
         ease: 'expo.out',
       },
-      0.2 // Start 0.2s into animation
+      0.14 // Start 0.14s into animation
     );
   }
   
@@ -143,9 +143,9 @@ function playPageExitAnimation() {
     
     tl.to(split.chars, {
       yPercent: 100,
-      duration: 0.4,
+      duration: 0.3,
       ease: 'power2.in',
-      stagger: 0.006,
+      stagger: 0.005,
     }, 0);
   }
   
@@ -154,9 +154,9 @@ function playPageExitAnimation() {
   if (filterButton) {
     tl.to(filterButton, {
       yPercent: 100,
-      duration: 0.4,
+      duration: 0.3,
       ease: 'power2.in',
-    }, 0.04);
+    }, 0.03);
   }
   
   // 3. Items: subtle fade + slight down movement
@@ -165,10 +165,10 @@ function playPageExitAnimation() {
     tl.to(items, {
       opacity: 0,
       y: 15,
-      duration: 0.35,
+      duration: 0.28,
       ease: 'power2.in',
-      stagger: 0.015,
-    }, 0.08);
+      stagger: 0.012,
+    }, 0.06);
   }
   
   return tl;
