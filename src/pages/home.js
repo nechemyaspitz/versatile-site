@@ -49,6 +49,92 @@ export async function initHome(nsCtx) {
     } catch (e) {}
   }
 
+  // ====== PAGE ENTER ANIMATION ======
+  function playPageEnterAnimation() {
+    const enterTL = gsap.timeline();
+
+    // 1. Hero heading: opacity 0→1, scale 0.8→1
+    const heroHeading = document.querySelector('.hero-heading');
+    if (heroHeading) {
+      enterTL.fromTo(
+        heroHeading,
+        { opacity: 0, scale: 0.8 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 1,
+          ease: 'expo.inOut',
+          transformOrigin: 'top left',
+        },
+        0 // Start at 0s
+      );
+    }
+
+    // 2. Button group children: y 102%→0%, stagger 0.05s
+    const btnGroupChildren = document.querySelectorAll('.btn-group > *');
+    if (btnGroupChildren.length > 0) {
+      enterTL.fromTo(
+        btnGroupChildren,
+        { yPercent: 102 },
+        {
+          yPercent: 0,
+          duration: 1,
+          ease: 'expo.inOut',
+          stagger: 0.05,
+        },
+        0.1 // Start 0.1s into animation
+      );
+    }
+
+    // 3. Hero cover: width 100%→0%
+    const heroCover = document.querySelector('.hero-cover');
+    if (heroCover) {
+      enterTL.fromTo(
+        heroCover,
+        { width: '100%' },
+        {
+          width: '0%',
+          duration: 1,
+          ease: 'expo.inOut',
+        },
+        0.34 // Start 0.34s into animation
+      );
+    }
+
+    // 4. Small premium text: split chars, opacity 0→1, stagger 0.02s
+    const smPremium = document.querySelector('.sm-premium');
+    if (smPremium && window.SplitText) {
+      const split = new SplitText(smPremium, { type: 'chars' });
+      enterTL.fromTo(
+        split.chars,
+        { opacity: 0 },
+        {
+          opacity: 1,
+          duration: 1.27,
+          ease: 'power1.out',
+          stagger: 0.02,
+        },
+        0.47 // Start 0.47s into animation
+      );
+    }
+
+    // 5. Swiper: scale 1.1→1
+    if (rootSwiper) {
+      enterTL.fromTo(
+        rootSwiper,
+        { scale: 1.1 },
+        {
+          scale: 1,
+          duration: 1.25,
+          ease: 'expo.out',
+        },
+        0.5 // Start 0.5s into animation
+      );
+    }
+
+    return enterTL;
+  }
+
   function splitOnce(slide) {
     if (!slide || !window.SplitText) return null;
     if (slide.__split) return slide.__split;
@@ -238,6 +324,9 @@ export async function initHome(nsCtx) {
     tl.add(() => animateTextIn(curSlide), SLIDE_DUR * TEXT_IN_FRACTION);
   }
 
+  // Play page enter animation first
+  const enterAnimation = playPageEnterAnimation();
+
   const swiper = new Swiper('.swiper', {
     loop: true,
     slidesPerView: 1,
@@ -258,8 +347,12 @@ export async function initHome(nsCtx) {
           force3D: true,
         });
         updateParallax(sw, currentX);
-        introFirstSlide(sw);
-        scheduleAutoplay(() => transitionTo(sw, 'next'));
+        
+        // Wait for enter animation to complete before starting slider
+        enterAnimation.then(() => {
+          introFirstSlide(sw);
+          scheduleAutoplay(() => transitionTo(sw, 'next'));
+        });
       },
       resize(sw) {
         sw.updateSlides();
@@ -298,6 +391,9 @@ export async function initHome(nsCtx) {
       } catch (e) {}
       try {
         swiper?.destroy?.(true, true);
+      } catch (e) {}
+      try {
+        enterAnimation?.kill?.();
       } catch (e) {}
     },
   });
