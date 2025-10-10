@@ -212,8 +212,12 @@ export async function initCollections(isBackButton = false) {
   }
 
   // Set up state IMMEDIATELY (before any async operations)
+  console.log('🎯 Setting collections state with exit animation');
   setState('collections', {
-    playExitAnimation: () => playPageExitAnimation(),
+    playExitAnimation: () => {
+      console.log('🎬 playExitAnimation called from state');
+      return playPageExitAnimation();
+    },
     destroy: () => {}, // Will be updated later with actual destroy function
   });
 

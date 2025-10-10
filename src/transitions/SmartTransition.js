@@ -18,9 +18,17 @@ export default function createSmartTransition() {
       const homeState = getState('home');
       const collectionsState = getState('collections');
       
+      console.log('🚪 SmartTransition onLeave:', {
+        homeState: !!homeState,
+        collectionsState: !!collectionsState,
+        homeExit: !!homeState?.playExitAnimation,
+        collectionsExit: !!collectionsState?.playExitAnimation,
+      });
+      
       const exitAnimation = homeState?.playExitAnimation?.() || collectionsState?.playExitAnimation?.();
       
       if (exitAnimation) {
+        console.log('✨ Playing custom exit animation');
         // Play custom exit animation, then fade out
         exitAnimation.eventCallback('onComplete', () => {
           gsap.to(from, {
@@ -31,6 +39,7 @@ export default function createSmartTransition() {
           });
         });
       } else {
+        console.log('⚠️ No custom animation found - using standard fade');
         // No custom animation - standard fade out
         gsap.to(from, {
           opacity: 0,
