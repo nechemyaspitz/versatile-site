@@ -1292,7 +1292,15 @@ export async function initCollections(isBackButton = false) {
               console.log('  - Product element found?', !!productEl);
               
               if (productEl) {
+                // Get element position for debugging
+                const rect = productEl.getBoundingClientRect();
+                const elementTop = window.pageYOffset + rect.top;
+                
                 console.log('🎯 Instantly jumping to clicked product:', productId);
+                console.log('  - Element rect.top:', rect.top);
+                console.log('  - window.pageYOffset:', window.pageYOffset);
+                console.log('  - Calculated element position:', elementTop);
+                console.log('  - Target scroll (with -100 offset):', elementTop - 100);
                 
                 // OPTION 1: Instant jump with Lenis (no animation)
                 window.lenis.scrollTo(productEl, {
@@ -1300,7 +1308,10 @@ export async function initCollections(isBackButton = false) {
                   offset: -100
                 });
                 
-                console.log('✅ Jumped to position:', window.scrollY);
+                // Check position after a moment
+                setTimeout(() => {
+                  console.log('✅ Final scroll position:', window.scrollY);
+                }, 100);
               } else {
                 console.warn('⚠️ Product element not found for scroll:', productId);
                 console.warn('  - Available product IDs:', 

@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.5.9';
+const VERSION = '3.5.10-DEBUG';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✅ Fixed: Store trigger in global for renderer access', 'color: #ffaa00;');
+console.log('%c🔍 DEBUG: Enhanced scroll position logging', 'color: #ffaa00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
