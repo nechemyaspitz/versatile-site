@@ -25,14 +25,9 @@ export class CollectionsPage {
   }
   
   /**
-   * Initialize the page
+   * Reveal page (call FIRST, before any async operations)
    */
-  async init(isBackButton = false) {
-    console.log('%c========== COLLECTIONS INIT ==========', 'color: #00ff00; font-weight: bold');
-    console.log(`URL: ${window.location.href}`);
-    console.log(`Back button: ${isBackButton}`);
-    
-    // Step 0: Reveal page immediately (hidden by CSS to prevent FOUC)
+  revealPage() {
     const view = document.querySelector('[data-taxi-view="collections"]');
     if (view) {
       if (window.gsap) {
@@ -43,6 +38,18 @@ export class CollectionsPage {
       }
       console.log('  👁️  Page revealed');
     }
+  }
+  
+  /**
+   * Initialize the page
+   */
+  async init(isBackButton = false) {
+    console.log('%c========== COLLECTIONS INIT ==========', 'color: #00ff00; font-weight: bold');
+    console.log(`URL: ${window.location.href}`);
+    console.log(`Back button: ${isBackButton}`);
+    
+    // Step 0: Reveal page immediately (hidden by CSS/transition to prevent FOUC)
+    this.revealPage();
     
     // Step 1: Load URL params into state
     this.loadURLParams();
@@ -149,6 +156,13 @@ export class CollectionsPage {
       this.state.setTotalItems(data.pagination.total);
       this.state.setHasMorePages(data.pagination.has_more);
       
+      console.log(`  📊 Pagination updated:`, {
+        currentPage: this.state.getCurrentPage(),
+        itemsLoaded: this.state.getItems().length,
+        totalItems: this.state.getTotalItems(),
+        hasMore: data.pagination.has_more,
+      });
+      
       // Render
       if (append) {
         await this.renderer.appendItems(data.items);
@@ -161,6 +175,7 @@ export class CollectionsPage {
       
       // Increment page for next fetch
       this.state.incrementPage();
+      console.log(`  📄 Next page will be: ${this.state.getCurrentPage()}`);
       
       // BUG FIX: Save to cache AFTER state is updated
       this.cache.save(this.state);
@@ -188,8 +203,19 @@ export class CollectionsPage {
     this.infiniteScroll = new CollectionInfiniteScroll(
       '.product-grid',
       () => {
+        console.log('  ♾️  Infinite scroll triggered:', {
+          hasMorePages: this.state.hasMorePages,
+          isLoading: this.isLoading,
+          itemsLoaded: this.state.getItems().length,
+          totalItems: this.state.getTotalItems(),
+        });
+        
         if (this.state.hasMorePages && !this.isLoading) {
           this.fetchItems(true);
+        } else if (!this.state.hasMorePages) {
+          console.log('  ⛔ No more pages to load');
+        } else if (this.isLoading) {
+          console.log('  ⏳ Already loading, skipping');
         }
       }
     );
@@ -251,7 +277,13 @@ export class CollectionsPage {
 // Export init function for compatibility with existing code
 export async function initCollections(isBackButton = false) {
   const page = new CollectionsPage();
+  
+  // Reveal page IMMEDIATELY (synchronous, before any async operations)
+  page.revealPage();
+  
+  // Then initialize (async)
   await page.init(isBackButton);
+  
   return page;
 }
 

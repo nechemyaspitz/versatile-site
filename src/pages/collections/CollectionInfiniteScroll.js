@@ -29,7 +29,9 @@ export class CollectionInfiniteScroll {
     // Create sentinel element
     this.sentinel = document.createElement('div');
     this.sentinel.className = 'infinite-scroll-sentinel';
-    this.sentinel.style.height = '1px';
+    this.sentinel.style.cssText = 'height: 1px; width: 100%; clear: both;';
+    
+    // Place sentinel right after the container
     this.container.after(this.sentinel);
     
     // Create observer
