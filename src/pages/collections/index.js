@@ -8,6 +8,7 @@ import { CollectionCache } from './CollectionCache.js';
 import { CollectionAPI } from './CollectionAPI.js';
 import { CollectionRenderer } from './CollectionRenderer.js';
 import { CollectionInfiniteScroll } from './CollectionInfiniteScroll.js';
+import { setState } from '../../core/state.js';
 
 export class CollectionsPage {
   constructor() {
@@ -25,6 +26,109 @@ export class CollectionsPage {
   }
   
   /**
+   * Play page enter animation (reveals page immediately)
+   */
+  playPageEnterAnimation() {
+    // 0. Reveal page immediately (hidden by CSS/transition to prevent FOUC)
+    const view = document.querySelector('[data-taxi-view="collections"]');
+    if (view) {
+      if (window.gsap) {
+        window.gsap.set(view, { opacity: 1 });
+      } else {
+        // Fallback if GSAP not loaded yet
+        view.style.opacity = '1';
+      }
+      console.log('  👁️  Page revealed (from playPageEnterAnimation)');
+    }
+    
+    if (!window.gsap) return Promise.resolve();
+    
+    const tl = window.gsap.timeline();
+    
+    // 1. Heading chars: y: 100% → 0%
+    const heading = document.querySelector('.font-color-primary');
+    if (heading && window.SplitText) {
+      const split = new window.SplitText(heading, { 
+        type: 'chars',
+        charsClass: 'char',
+      });
+      
+      window.gsap.set(split.chars, { yPercent: 100 });
+      
+      tl.to(split.chars, {
+        yPercent: 0,
+        duration: 0.65,
+        ease: 'expo.out',
+        stagger: 0.007,
+      }, 0);
+    }
+    
+    // 2. Filter button: y: 100% → 0%
+    const filterButton = document.querySelector('#filters-open');
+    if (filterButton) {
+      window.gsap.set(filterButton, { clearProps: 'transform' });
+      window.gsap.set(filterButton, { yPercent: 100 });
+      
+      tl.to(filterButton, {
+        yPercent: 0,
+        duration: 0.65,
+        ease: 'expo.out',
+      }, 0.035);
+    }
+    
+    return tl;
+  }
+  
+  /**
+   * Play page exit animation
+   */
+  playPageExitAnimation() {
+    if (!window.gsap) return Promise.resolve();
+    
+    const tl = window.gsap.timeline();
+    
+    // 1. Heading chars: 0% → y: 100% (exit down)
+    const heading = document.querySelector('.font-color-primary');
+    if (heading && window.SplitText) {
+      const split = new window.SplitText(heading, { 
+        type: 'chars',
+        charsClass: 'char',
+      });
+      
+      tl.to(split.chars, {
+        yPercent: 100,
+        duration: 0.35,
+        ease: 'power2.in',
+        stagger: 0.005,
+      }, 0);
+    }
+    
+    // 2. Filter button: 0% → y: 100% (exit down)
+    const filterButton = document.querySelector('#filters-open');
+    if (filterButton) {
+      tl.to(filterButton, {
+        yPercent: 100,
+        duration: 0.35,
+        ease: 'power2.in',
+      }, 0.035);
+    }
+
+    // 3. Collection Items: fade + slide down
+    const items = document.querySelectorAll('.collection_grid-item');
+    if (items.length > 0) {
+      tl.to(items, {
+        opacity: 0,
+        y: 15,
+        duration: 0.32,
+        ease: 'power2.in',
+        stagger: 0.013,
+      }, 0.07);
+    }
+    
+    return tl;
+  }
+  
+  /**
    * Initialize the page
    */
   async init(isBackButton = false) {
@@ -32,7 +136,13 @@ export class CollectionsPage {
     console.log(`URL: ${window.location.href}`);
     console.log(`Back button: ${isBackButton}`);
     
-    // Note: Page reveal is handled by CollectionsRenderer.onEnter()
+    // Register state IMMEDIATELY for exit animation
+    setState('collections', {
+      playExitAnimation: () => this.playPageExitAnimation(),
+    });
+    
+    // Step 0: Play page enter animation (reveals page + animates elements)
+    this.playPageEnterAnimation();
     
     // Step 1: Load URL params into state
     this.loadURLParams();

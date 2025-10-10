@@ -18,19 +18,8 @@ export default function createCollectionsRenderer() {
       const isBackButton = trigger === 'popstate';
       console.log('🎬 CollectionsRenderer onEnter - trigger:', trigger, 'isBackButton:', isBackButton);
       
-      // CRITICAL: Reveal page BEFORE init to prevent flash
-      // SmartTransition sets opacity:0, so we must reveal immediately
-      const view = document.querySelector('[data-taxi-view="collections"]');
-      if (view) {
-        if (window.gsap) {
-          window.gsap.set(view, { opacity: 1 });
-        } else {
-          view.style.opacity = '1';
-        }
-        console.log('  👁️  Page revealed (from renderer)');
-      }
-      
       // Pass back button flag to initCollections
+      // (Page reveal happens in CollectionsPage.init())
       await initCollections(isBackButton);
     }
   };
