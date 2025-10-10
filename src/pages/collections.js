@@ -82,7 +82,9 @@ function setupFilterAccordions() {
   });
 }
 
-export async function initCollections(nsCtx) {
+export async function initCollections(isBackButton = false) {
+  console.log('🎬 initCollections called with isBackButton:', isBackButton);
+  
   // GSAP for filter drawer, Nice Select assets
   if (!window.gsap) {
     await loadScript(
