@@ -8,6 +8,11 @@ export class CollectionRenderer {
   constructor(containerSelector) {
     this.container = document.querySelector(containerSelector);
     if (!this.container) {
+      console.error(`Container not found: ${containerSelector}`);
+      console.log('Available containers:', {
+        productGrid: document.querySelector('.product-grid'),
+        collectionList: document.querySelector('.collection_product-list'),
+      });
       throw new Error(`Container not found: ${containerSelector}`);
     }
     

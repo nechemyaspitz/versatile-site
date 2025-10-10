@@ -15,7 +15,7 @@ export class CollectionsPage {
     this.state = new CollectionState();
     this.cache = new CollectionCache();
     this.api = new CollectionAPI();
-    this.renderer = new CollectionRenderer('.collection_product-list');
+    this.renderer = new CollectionRenderer('.product-grid');
     this.infiniteScroll = null;
     
     // Loading flag
@@ -174,7 +174,7 @@ export class CollectionsPage {
     }
     
     this.infiniteScroll = new CollectionInfiniteScroll(
-      '.collection_product-list',
+      '.product-grid',
       () => {
         if (this.state.hasMorePages && !this.isLoading) {
           this.fetchItems(true);
@@ -190,13 +190,13 @@ export class CollectionsPage {
    */
   updateUI() {
     // Update results counter
-    const counter = document.querySelector('.total-results-counter');
+    const counter = document.querySelector('[data-results-count]');
     if (counter) {
       counter.textContent = this.state.getTotalItems();
     }
     
     // Update clear button state
-    const clearButton = document.querySelector('#clear-filters');
+    const clearButton = document.querySelector('.button.alt');
     if (clearButton) {
       const hasFilters = this.state.hasFilters();
       clearButton.style.opacity = hasFilters ? '1' : '0.5';

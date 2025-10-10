@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.0.0-MODULAR';
+const VERSION = '4.0.1';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🎉 MAJOR: Modular architecture - clean, maintainable, bug-free!', 'color: #00ff00;');
+console.log('%c🔧 Fix: Correct DOM selectors (.product-grid, [data-results-count])', 'color: #00aaff;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
