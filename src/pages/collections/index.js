@@ -245,6 +245,11 @@ export class CollectionsPage {
     // Step 1: Load URL params into state
     this.loadURLParams();
     
+    // Step 1.5: Sync UI with state (checkboxes, dropdown, chips)
+    if (this.interactions) {
+      this.interactions.syncUIWithState();
+    }
+    
     // Step 2: Try to restore from cache
     const cacheData = this.cache.restore(isBackButton);
     
@@ -256,6 +261,7 @@ export class CollectionsPage {
       
       // Initialize interactions for restored items
       if (this.interactions) {
+        this.interactions.setupProductClickTracking();
         this.interactions.initImageHover();
         this.interactions.updateProductImages();
         this.interactions.updateProductLinks();
@@ -373,8 +379,9 @@ export class CollectionsPage {
       // Update UI
       this.updateUI();
       
-      // Initialize interactions for new items (image hover, product links)
+      // Initialize interactions for new items (image hover, product links, click tracking)
       if (this.interactions) {
+        this.interactions.setupProductClickTracking();
         this.interactions.initImageHover();
         this.interactions.updateProductImages();
         this.interactions.updateProductLinks();

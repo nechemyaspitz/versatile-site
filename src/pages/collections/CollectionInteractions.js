@@ -23,6 +23,7 @@ export class CollectionInteractions {
     this.initNiceSelect();
     this.initEventListeners();
     this.initFilterChipEvents();
+    this.setupProductClickTracking();
   }
   
   // ===== NICE SELECT =====
@@ -52,6 +53,63 @@ export class CollectionInteractions {
         console.error('Failed to update Nice Select:', error);
       }
     }
+  }
+  
+  /**
+   * Sync UI elements (checkboxes, dropdown) with current state
+   * Called after loading from URL params or cache
+   */
+  syncUIWithState() {
+    // 1. Update sort dropdown value first
+    const currentSort = this.page.state.getCurrentSort();
+    if (this.sortDropdown) {
+      this.sortDropdown.value = currentSort;
+    }
+    
+    // 2. Re-initialize NiceSelect to reflect the new value
+    // (NiceSelect might not have been initialized yet on first call)
+    this.initNiceSelect();
+    
+    // 3. Update filter checkboxes
+    const activeFilters = this.page.state.getActiveFilters();
+    
+    // First, uncheck all
+    if (this.filterForm) {
+      const allCheckboxes = this.filterForm.querySelectorAll('input[type="checkbox"]');
+      allCheckboxes.forEach(cb => cb.checked = false);
+    }
+    
+    // Then check the active ones
+    const aliasMap = {
+      colors: ['color', 'colors', 'Color', 'Colors'],
+      color: ['color', 'colors', 'Color', 'Colors'],
+      size: ['size', 'sizes', 'Size', 'Sizes'],
+      finish: ['finish', 'finishes', 'Finish', 'Finishes'],
+      application: ['application', 'applications', 'Application', 'Applications'],
+      material: ['material', 'materials', 'Material', 'Materials'],
+      thickness: ['thickness', 'Thickness'],
+    };
+    
+    Object.entries(activeFilters).forEach(([filterType, filterValues]) => {
+      const candidateNames = aliasMap[filterType] || [filterType];
+      filterValues.forEach((value) => {
+        let checkbox = null;
+        for (const name of candidateNames) {
+          checkbox = this.filterForm?.querySelector(
+            `input[name="${name}"][value="${value}"]`
+          );
+          if (checkbox) break;
+        }
+        if (checkbox) {
+          checkbox.checked = true;
+        }
+      });
+    });
+    
+    // 3. Update filter chips
+    this.updateFilterChips();
+    
+    console.log('  ✅ UI synced with state');
   }
   
   // ===== EVENT LISTENERS =====
@@ -509,6 +567,34 @@ export class CollectionInteractions {
       setTimeout(() => {
         this.replaceMainImage(product, originalSrc, originalAlt);
       }, permanentOverlay ? 300 : 0);
+    }
+  }
+  
+  // ===== PRODUCT CLICK TRACKING (for scroll restoration) =====
+  
+  setupProductClickTracking() {
+    const productLinks = this.productContainer.querySelectorAll('.collection_image-cover, .collection_details, .variant-thumb-link');
+    
+    productLinks.forEach((link) => {
+      // Remove old listener first (if any)
+      link.removeEventListener('click', this._productClickHandler);
+      
+      // Add new listener
+      link.addEventListener('click', this._productClickHandler);
+    });
+    
+    console.log(`  🖱️  Product click tracking set up for ${productLinks.length} links`);
+  }
+  
+  _productClickHandler = (e) => {
+    const gridItem = e.currentTarget.closest('.collection_grid-item');
+    if (gridItem) {
+      const productId = gridItem.dataset.productId || gridItem.dataset.baseUrl;
+      if (productId) {
+        this.page.state.setClickedProductId(productId);
+        this.page.cache.save(this.page.state);
+        console.log(`  💾 Saved clicked product: ${productId}`);
+      }
     }
   }
   
