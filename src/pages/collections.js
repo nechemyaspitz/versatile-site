@@ -453,27 +453,65 @@ export async function initCollections(isBackButton = false) {
       this.productContainer.appendChild(skeletons);
     }
 
-    removeSkeletonLoaders() {
+    removeSkeletonLoaders(animate = false) {
       const skeletons = this.productContainer.querySelectorAll('.skeleton-item');
-      skeletons.forEach(s => s.remove());
+      
+      if (animate && window.gsap && skeletons.length > 0) {
+        // Fade out skeletons smoothly
+        return new Promise((resolve) => {
+          gsap.to(skeletons, {
+            opacity: 0,
+            duration: 0.3,
+            ease: 'power2.out',
+            onComplete: () => {
+              skeletons.forEach(s => s.remove());
+              resolve();
+            }
+          });
+        });
+      } else {
+        // Immediate removal
+        skeletons.forEach(s => s.remove());
+        return Promise.resolve();
+      }
     }
 
-    renderItems(items, fromCache = false) {
-      // Clear container (including any skeletons)
-      this.productContainer.innerHTML = '';
+    async renderItems(items, fromCache = false) {
+      // Check if we have skeletons to fade out
+      const hasSkeletons = this.productContainer.querySelectorAll('.skeleton-item').length > 0;
+      
+      if (hasSkeletons) {
+        // Fade out skeletons while preparing items
+        const fadePromise = this.removeSkeletonLoaders(true);
+        
+        // Build items while skeletons are fading
+        const fragment = document.createDocumentFragment();
+        items.forEach((item) => {
+          const el = this.createProductElement(item);
+          fragment.appendChild(el);
+        });
+        
+        // Wait for skeleton fade to complete
+        await fadePromise;
+        
+        // Clear any remaining content and append new items
+        this.productContainer.innerHTML = '';
+        this.productContainer.appendChild(fragment);
+      } else {
+        // No skeletons - normal render
+        this.productContainer.innerHTML = '';
+        
+        const fragment = document.createDocumentFragment();
+        items.forEach((item) => {
+          const el = this.createProductElement(item);
+          fragment.appendChild(el);
+        });
+        
+        this.productContainer.appendChild(fragment);
+      }
       
       // Reset all loaded items (fresh render)
       this._allLoadedItems = [...items];
-      
-      // Build all elements in fragment (off-DOM for performance)
-      const fragment = document.createDocumentFragment();
-      items.forEach((item) => {
-        const el = this.createProductElement(item);
-        fragment.appendChild(el);
-      });
-      
-      // Single DOM append (batch write)
-      this.productContainer.appendChild(fragment);
       
       // Animate items in (staggered) - GSAP will handle initial state
       this.animateItemsIn(this.productContainer.querySelectorAll('.collection_grid-item'));
@@ -490,9 +528,9 @@ export async function initCollections(isBackButton = false) {
       }, { timeout: 1000 });
     }
 
-    appendItems(items) {
-      // Remove skeleton loaders at bottom if any
-      this.removeSkeletonLoaders();
+    async appendItems(items) {
+      // Fade out skeleton loaders at bottom if any
+      await this.removeSkeletonLoaders(true);
       
       // Add to all loaded items
       this._allLoadedItems.push(...items);
@@ -538,14 +576,15 @@ export async function initCollections(isBackButton = false) {
         y: 20,
       });
       
-      // Animate in on next frame
+      // Animate in with slight delay for smooth crossfade
       requestAnimationFrame(() => {
         gsap.to(items, {
           opacity: 1,
           y: 0,
-          duration: 0.6,
+          duration: 0.5,
           ease: 'power2.out',
-          stagger: 0.03,
+          stagger: 0.025,
+          delay: 0.15, // Small delay for crossfade effect
         });
       });
     }
