@@ -7,6 +7,11 @@ Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to
 ```css
 /* Product Page Enter Animation - Initial States */
 
+/* 0. Hero cover - starts full width */
+.hero-cover {
+  width: 100%;
+}
+
 /* 1. Product title - chars will be split and animated */
 #product-title {
   /* Initial state will be set by GSAP */
@@ -15,12 +20,6 @@ Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to
 /* 2. Product description - lines will be masked */
 .product-description {
   overflow: hidden;
-}
-
-/* Optional: Line masking */
-.line-mask {
-  overflow: hidden;
-  display: block;
 }
 
 /* 3. Variant buttons - hidden below */
@@ -66,31 +65,33 @@ Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to
 
 | Element | Start | Duration | Animation | Easing | Notes |
 |---------|-------|----------|-----------|--------|-------|
-| `#product-title` | 0s | 1s | opacity 0 + y 20% → 100% + y 0% | expo.out | SplitText chars, stagger 0.2s total |
-| `.product-description` | 0.15s | 1s | y 100% → 0% | expo.out | SplitText lines with mask, stagger 0.1s total |
-| `.variant-buttons` | 0.33s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
-| `.variant-sizes` | 0.4s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
-| `.variant-finishes` | 0.5s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
-| `#material` | 0.58s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
-| `#thickness` | 0.66s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
-| `#applications` | 0.74s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
+| `.hero-cover` | 0s | 1s | width 100% → 0% | expo.inOut | Reveals page |
+| `#product-title` | 0.2s | 1s | opacity 0 + y 20% → 100% + y 0% | expo.out | SplitText chars, stagger 0.2s total |
+| `.product-description` | 0.35s | 1s | y 100% → 0% | expo.out | SplitText lines with mask, stagger 0.1s total |
+| `.variant-buttons` | 0.53s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
+| `.variant-sizes` | 0.6s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
+| `.variant-finishes` | 0.7s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
+| `#material` | 0.78s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
+| `#thickness` | 0.86s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
+| `#applications` | 0.94s | 0.8s | opacity 0 + y 20% → 100% + y 0% | expo.out | |
 
-**Total duration:** ~1.5s
+**Total duration:** ~1.7s
 
 ### **Exit Animation Timeline:**
 
 | Element | Start | Duration | Animation | Easing | Notes |
 |---------|-------|----------|-----------|--------|-------|
-| `#product-title` | 0s | 0.5s | opacity 100% + y 0% → 0% + y -20% | power2.in | Chars exit up, stagger 0.08s total |
-| `.product-description` | 0.05s | 0.5s | y 0% → -100% | power2.in | Lines exit up, stagger 0.04s total |
-| `#applications` | 0s | 0.5s | opacity 100% + y 0% → 0% + y 20% | power2.in | Reverse order |
-| `#thickness` | 0.04s | 0.5s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
-| `#material` | 0.08s | 0.5s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
-| `.variant-finishes` | 0.12s | 0.5s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
-| `.variant-sizes` | 0.16s | 0.5s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
-| `.variant-buttons` | 0.2s | 0.5s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
+| `#applications` | 0s | 0.4s | opacity 100% + y 0% → 0% + y 20% | power2.in | Reverse order, exit DOWN |
+| `#thickness` | 0.03s | 0.4s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
+| `#material` | 0.06s | 0.4s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
+| `.variant-finishes` | 0.09s | 0.4s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
+| `.variant-sizes` | 0.12s | 0.4s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
+| `.variant-buttons` | 0.15s | 0.4s | opacity 100% + y 0% → 0% + y 20% | power2.in | |
+| `.product-description` | 0.18s | 0.4s | y 0% → 100% | power2.in | Lines exit DOWN with mask, stagger 0.03s total |
+| `#product-title` | 0.21s | 0.4s | opacity 100% + y 0% → 0% + y 20% | power2.in | Chars exit DOWN, stagger 0.06s total |
+| `.hero-cover` | 0.24s | 0.5s | width 0% → 100% | expo.inOut | Covers page |
 
-**Total duration:** ~0.7s
+**Total duration:** ~0.75s
 
 ---
 
