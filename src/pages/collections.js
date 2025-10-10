@@ -379,8 +379,6 @@ export async function initCollections(isBackButton = false) {
           </a>
           <div class="progressive-blur">
               <div class="blur"></div>
-              <div class="blur"></div>
-              <div class="blur"></div>
           </div>
           <div class="gradient-cover"></div>
           <div class="collection-overlay">
