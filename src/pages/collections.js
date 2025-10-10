@@ -413,16 +413,13 @@ export async function initCollections(isBackButton = false) {
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
-        // Set initial state for animation (hidden, slightly below)
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
         fragment.appendChild(el);
       });
       
       // Single DOM append (batch write)
       this.productContainer.appendChild(fragment);
       
-      // Animate items in (staggered)
+      // Animate items in (staggered) - GSAP will handle initial state
       this.animateItemsIn(this.productContainer.querySelectorAll('.collection_grid-item'));
       
       // Resize Lenis after images load
@@ -447,9 +444,6 @@ export async function initCollections(isBackButton = false) {
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
-        // Set initial state for animation
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
         fragment.appendChild(el);
       });
       
@@ -460,7 +454,7 @@ export async function initCollections(isBackButton = false) {
       const allItems = Array.from(this.productContainer.querySelectorAll('.collection_grid-item'));
       const newItems = allItems.slice(-items.length);
       
-      // Animate new items in
+      // Animate new items in - GSAP will handle initial state
       this.animateItemsIn(newItems);
       
       // Get only the NEW images we just added
@@ -492,20 +486,23 @@ export async function initCollections(isBackButton = false) {
       
       console.log('🎬 Animating', items.length, 'items');
       
-      // Double RAF to ensure paint + layout are complete
+      // Set initial state with GSAP (no inline styles)
+      gsap.set(items, {
+        opacity: 0,
+        y: 20,
+      });
+      
+      // Animate in on next frame
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          console.log('🚀 Starting GSAP animation');
-          gsap.to(items, {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            ease: 'power2.out',
-            stagger: 0.03,
-            clearProps: 'transform,opacity',
-            onStart: () => console.log('✅ Animation started'),
-            onComplete: () => console.log('✅ Animation complete'),
-          });
+        console.log('🚀 Starting GSAP animation');
+        gsap.to(items, {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power2.out',
+          stagger: 0.03,
+          onStart: () => console.log('✅ Animation started'),
+          onComplete: () => console.log('✅ Animation complete'),
         });
       });
     }
