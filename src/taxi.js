@@ -9,7 +9,7 @@ import createCollectionsRenderer from './renderers/CollectionsRenderer.js';
 import createProductRenderer from './renderers/ProductRenderer.js';
 
 // Import transition factories
-import createDefaultTransition from './transitions/DefaultTransition.js';
+import createSmartTransition from './transitions/SmartTransition.js';
 
 export function initTaxi() {
   // Check if taxi is available (loaded via CDN)
@@ -23,7 +23,7 @@ export function initTaxi() {
   const HomeRenderer = createHomeRenderer();
   const CollectionsRenderer = createCollectionsRenderer();
   const ProductRenderer = createProductRenderer();
-  const DefaultTransition = createDefaultTransition();
+  const SmartTransition = createSmartTransition();
   
   // Initialize Taxi
   const taxiInstance = new window.taxi.Core({
@@ -33,7 +33,7 @@ export function initTaxi() {
     enablePrefetch: true,
     
     transitions: {
-      default: DefaultTransition,
+      default: SmartTransition,
     },
     
     renderers: {

@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.9.2';
+const VERSION = '3.9.3';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🚨 HOTFIX: Fixed regex error and broken animations', 'color: #ff0000;');
+console.log('%c✅ Fixed: Exit animation now in SmartTransition', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
