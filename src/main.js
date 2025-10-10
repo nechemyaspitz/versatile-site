@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.12.5';
+const VERSION = '3.12.6';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✨ Smooth crossfade transition from skeletons to items', 'color: #00ff00;');
+console.log('%c🎯 Show accurate skeleton count for infinite scroll', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

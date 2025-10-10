@@ -309,12 +309,15 @@ export async function initCollections(isBackButton = false) {
           return;
         }
 
-        // Show skeleton loaders (only for non-append/initial loads)
+        // Show skeleton loaders
         if (!append) {
+          // Initial load - show full page worth
           this.showSkeletonLoaders(this.itemsPerPage);
         } else {
-          // For infinite scroll, add skeletons at the bottom
-          this.showSkeletonLoaders(this.itemsPerPage);
+          // Infinite scroll - show only remaining items count
+          const itemsRemaining = this.totalItems - this._allLoadedItems.length;
+          const skeletonsToShow = Math.min(itemsRemaining, this.itemsPerPage);
+          this.showSkeletonLoaders(skeletonsToShow);
         }
 
         const response = await fetch(url);
