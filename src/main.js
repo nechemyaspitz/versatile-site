@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.15.1';
+const VERSION = '3.15.2';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔧 Fixed: Transition controls page hiding - no more flashes!', 'color: #00ff00;');
+console.log('%c🔧 Critical: Fallback opacity reveal if GSAP not loaded', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

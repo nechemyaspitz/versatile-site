@@ -4,13 +4,20 @@ import { setState } from '../core/state.js';
 
 // Page enter animation
 function playPageEnterAnimation() {
+  // 0. Reveal page immediately (hidden by CSS/transition to prevent FOUC)
+  const view = document.querySelector('[data-taxi-view="product"]');
+  if (view) {
+    if (window.gsap) {
+      gsap.set(view, { opacity: 1 });
+    } else {
+      // Fallback if GSAP not loaded yet
+      view.style.opacity = '1';
+    }
+  }
+  
   if (!window.gsap) return Promise.resolve();
   
   const tl = gsap.timeline();
-  
-  // 0. Reveal page immediately (hidden by transition to prevent FOUC)
-  const view = document.querySelector('[data-taxi-view="product"]');
-  if (view) gsap.set(view, { opacity: 1 });
   
   // 1. Hero cover: width 100% → 0%
   const heroCover = document.querySelector('.hero-cover');

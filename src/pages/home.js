@@ -52,11 +52,20 @@ export async function initHome(nsCtx) {
 
   // ====== PAGE ENTER ANIMATION ======
   function playPageEnterAnimation(swiperInstance) {
-    const enterTL = gsap.timeline();
-    
-    // 0. Reveal page immediately (hidden by transition to prevent FOUC)
+    // 0. Reveal page immediately (hidden by CSS/transition to prevent FOUC)
     const view = document.querySelector('[data-taxi-view="home"]');
-    if (view) gsap.set(view, { opacity: 1 });
+    if (view) {
+      if (window.gsap) {
+        gsap.set(view, { opacity: 1 });
+      } else {
+        // Fallback if GSAP not loaded yet
+        view.style.opacity = '1';
+      }
+    }
+    
+    if (!window.gsap) return Promise.resolve();
+    
+    const enterTL = gsap.timeline();
 
     // 1. Hero heading: opacity 0→1, scale 0.8→1
     const heroHeading = document.querySelector('.hero-heading');
