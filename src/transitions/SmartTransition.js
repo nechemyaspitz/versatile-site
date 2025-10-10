@@ -16,23 +16,19 @@ export default function createSmartTransition() {
       
       // Detect which page we're leaving FROM by checking data-taxi-view attribute
       const viewName = from.getAttribute('data-taxi-view');
-      console.log('🚪 SmartTransition onLeave from:', viewName);
       
       // Get the state for the page we're leaving from
       let exitAnimation = null;
       
       if (viewName === 'home') {
         const homeState = getState('home');
-        console.log('  → Home state:', !!homeState, 'Exit:', !!homeState?.playExitAnimation);
         exitAnimation = homeState?.playExitAnimation?.();
       } else if (viewName === 'collections') {
         const collectionsState = getState('collections');
-        console.log('  → Collections state:', !!collectionsState, 'Exit:', !!collectionsState?.playExitAnimation);
         exitAnimation = collectionsState?.playExitAnimation?.();
       }
       
       if (exitAnimation) {
-        console.log('✨ Playing custom exit animation for', viewName);
         // Play custom exit animation, then fade out
         exitAnimation.eventCallback('onComplete', () => {
           gsap.to(from, {
@@ -43,7 +39,6 @@ export default function createSmartTransition() {
           });
         });
       } else {
-        console.log('⚠️ No custom animation for', viewName, '- using standard fade');
         // No custom animation - standard fade out
         gsap.to(from, {
           opacity: 0,

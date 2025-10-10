@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.12.3-DEBUG';
+const VERSION = '3.12.4';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔧 FIX: Check view name to determine which exit animation', 'color: #00ff00;');
+console.log('%c🔧 Clear scroll position on regular navigation, restore only on back button', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

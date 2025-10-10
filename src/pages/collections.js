@@ -212,12 +212,8 @@ export async function initCollections(isBackButton = false) {
   }
 
   // Set up state IMMEDIATELY (before any async operations)
-  console.log('🎯 Setting collections state with exit animation');
   setState('collections', {
-    playExitAnimation: () => {
-      console.log('🎬 playExitAnimation called from state');
-      return playPageExitAnimation();
-    },
+    playExitAnimation: () => playPageExitAnimation(),
     destroy: () => {}, // Will be updated later with actual destroy function
   });
 
@@ -1299,7 +1295,16 @@ export async function initCollections(isBackButton = false) {
         this.currentPage = state.currentPage || 1;
         this.totalItems = state.totalItems || 0;
         this.hasMorePages = state.hasMorePages !== undefined ? state.hasMorePages : true;
-        this._clickedProductId = state.clickedProductId || null;
+        
+        // Only restore clicked product ID if back button
+        // If regular navigation, clear it to prevent stale scroll restoration
+        if (isBackButton) {
+          this._clickedProductId = state.clickedProductId || null;
+        } else {
+          this._clickedProductId = null;
+          // Update session to clear the stale clicked product
+          this.saveToSession();
+        }
         
         // Render all items
         if (this._allLoadedItems.length > 0) {
