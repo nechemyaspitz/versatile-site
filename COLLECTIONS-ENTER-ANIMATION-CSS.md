@@ -1,6 +1,6 @@
 # Collections Page Enter Animation - CSS Initial States
 
-Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to set the initial states and prevent FOUC.
+Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to set the initial states and animations.
 
 ## CSS to Add
 
@@ -9,7 +9,6 @@ Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to
 
 /* 1. Heading - characters will be masked and animated */
 .font-color-primary {
-  /* Optional: Add overflow hidden if you want strict masking */
   overflow: hidden;
 }
 
@@ -18,13 +17,20 @@ Add these CSS rules to your Webflow **Custom Code** (in the `<head>` section) to
   transform: translateY(100%);
 }
 
-/* 3. Optional: Add a wrapper for proper masking */
-/* If the heading animation doesn't mask properly, wrap the heading in a div with: */
-/* 
+/* 3. Skeleton loader animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    background-position: 200% 0;
+  }
+  50% {
+    background-position: -200% 0;
+  }
+}
+
+/* 4. Optional: Char styling for better masking */
 .char {
   display: inline-block;
 }
-*/
 ```
 
 ## Animation Summary

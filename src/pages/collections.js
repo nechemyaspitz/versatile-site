@@ -237,19 +237,28 @@ export async function initCollections(isBackButton = false) {
     async fetchItems(append = false) {
       if (this.isLoading) return;
       this.isLoading = true;
+      
       try {
         const url = this.buildRequestUrl();
         
-        // Check cache first
+        // Check cache first (instant, no skeleton needed)
         if (this._respCache.has(url)) {
           const data = this._respCache.get(url);
           if (append) this.appendItems(data.items);
-          else this.renderItems(data.items);
+          else this.renderItems(data.items, true); // fromCache = true
           this.updatePagination(data.pagination);
           this.updateResultsCounter(data.pagination.total);
           this.updateClearButton();
           this.isLoading = false;
           return;
+        }
+
+        // Show skeleton loaders (only for non-append/initial loads)
+        if (!append) {
+          this.showSkeletonLoaders(this.itemsPerPage);
+        } else {
+          // For infinite scroll, add skeletons at the bottom
+          this.showSkeletonLoaders(this.itemsPerPage);
         }
 
         const response = await fetch(url);
@@ -260,6 +269,9 @@ export async function initCollections(isBackButton = false) {
         
         // Cache the response
         this._respCache.set(url, data);
+        
+        // Small delay to prevent jarring transition (if response is too fast)
+        await new Promise(resolve => setTimeout(resolve, 150));
         
         if (append) {
           this.appendItems(data.items);
@@ -353,8 +365,45 @@ export async function initCollections(isBackButton = false) {
       return `${this.baseUrl}?${params.toString()}`;
     }
 
-    renderItems(items) {
-      // Clear container
+    createSkeletonLoader(count = 10) {
+      const fragment = document.createDocumentFragment();
+      
+      for (let i = 0; i < count; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton-item';
+        skeleton.setAttribute('role', 'listitem');
+        skeleton.style.cssText = `
+          width: 100%;
+          height: 100%;
+          min-height: 300px;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: skeleton-pulse 2s ease-in-out infinite;
+          animation-delay: ${i * 0.1}s;
+          border-radius: 4px;
+        `;
+        fragment.appendChild(skeleton);
+      }
+      
+      return fragment;
+    }
+
+    showSkeletonLoaders(count = 10) {
+      // Remove existing skeletons if any
+      this.removeSkeletonLoaders();
+      
+      // Add skeletons to container
+      const skeletons = this.createSkeletonLoader(count);
+      this.productContainer.appendChild(skeletons);
+    }
+
+    removeSkeletonLoaders() {
+      const skeletons = this.productContainer.querySelectorAll('.skeleton-item');
+      skeletons.forEach(s => s.remove());
+    }
+
+    renderItems(items, fromCache = false) {
+      // Clear container (including any skeletons)
       this.productContainer.innerHTML = '';
       
       // Reset all loaded items (fresh render)
@@ -364,13 +413,19 @@ export async function initCollections(isBackButton = false) {
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
+        // Set initial state for animation (hidden, slightly below)
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
         fragment.appendChild(el);
       });
       
       // Single DOM append (batch write)
       this.productContainer.appendChild(fragment);
       
-      // Resize Lenis after images load to ensure accurate scroll height
+      // Animate items in (staggered)
+      this.animateItemsIn(this.productContainer.querySelectorAll('.collection_grid-item'));
+      
+      // Resize Lenis after images load
       this.waitForImagesToLoad(this.productContainer.querySelectorAll('img'));
       
       // Initialize features
@@ -383,17 +438,30 @@ export async function initCollections(isBackButton = false) {
     }
 
     appendItems(items) {
+      // Remove skeleton loaders at bottom if any
+      this.removeSkeletonLoaders();
+      
       // Add to all loaded items
       this._allLoadedItems.push(...items);
       
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
         const el = this.createProductElement(item);
+        // Set initial state for animation
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
         fragment.appendChild(el);
       });
       
       // Batch DOM append
       this.productContainer.appendChild(fragment);
+      
+      // Get only the NEW items we just added
+      const allItems = Array.from(this.productContainer.querySelectorAll('.collection_grid-item'));
+      const newItems = allItems.slice(-items.length);
+      
+      // Animate new items in
+      this.animateItemsIn(newItems);
       
       // Get only the NEW images we just added
       const allImages = Array.from(this.productContainer.querySelectorAll('img'));
@@ -409,6 +477,19 @@ export async function initCollections(isBackButton = false) {
         this.updateProductLinks();
         this.setupProductClickTracking();
       }, { timeout: 1000 });
+    }
+
+    animateItemsIn(items) {
+      if (!window.gsap || !items || items.length === 0) return;
+      
+      gsap.to(items, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power2.out',
+        stagger: 0.03, // Small stagger for smooth sequential reveal
+        clearProps: 'transform,opacity', // Clean up inline styles after animation
+      });
     }
 
     createProductElement(item) {
