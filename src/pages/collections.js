@@ -311,21 +311,18 @@ export async function initCollections(isBackButton = false) {
         fragment.appendChild(el);
       });
       
-      // Single DOM append (batch write) - no animations!
+      // Single DOM append (batch write)
       this.productContainer.appendChild(fragment);
       
-      // GPU acceleration for smooth scroll with complex DOM
-      this.optimizeForScroll();
-      
-      // Wait for images to load BEFORE resizing Lenis
+      // Resize Lenis after images load to ensure accurate scroll height
       this.waitForImagesToLoad(this.productContainer.querySelectorAll('img'));
       
-      // Initialize features immediately
+      // Initialize features
       safeRequestIdleCallback(() => {
         this.initImageHover();
         this.updateProductImages();
         this.updateProductLinks();
-        this.setupProductClickTracking(); // Track clicks for scroll restoration
+        this.setupProductClickTracking();
       }, { timeout: 1000 });
     }
 
@@ -339,17 +336,14 @@ export async function initCollections(isBackButton = false) {
         fragment.appendChild(el);
       });
       
-      // Batch DOM append - no animations!
+      // Batch DOM append
       this.productContainer.appendChild(fragment);
-      
-      // GPU acceleration for newly added items
-      this.optimizeForScroll();
       
       // Get only the NEW images we just added
       const allImages = Array.from(this.productContainer.querySelectorAll('img'));
-      const newImages = allImages.slice(-items.length * 4); // Approximate: ~4 images per product
+      const newImages = allImages.slice(-items.length * 4);
       
-      // Wait for NEW images to load BEFORE resizing Lenis
+      // Resize Lenis as new images load
       this.waitForImagesToLoad(newImages);
       
       // Initialize features for new items
@@ -357,7 +351,7 @@ export async function initCollections(isBackButton = false) {
         this.initImageHover();
         this.updateProductImages();
         this.updateProductLinks();
-        this.setupProductClickTracking(); // Track clicks for scroll restoration
+        this.setupProductClickTracking();
       }, { timeout: 1000 });
     }
 
@@ -1165,50 +1159,28 @@ export async function initCollections(isBackButton = false) {
       });
     }
     
-    optimizeForScroll() {
-      // Force GPU acceleration on all product cards to reduce jitter
-      const products = this.productContainer.querySelectorAll('.collection_grid-item');
-      products.forEach((product) => {
-        // Use transform to create a new compositing layer (GPU accelerated)
-        product.style.transform = 'translateZ(0)';
-        product.style.willChange = 'transform';
-      });
-    }
-
     waitForImagesToLoad(images) {
-      // Accept images as parameter to track specific images (not all)
       const imageArray = images ? Array.from(images) : [];
       let loadedCount = 0;
       const totalImages = imageArray.length;
       
       if (totalImages === 0) {
-        // No images, resize immediately
-        if (window.lenis) {
-          window.lenis.resize();
-        }
+        if (window.lenis) window.lenis.resize();
         return;
       }
       
       // Initial resize
-      if (window.lenis) {
-        window.lenis.resize();
-      }
+      if (window.lenis) window.lenis.resize();
       
       const checkAllLoaded = () => {
         loadedCount++;
         
-        // Resize on EVERY image load to keep scroll smooth
-        if (window.lenis) {
-          window.lenis.resize();
-        }
+        // Resize as images load
+        if (window.lenis) window.lenis.resize();
         
-        // Final resize when all images are done
-        if (loadedCount === totalImages) {
-          setTimeout(() => {
-            if (window.lenis) {
-              window.lenis.resize();
-            }
-          }, 50);
+        // Final resize when complete
+        if (loadedCount === totalImages && window.lenis) {
+          setTimeout(() => window.lenis.resize(), 50);
         }
       };
       
@@ -1217,7 +1189,7 @@ export async function initCollections(isBackButton = false) {
           checkAllLoaded();
         } else {
           img.addEventListener('load', checkAllLoaded, { once: true });
-          img.addEventListener('error', checkAllLoaded, { once: true }); // Count errors too
+          img.addEventListener('error', checkAllLoaded, { once: true });
         }
       });
     }
