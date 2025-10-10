@@ -105,18 +105,20 @@ export function initTaxi() {
             const rect = productEl.getBoundingClientRect();
             const elementTop = window.pageYOffset + rect.top;
             
-            console.log('🎯 Instantly jumping to product:', productId);
+            console.log('🎯 Smoothly scrolling to product:', productId);
             console.log('  - Element position:', elementTop);
             console.log('  - Target (with offset):', elementTop - 100);
             
+            // Smooth, quick animation (0.6s)
             window.lenis.scrollTo(productEl, {
-              immediate: true,
-              offset: -100
+              duration: 0.6,
+              offset: -100,
+              easing: (x) => x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2  // easeInOutQuad
             });
             
             setTimeout(() => {
               console.log('✅ Final scroll position:', window.scrollY);
-            }, 100);
+            }, 700);
           } else {
             console.warn('⚠️ Product element not found:', productId);
           }
