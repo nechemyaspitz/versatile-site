@@ -19,7 +19,8 @@
 }
 
 .btn-group > * {
-  transform: translateY(102%);
+  /* Removed - GSAP handles this to avoid conflicts */
+  /* transform: translateY(102%); */
 }
 
 .hero-cover {
@@ -40,7 +41,8 @@
 }
 
 #filters-open {
-  transform: translateY(100%);
+  /* Removed - GSAP handles this to avoid conflicts */
+  /* transform: translateY(100%); */
 }
 
 /* PRODUCT PAGE ANIMATIONS */

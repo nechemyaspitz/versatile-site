@@ -74,7 +74,8 @@ export async function initHome(nsCtx) {
     // 2. Button group children: y 102%→0%, stagger 0.045s
     const btnGroupChildren = document.querySelectorAll('.btn-group > *');
     if (btnGroupChildren.length > 0) {
-      // Set initial state via GSAP (CSS has set it, but we need GSAP to control it)
+      // Clear any CSS transforms first, then set GSAP initial state
+      gsap.set(btnGroupChildren, { clearProps: 'transform' });
       gsap.set(btnGroupChildren, { yPercent: 102 });
       
       enterTL.to(

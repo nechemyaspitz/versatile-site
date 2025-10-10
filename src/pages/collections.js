@@ -113,7 +113,8 @@ function playPageEnterAnimation() {
   // 2. Filter button: y: 100% → 0%
   const filterButton = document.querySelector('#filters-open');
   if (filterButton) {
-    // Set initial state via GSAP (CSS has set it, but we need GSAP to control it)
+    // Clear any CSS transforms first, then set GSAP initial state
+    gsap.set(filterButton, { clearProps: 'transform' });
     gsap.set(filterButton, { yPercent: 100 });
     
     tl.to(filterButton,
