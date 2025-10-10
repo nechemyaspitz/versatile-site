@@ -1395,21 +1395,30 @@ export async function initCollections(isBackButton = false) {
     tryRestoreFromSession(isBackButton = false) {
       try {
         const saved = sessionStorage.getItem('collections_state');
-        if (!saved) return false;
+        if (!saved) {
+          console.log('  ❌ No cache found');
+          return false;
+        }
         
         const state = JSON.parse(saved);
         const now = Date.now();
         const timeSinceCache = now - state.timestamp;
         
+        console.log('  📦 Cache found:', {
+          age: `${Math.round(timeSinceCache / 1000)}s`,
+          items: state.allLoadedItems?.length || 0,
+          filters: state.activeFilters,
+          sort: state.currentSort,
+        });
+        
         // Check cache expiration (5 minutes)
         if (timeSinceCache > 300000) {
-          console.log('⏰ Cache expired (>5min)');
+          console.log('  ⏰ Cache expired (>5min)');
           sessionStorage.removeItem('collections_state');
           return false;
         }
         
-        // CRITICAL FIX: Validate cache matches current URL params
-        // Clean cached filters first
+        // CRITICAL: Clean cached filters
         const cachedFilters = {};
         if (state.activeFilters) {
           Object.entries(state.activeFilters).forEach(([key, values]) => {
@@ -1419,26 +1428,37 @@ export async function initCollections(isBackButton = false) {
           });
         }
         
+        console.log('  🔍 Validating cache against current URL...');
+        console.log('    Current (from URL):', {
+          filters: this.activeFilters,
+          sort: this.currentSort
+        });
+        console.log('    Cached:', {
+          filters: cachedFilters,
+          sort: state.currentSort || 'recommended'
+        });
+        
         // Compare cached state with current URL-derived state
         const cacheMatchesURL = this.validateCacheMatchesCurrentState(
           cachedFilters,
           state.currentSort || 'recommended'
         );
         
-        // If not back button and cache doesn't match URL, invalidate cache
+        console.log('  ✅ Cache matches URL?', cacheMatchesURL);
+        
+        // CRITICAL FIX: If not back button and cache doesn't match, STOP HERE
         if (!isBackButton && !cacheMatchesURL) {
-          console.log('❌ Cache doesn\'t match URL params - fetching fresh');
+          console.log('  ❌ Cache invalid (not back button + mismatch) - will fetch fresh');
           sessionStorage.removeItem('collections_state');
           return false;
         }
         
-        // If back button, always restore (but might have different filters than URL)
-        // In that case, restore cache state and override URL params
+        // If back button, ALWAYS restore cache state (override URL)
         if (isBackButton) {
+          console.log('  🔄 Back button: Overriding URL with cached state');
           this.activeFilters = cachedFilters;
           this.currentSort = state.currentSort || 'recommended';
         }
-        // If not back button and cache matches, we already have the right filters from URL
         
         // Restore ALL state
         this._allLoadedItems = state.allLoadedItems || [];
@@ -1455,11 +1475,11 @@ export async function initCollections(isBackButton = false) {
         
         // Validate we have items to render
         if (this._allLoadedItems.length === 0) {
-          console.log('⚠️ Cache has no items');
+          console.log('  ⚠️ Cache has no items');
           return false;
         }
         
-        console.log(`✅ Restoring ${this._allLoadedItems.length} items from cache`);
+        console.log(`  ✅ Restoring ${this._allLoadedItems.length} items from cache`);
         
         // Render all items (fromCache=true preserves _allLoadedItems)
         this.renderItems(this._allLoadedItems, true);
@@ -1484,32 +1504,43 @@ export async function initCollections(isBackButton = false) {
     
     // Helper: Check if cached state matches current URL params
     validateCacheMatchesCurrentState(cachedFilters, cachedSort) {
+      console.log('    [VALIDATE] Starting validation...');
+      
       // Compare sort
+      console.log(`    [VALIDATE] Sort check: cached="${cachedSort}" vs current="${this.currentSort}"`);
       if (cachedSort !== this.currentSort) {
-        console.log(`Sort mismatch: cached=${cachedSort}, current=${this.currentSort}`);
+        console.log(`    ❌ Sort mismatch!`);
         return false;
       }
+      console.log(`    ✅ Sort matches`);
       
       // Compare filters (both keys and values)
       const currentFilterKeys = Object.keys(this.activeFilters).sort();
       const cachedFilterKeys = Object.keys(cachedFilters).sort();
       
+      console.log(`    [VALIDATE] Filter keys: current=${JSON.stringify(currentFilterKeys)} vs cached=${JSON.stringify(cachedFilterKeys)}`);
+      
       if (JSON.stringify(currentFilterKeys) !== JSON.stringify(cachedFilterKeys)) {
-        console.log('Filter keys mismatch');
+        console.log(`    ❌ Filter keys mismatch!`);
         return false;
       }
+      console.log(`    ✅ Filter keys match`);
       
       // Compare filter values
       for (const key of currentFilterKeys) {
         const currentValues = [...this.activeFilters[key]].sort();
         const cachedValues = [...cachedFilters[key]].sort();
         
+        console.log(`    [VALIDATE] "${key}" values: current=${JSON.stringify(currentValues)} vs cached=${JSON.stringify(cachedValues)}`);
+        
         if (JSON.stringify(currentValues) !== JSON.stringify(cachedValues)) {
-          console.log(`Filter values mismatch for ${key}`);
+          console.log(`    ❌ Filter values mismatch for "${key}"!`);
           return false;
         }
       }
+      console.log(`    ✅ All filter values match`);
       
+      console.log(`    ✅ VALIDATION PASSED`);
       return true;
     }
     
