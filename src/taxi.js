@@ -47,8 +47,9 @@ export function initTaxi() {
     },
   });
   
-  // Add custom transition route for home page exit
-  taxiInstance.addRoute('/', 'homeExit', { from: 'home' });
+  // Add custom transition routes for home page exit
+  // Use homeExit transition when leaving FROM home renderer TO any page
+  taxiInstance.addRoute('*', 'homeExit', { from: 'home' });
   
   // Initialize navigation
   initScalingHamburgerNavigation();
