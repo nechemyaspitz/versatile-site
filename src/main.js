@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.5.4';
+const VERSION = '3.5.6';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c⚡ Instant scroll restoration (no animation) for better UX', 'color: #ffaa00;');
+console.log('%c🛑 Fixed: Stop Lenis momentum during navigation', 'color: #ffaa00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

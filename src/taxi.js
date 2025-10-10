@@ -57,6 +57,13 @@ export function initTaxi() {
   taxiInstance.on('NAVIGATE_OUT', ({ from }) => {
     // Close navigation when leaving page (skip scroll restore during navigation)
     closeNav(true);
+    
+    // CRITICAL FIX: Stop Lenis momentum scroll before navigation
+    // This prevents scroll momentum from carrying over to the next page
+    if (window.lenis) {
+      window.lenis.stop();
+      console.log('🛑 Stopped Lenis momentum scroll');
+    }
   });
 
   taxiInstance.on('NAVIGATE_END', ({ to }) => {
@@ -65,6 +72,12 @@ export function initTaxi() {
     
     // Re-initialize Webflow interactions
     reinitWebflow();
+    
+    // CRITICAL FIX: Restart Lenis after navigation completes
+    if (window.lenis) {
+      window.lenis.start();
+      console.log('▶️ Restarted Lenis');
+    }
   });
   
   taxiInstance.on('NAVIGATE_ERROR', (error) => {
