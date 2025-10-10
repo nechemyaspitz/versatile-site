@@ -51,7 +51,7 @@ export async function initHome(nsCtx) {
   }
 
   // ====== PAGE ENTER ANIMATION ======
-  function playPageEnterAnimation() {
+  function playPageEnterAnimation(swiperInstance) {
     const enterTL = gsap.timeline();
 
     // 1. Hero heading: opacity 0→1, scale 0.8→1
@@ -131,6 +131,26 @@ export async function initHome(nsCtx) {
         },
         0.5 // Start 0.5s into animation
       );
+    }
+
+    // 6. Slider text: animate in the first slide's text during page enter
+    if (swiperInstance && !prefersReduced) {
+      const activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
+      const split = splitOnce(activeSlide);
+      if (split) {
+        enterTL.to(
+          split.chars,
+          {
+            yPercent: 0,
+            rotate: 0,
+            opacity: 1,
+            duration: 0.9,
+            ease: 'power3.out',
+            stagger: { each: 0.02, from: 'start' },
+          },
+          0.8 // Start 0.8s into animation - during the page enter flow
+        );
+      }
     }
 
     return enterTL;
@@ -411,9 +431,7 @@ export async function initHome(nsCtx) {
     tl.add(() => animateTextIn(curSlide), SLIDE_DUR * TEXT_IN_FRACTION);
   }
 
-  // Play page enter animation first
-  const enterAnimation = playPageEnterAnimation();
-
+  // Initialize swiper first (before enter animation so we can access the active slide)
   const swiper = new Swiper('.swiper', {
     loop: true,
     slidesPerView: 1,
@@ -435,9 +453,12 @@ export async function initHome(nsCtx) {
         });
         updateParallax(sw, currentX);
         
-        // Wait for enter animation to complete before starting slider
+        // Play page enter animation (includes slider text)
+        const enterAnimation = playPageEnterAnimation(sw);
+        
+        // Wait for enter animation to complete before starting autoplay
         enterAnimation.then(() => {
-          introFirstSlide(sw);
+          introPlayed = true; // Mark as played
           scheduleAutoplay(() => transitionTo(sw, 'next'));
         });
       },

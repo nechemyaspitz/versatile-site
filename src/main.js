@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.9.3';
+const VERSION = '3.9.4';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✅ Fixed: Exit animation now in SmartTransition', 'color: #00ff00;');
+console.log('%c✨ Slider text now animates during page enter', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
