@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.0.2-DEBUG';
+const VERSION = '4.0.3';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔍 Debug: Page reveal fix + infinite scroll diagnostics', 'color: #ffaa00;');
+console.log('%c✅ Fix: pagination.hasMore (not has_more) + page reveal timing', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

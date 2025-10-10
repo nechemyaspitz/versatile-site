@@ -25,22 +25,6 @@ export class CollectionsPage {
   }
   
   /**
-   * Reveal page (call FIRST, before any async operations)
-   */
-  revealPage() {
-    const view = document.querySelector('[data-taxi-view="collections"]');
-    if (view) {
-      if (window.gsap) {
-        window.gsap.set(view, { opacity: 1 });
-      } else {
-        // Fallback if GSAP not loaded yet
-        view.style.opacity = '1';
-      }
-      console.log('  👁️  Page revealed');
-    }
-  }
-  
-  /**
    * Initialize the page
    */
   async init(isBackButton = false) {
@@ -48,8 +32,7 @@ export class CollectionsPage {
     console.log(`URL: ${window.location.href}`);
     console.log(`Back button: ${isBackButton}`);
     
-    // Step 0: Reveal page immediately (hidden by CSS/transition to prevent FOUC)
-    this.revealPage();
+    // Note: Page reveal is handled by CollectionsRenderer.onEnter()
     
     // Step 1: Load URL params into state
     this.loadURLParams();
@@ -154,13 +137,15 @@ export class CollectionsPage {
       }
       
       this.state.setTotalItems(data.pagination.total);
-      this.state.setHasMorePages(data.pagination.has_more);
+      // API uses camelCase: hasMore, not has_more
+      this.state.setHasMorePages(data.pagination.hasMore || false);
       
       console.log(`  📊 Pagination updated:`, {
         currentPage: this.state.getCurrentPage(),
         itemsLoaded: this.state.getItems().length,
         totalItems: this.state.getTotalItems(),
-        hasMore: data.pagination.has_more,
+        hasMore: data.pagination.hasMore,
+        hasMoreInState: this.state.hasMorePages,
       });
       
       // Render
@@ -278,10 +263,10 @@ export class CollectionsPage {
 export async function initCollections(isBackButton = false) {
   const page = new CollectionsPage();
   
-  // Reveal page IMMEDIATELY (synchronous, before any async operations)
-  page.revealPage();
+  // Note: Page reveal is handled by CollectionsRenderer.onEnter()
+  // to ensure proper timing with SmartTransition
   
-  // Then initialize (async)
+  // Initialize (async)
   await page.init(isBackButton);
   
   return page;
