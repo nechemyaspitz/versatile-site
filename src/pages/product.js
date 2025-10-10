@@ -28,8 +28,17 @@ function playPageEnterAnimation() {
   if (description && window.SplitText) {
     const split = new SplitText(description, { 
       type: 'lines',
-      linesClass: 'line-mask',
+      linesClass: 'split-line',
     });
+    
+    // Wrap each line in a mask div
+    split.lines.forEach(line => {
+      const wrapper = document.createElement('div');
+      wrapper.style.overflow = 'hidden';
+      line.parentNode.insertBefore(wrapper, line);
+      wrapper.appendChild(line);
+    });
+    
     gsap.set(split.lines, { yPercent: 100 });
     
     tl.to(split.lines, {
