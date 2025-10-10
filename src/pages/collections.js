@@ -314,13 +314,9 @@ export async function initCollections(isBackButton = false) {
       // Single DOM append (batch write) - no animations!
       this.productContainer.appendChild(fragment);
       
-      // FIX #4: Immediate Lenis resize + continued monitoring
-      if (window.lenis) {
-        window.lenis.resize();
-        // Resize again after a moment (for any delayed renders)
-        setTimeout(() => window.lenis.resize(), 50);
-        setTimeout(() => window.lenis.resize(), 200);
-      }
+      // CRITICAL: Wait for images to load BEFORE resizing Lenis
+      // This prevents jitter from height changes during scroll
+      this.waitForImagesToLoad(this.productContainer.querySelectorAll('img'));
       
       // Initialize features immediately
       safeRequestIdleCallback(() => {
@@ -328,15 +324,15 @@ export async function initCollections(isBackButton = false) {
         this.updateProductImages();
         this.updateProductLinks();
         this.setupProductClickTracking(); // Track clicks for scroll restoration
-        
-        // Fix jittery scroll: resize after images load
-        this.waitForImagesToLoad();
       }, { timeout: 1000 });
     }
 
     appendItems(items) {
       // Add to all loaded items
       this._allLoadedItems.push(...items);
+      
+      // Track the starting position before adding new items
+      const beforeHeight = this.productContainer.scrollHeight;
       
       const fragment = document.createDocumentFragment();
       items.forEach((item) => {
@@ -347,14 +343,13 @@ export async function initCollections(isBackButton = false) {
       // Batch DOM append - no animations!
       this.productContainer.appendChild(fragment);
       
-      // FIX #4: Aggressive Lenis resize after adding items
-      if (window.lenis) {
-        window.lenis.resize();
-        // Multiple resize calls for smooth scroll
-        setTimeout(() => window.lenis.resize(), 50);
-        setTimeout(() => window.lenis.resize(), 200);
-        setTimeout(() => window.lenis.resize(), 500);
-      }
+      // Get only the NEW images we just added
+      const allImages = Array.from(this.productContainer.querySelectorAll('img'));
+      const newImages = allImages.slice(-items.length * 4); // Approximate: ~4 images per product
+      
+      // CRITICAL: Wait for NEW images to load BEFORE resizing Lenis
+      // This prevents jitter during infinite scroll
+      this.waitForImagesToLoad(newImages);
       
       // Initialize features for new items
       safeRequestIdleCallback(() => {
@@ -362,9 +357,6 @@ export async function initCollections(isBackButton = false) {
         this.updateProductImages();
         this.updateProductLinks();
         this.setupProductClickTracking(); // Track clicks for scroll restoration
-        
-        // Fix jittery scroll: resize after images load
-        this.waitForImagesToLoad();
       }, { timeout: 1000 });
     }
 
@@ -1176,34 +1168,44 @@ export async function initCollections(isBackButton = false) {
       });
     }
     
-    waitForImagesToLoad() {
-      // FIX #4: Aggressive Lenis resize to prevent jittery scroll
-      const images = this.productContainer.querySelectorAll('img');
+    waitForImagesToLoad(images) {
+      // Accept images as parameter to track specific images (not all)
+      const imageArray = images ? Array.from(images) : [];
       let loadedCount = 0;
-      const totalImages = images.length;
+      const totalImages = imageArray.length;
       
       if (totalImages === 0) {
-        // No images, but still resize after a moment
-        setTimeout(() => {
-          if (window.lenis) window.lenis.resize();
-        }, 100);
+        // No images, resize immediately
+        if (window.lenis) {
+          window.lenis.resize();
+        }
         return;
+      }
+      
+      // Initial resize
+      if (window.lenis) {
+        window.lenis.resize();
       }
       
       const checkAllLoaded = () => {
         loadedCount++;
         
-        // Resize on EVERY image load (aggressive but smooth)
+        // Resize on EVERY image load to keep scroll smooth
         if (window.lenis) {
           window.lenis.resize();
         }
         
+        // Final resize when all images are done
         if (loadedCount === totalImages) {
-          console.log('📸 All images loaded, Lenis fully resized');
+          setTimeout(() => {
+            if (window.lenis) {
+              window.lenis.resize();
+            }
+          }, 50);
         }
       };
       
-      images.forEach((img) => {
+      imageArray.forEach((img) => {
         if (img.complete) {
           checkAllLoaded();
         } else {
