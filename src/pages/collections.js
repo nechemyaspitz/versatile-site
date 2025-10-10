@@ -275,22 +275,42 @@ export async function initCollections(isBackButton = false) {
 
     async init(isBackButton = false) {
       try {
+        console.log('%c========== INIT START ==========', 'color: #00ff00; font-weight: bold');
+        console.log('isBackButton:', isBackButton);
+        console.log('Current URL:', window.location.href);
+        
         // STEP 1: Load URL params (source of truth for initial state)
+        console.log('%c[1] Loading URL params...', 'color: #00aaff');
         this.loadFromURLParams();
+        console.log('After loadFromURLParams:');
+        console.log('  - activeFilters:', JSON.stringify(this.activeFilters));
+        console.log('  - currentSort:', this.currentSort);
         
         // STEP 2: Check if we can restore from cache
         // BUT only if cache matches current URL params
+        console.log('%c[2] Checking cache restoration...', 'color: #00aaff');
         const cacheValid = this.tryRestoreFromSession(isBackButton);
+        console.log('Cache valid?', cacheValid);
         
         // STEP 3: Initialize UI components
+        console.log('%c[3] Initializing UI...', 'color: #00aaff');
         this.initNiceSelect();
         this.initEventListeners();
         this.initInfiniteScroll();
         
         // STEP 4: If cache invalid or doesn't match URL, fetch fresh
         if (!cacheValid) {
+          console.log('%c[4] Fetching fresh data...', 'color: #00aaff');
           await this.loadInitialData();
+        } else {
+          console.log('%c[4] Using cached data, no fetch needed', 'color: #00aaff');
         }
+        
+        console.log('%c========== INIT COMPLETE ==========', 'color: #00ff00; font-weight: bold');
+        console.log('Final state:');
+        console.log('  - Items rendered:', this._allLoadedItems.length);
+        console.log('  - Total items:', this.totalItems);
+        console.log('  - activeFilters:', JSON.stringify(this.activeFilters));
       } catch (error) {
         console.error('Error initializing filter:', error);
         this.handleError(error);
@@ -310,9 +330,15 @@ export async function initCollections(isBackButton = false) {
       
       try {
         const url = this.buildRequestUrl();
+        console.log('%c[FETCH] Building request...', 'color: #ff9900');
+        console.log('  - URL:', url);
+        console.log('  - append:', append);
+        console.log('  - activeFilters:', JSON.stringify(this.activeFilters));
+        console.log('  - currentSort:', this.currentSort);
         
         // Check cache first (instant, no skeleton needed)
         if (this._respCache.has(url)) {
+          console.log('%c[FETCH] Using cached response', 'color: #ff9900');
           const data = this._respCache.get(url);
           if (append) this.appendItems(data.items);
           else this.renderItems(data.items, true); // fromCache = true
@@ -323,6 +349,8 @@ export async function initCollections(isBackButton = false) {
           this.isLoading = false;
           return;
         }
+        
+        console.log('%c[FETCH] No cached response, fetching from API...', 'color: #ff9900');
 
         // Show skeleton loaders
         if (!append) {
@@ -514,8 +542,14 @@ export async function initCollections(isBackButton = false) {
     }
 
     async renderItems(items, fromCache = false) {
+      console.log('%c[RENDER] renderItems called', 'color: #9900ff');
+      console.log('  - Items to render:', items.length);
+      console.log('  - fromCache flag:', fromCache);
+      console.log('  - Current _allLoadedItems length:', this._allLoadedItems.length);
+      
       // Check if we have skeletons to fade out
       const hasSkeletons = this.productContainer.querySelectorAll('.skeleton-item').length > 0;
+      console.log('  - Has skeletons:', hasSkeletons);
       
       if (hasSkeletons) {
         // Fade out skeletons while preparing items
@@ -550,8 +584,12 @@ export async function initCollections(isBackButton = false) {
       // FIX: Only reset loaded items if NOT from cache restore
       // Cache restore already has the correct _allLoadedItems
       if (!fromCache) {
+        console.log('  - NOT from cache: Resetting _allLoadedItems to rendered items');
         this._allLoadedItems = [...items];
+      } else {
+        console.log('  - FROM cache: Keeping existing _allLoadedItems');
       }
+      console.log('  - Final _allLoadedItems length:', this._allLoadedItems.length);
       
       // Animate items in (staggered) - GSAP will handle initial state
       this.animateItemsIn(this.productContainer.querySelectorAll('.collection_grid-item'));
