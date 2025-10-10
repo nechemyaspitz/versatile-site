@@ -14,34 +14,24 @@ export default function createSmartTransition() {
         return;
       }
       
-      // Check if we're leaving from home page by checking for home state
+      // Check for page-specific exit animations
       const homeState = getState('home');
+      const collectionsState = getState('collections');
       
-      if (homeState?.playExitAnimation) {
-        // We're on home page - play custom exit animation
-        const exitTimeline = homeState.playExitAnimation();
-        
-        if (exitTimeline) {
-          // Wait for exit animation, then fade out container
-          exitTimeline.eventCallback('onComplete', () => {
-            gsap.to(from, {
-              opacity: 0,
-              duration: 0.3,
-              ease: 'power2.out',
-              onComplete: done,
-            });
-          });
-        } else {
-          // Fallback: just fade out
+      const exitAnimation = homeState?.playExitAnimation?.() || collectionsState?.playExitAnimation?.();
+      
+      if (exitAnimation) {
+        // Play custom exit animation, then fade out
+        exitAnimation.eventCallback('onComplete', () => {
           gsap.to(from, {
             opacity: 0,
             duration: 0.3,
             ease: 'power2.out',
             onComplete: done,
           });
-        }
+        });
       } else {
-        // Not on home page - standard fade out
+        // No custom animation - standard fade out
         gsap.to(from, {
           opacity: 0,
           duration: 0.3,

@@ -127,6 +127,41 @@ function playPageEnterAnimation() {
   return tl;
 }
 
+// Page exit animation (reverse of enter, faster)
+function playPageExitAnimation() {
+  if (!window.gsap) return Promise.resolve();
+  
+  const tl = gsap.timeline();
+  
+  // 1. Heading chars: 0% → y: -100% (exit up)
+  const heading = document.querySelector('.font-color-primary');
+  if (heading && window.SplitText) {
+    const split = new SplitText(heading, { 
+      type: 'chars',
+      charsClass: 'char',
+    });
+    
+    tl.to(split.chars, {
+      yPercent: -100,
+      duration: 0.5,
+      ease: 'power2.in',
+      stagger: 0.008,
+    }, 0);
+  }
+  
+  // 2. Filter button: 0% → y: 100% (exit down)
+  const filterButton = document.querySelector('#filters-open');
+  if (filterButton) {
+    tl.to(filterButton, {
+      yPercent: 100,
+      duration: 0.5,
+      ease: 'power2.in',
+    }, 0.05);
+  }
+  
+  return tl;
+}
+
 export async function initCollections(isBackButton = false) {
   console.log('🎬 initCollections called with isBackButton:', isBackButton);
   
@@ -474,17 +509,7 @@ export async function initCollections(isBackButton = false) {
     }
 
     animateItemsIn(items) {
-      if (!window.gsap) {
-        console.warn('⚠️ GSAP not loaded, items will not animate');
-        return;
-      }
-      
-      if (!items || items.length === 0) {
-        console.warn('⚠️ No items to animate');
-        return;
-      }
-      
-      console.log('🎬 Animating', items.length, 'items');
+      if (!window.gsap || !items || items.length === 0) return;
       
       // Set initial state with GSAP (no inline styles)
       gsap.set(items, {
@@ -494,15 +519,12 @@ export async function initCollections(isBackButton = false) {
       
       // Animate in on next frame
       requestAnimationFrame(() => {
-        console.log('🚀 Starting GSAP animation');
         gsap.to(items, {
           opacity: 1,
           y: 0,
           duration: 0.6,
           ease: 'power2.out',
           stagger: 0.03,
-          onStart: () => console.log('✅ Animation started'),
-          onComplete: () => console.log('✅ Animation complete'),
         });
       });
     }
@@ -1370,6 +1392,7 @@ export async function initCollections(isBackButton = false) {
   window.InfiniteScrollProductFilter = filterInstance;
 
   setState('collections', {
+    playExitAnimation: () => playPageExitAnimation(),
     destroy: () => {
       try {
         filterInstance.destroy();
