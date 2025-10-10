@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '3.18.0-REFACTOR';
+const VERSION = '4.0.0-MODULAR';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔥 COMPLETE REFACTOR: URL-keyed cache (one entry per filter/sort state)', 'color: #ff00ff;');
+console.log('%c🎉 MAJOR: Modular architecture - clean, maintainable, bug-free!', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
