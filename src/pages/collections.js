@@ -1152,15 +1152,13 @@ export async function initCollections(isBackButton = false) {
           this.renderItems(this._allLoadedItems);
           this.updateResultsCounter(this.totalItems);
           
-          // FIX #3: Scroll to clicked product with Lenis
+          // FIX #3: Scroll to clicked product - DELAYED until page is fully ready
           if (this._clickedProductId) {
-            console.log('🔍 DEBUG: Attempting scroll restoration...');
+            console.log('🔍 DEBUG: Scheduling scroll restoration...');
             console.log('  - Clicked product ID:', this._clickedProductId);
-            console.log('  - Lenis available?', !!window.lenis);
-            console.log('  - Current scroll:', window.scrollY);
             
-            // CRITICAL FIX: Wait for Lenis to become available
-            this.waitForLenisAndScroll(this._clickedProductId);
+            // Store product ID for later use
+            window.__pendingScrollRestoration = this._clickedProductId;
           } else {
             console.log('ℹ️ No clicked product to scroll to');
           }

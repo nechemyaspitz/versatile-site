@@ -87,6 +87,42 @@ export function initTaxi() {
       window.lenis.start();
       console.log('▶️ Restarted Lenis');
     }
+    
+    // Handle pending scroll restoration AFTER everything is fully settled
+    if (window.__pendingScrollRestoration) {
+      const productId = window.__pendingScrollRestoration;
+      window.__pendingScrollRestoration = null; // Clear it
+      
+      console.log('🔍 Executing delayed scroll restoration for:', productId);
+      
+      // Wait a bit for page to fully settle, then scroll
+      setTimeout(() => {
+        if (window.lenis) {
+          window.lenis.resize(); // Recalculate
+          
+          const productEl = document.querySelector(`[data-product-id="${productId}"]`);
+          if (productEl) {
+            const rect = productEl.getBoundingClientRect();
+            const elementTop = window.pageYOffset + rect.top;
+            
+            console.log('🎯 Instantly jumping to product:', productId);
+            console.log('  - Element position:', elementTop);
+            console.log('  - Target (with offset):', elementTop - 100);
+            
+            window.lenis.scrollTo(productEl, {
+              immediate: true,
+              offset: -100
+            });
+            
+            setTimeout(() => {
+              console.log('✅ Final scroll position:', window.scrollY);
+            }, 100);
+          } else {
+            console.warn('⚠️ Product element not found:', productId);
+          }
+        }
+      }, 200); // Wait 200ms for everything to settle
+    }
   });
   
   taxiInstance.on('NAVIGATE_ERROR', (error) => {
