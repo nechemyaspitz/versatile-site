@@ -9,6 +9,7 @@ import { CollectionAPI } from './CollectionAPI.js';
 import { CollectionRenderer } from './CollectionRenderer.js';
 import { CollectionInfiniteScroll } from './CollectionInfiniteScroll.js';
 import { setState } from '../../core/state.js';
+import { setupFilterListeners } from '../../components/filterDrawer.js';
 
 export class CollectionsPage {
   constructor() {
@@ -131,6 +132,92 @@ export class CollectionsPage {
   }
   
   /**
+   * Setup filter UI interactions (drawer + accordion)
+   */
+  setupFilterUI() {
+    // Filter drawer open/close
+    setupFilterListeners();
+    
+    // Filter accordion expand/collapse
+    this.setupFilterAccordions();
+  }
+  
+  /**
+   * Setup filter accordion interactions
+   */
+  setupFilterAccordions() {
+    if (!window.gsap) return;
+    
+    const filterHeaders = document.querySelectorAll('.filter-header');
+    
+    filterHeaders.forEach((header) => {
+      // Skip if already initialized
+      if (header.dataset.accordionInit === 'true') return;
+      
+      const filterGroup = header.closest('.filter-group');
+      const icon = header.querySelector('.icon-sm');
+      
+      if (!filterGroup || !icon) return;
+      
+      // Create timeline for this specific accordion (paused initially)
+      const tl = window.gsap.timeline({ 
+        paused: true,
+        onComplete: () => { header._isOpen = true; },
+        onReverseComplete: () => { header._isOpen = false; }
+      });
+      
+      // Action 1: Animate filter group height
+      tl.fromTo(filterGroup, 
+        { height: '2em' },
+        { 
+          height: 'auto',
+          duration: 0.25,
+          ease: 'power3.inOut'
+        },
+        0 // Start at time 0
+      );
+      
+      // Action 2: Animate icon rotation (in parallel)
+      tl.fromTo(icon,
+        { rotation: -90 },
+        { 
+          rotation: 0,
+          duration: 0.25,
+          ease: 'power3.inOut'
+        },
+        0 // Start at time 0 (parallel with action 1)
+      );
+      
+      // Store timeline on the header element
+      header._timeline = tl;
+      header._isOpen = false;
+      
+      // Click handler with toggle and mid-animation reversal support
+      header.addEventListener('click', () => {
+        // Check if animation is currently running
+        if (tl.isActive()) {
+          // Reverse from current position
+          tl.reversed(!tl.reversed());
+        } else {
+          // Not playing, toggle based on current state
+          if (header._isOpen) {
+            // Close: reverse the animation
+            tl.reverse();
+            header._isOpen = false;
+          } else {
+            // Open: play the animation forward
+            tl.play();
+            header._isOpen = true;
+          }
+        }
+      });
+      
+      // Mark as initialized
+      header.dataset.accordionInit = 'true';
+    });
+  }
+  
+  /**
    * Initialize the page
    */
   async init(isBackButton = false) {
@@ -145,6 +232,9 @@ export class CollectionsPage {
     
     // Step 0: Play page enter animation (reveals page + animates elements)
     this.playPageEnterAnimation();
+    
+    // Step 0.5: Setup filter drawer and accordion interactions
+    this.setupFilterUI();
     
     // Step 1: Load URL params into state
     this.loadURLParams();
