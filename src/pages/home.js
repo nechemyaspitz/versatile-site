@@ -41,6 +41,7 @@ export async function initHome(nsCtx) {
   let autoplayTimer = null;
   let introPlayed = false;
   let currentX = 0;
+  let exitAnimation = null;
 
   // SplitText is a Club plugin; only register if available
   if (window.SplitText && window.gsap && gsap.registerPlugin) {
@@ -133,6 +134,92 @@ export async function initHome(nsCtx) {
     }
 
     return enterTL;
+  }
+
+  // ====== PAGE EXIT ANIMATION ======
+  function playPageExitAnimation() {
+    const exitTL = gsap.timeline();
+
+    // 1. Small premium text: opacity 1→0, stagger chars 0.01s
+    const smPremium = document.querySelector('.sm-premium');
+    if (smPremium && window.SplitText) {
+      const split = new SplitText(smPremium, { type: 'chars' });
+      exitTL.fromTo(
+        split.chars,
+        { opacity: 1 },
+        {
+          opacity: 0,
+          duration: 0.8,
+          ease: 'power1.out',
+          stagger: 0.01,
+        },
+        0 // Start at 0s
+      );
+    }
+
+    // 2. Hero heading: opacity 1→0, scale 1→0.8
+    const heroHeading = document.querySelector('.hero-heading');
+    if (heroHeading) {
+      exitTL.fromTo(
+        heroHeading,
+        { opacity: 1, scale: 1 },
+        {
+          opacity: 0,
+          scale: 0.8,
+          duration: 1,
+          ease: 'expo.inOut',
+          transformOrigin: 'top left',
+        },
+        0 // Start at 0s
+      );
+    }
+
+    // 3. Button group children: y 0%→102%, stagger 0.05s
+    const btnGroupChildren = document.querySelectorAll('.btn-group > *');
+    if (btnGroupChildren.length > 0) {
+      exitTL.fromTo(
+        btnGroupChildren,
+        { yPercent: 0 },
+        {
+          yPercent: 102,
+          duration: 1,
+          ease: 'expo.inOut',
+          stagger: 0.05,
+        },
+        0.06 // Start 0.06s into animation
+      );
+    }
+
+    // 4. Hero cover: width 0%→100%
+    const heroCover = document.querySelector('.hero-cover');
+    if (heroCover) {
+      exitTL.fromTo(
+        heroCover,
+        { width: '0%' },
+        {
+          width: '100%',
+          duration: 1,
+          ease: 'expo.inOut',
+        },
+        0.19 // Start 0.19s into animation
+      );
+    }
+
+    // 5. Swiper: scale 1→0.5
+    if (rootSwiper) {
+      exitTL.fromTo(
+        rootSwiper,
+        { scale: 1 },
+        {
+          scale: 0.5,
+          duration: 1,
+          ease: 'expo.in',
+        },
+        0.19 // Start 0.19s into animation
+      );
+    }
+
+    return exitTL;
   }
 
   function splitOnce(slide) {
@@ -377,6 +464,11 @@ export async function initHome(nsCtx) {
   rootSwiper.addEventListener('mouseleave', onLeave);
 
   setState('home', {
+    playExitAnimation: () => {
+      // Play exit animation and return the timeline
+      exitAnimation = playPageExitAnimation();
+      return exitAnimation;
+    },
     destroy: () => {
       try {
         document.removeEventListener('visibilitychange', onVisChange);
@@ -394,6 +486,9 @@ export async function initHome(nsCtx) {
       } catch (e) {}
       try {
         enterAnimation?.kill?.();
+      } catch (e) {}
+      try {
+        exitAnimation?.kill?.();
       } catch (e) {}
     },
   });
