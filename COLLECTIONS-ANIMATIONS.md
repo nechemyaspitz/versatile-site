@@ -65,24 +65,31 @@ Add this CSS to Webflow **Head Code**:
 
 ## 👋 **Exit Animation**
 
-**Short and snappy - reverse of enter but faster!**
+**Short and snappy - faster, cleaner exit!**
 
 ### **Timeline:**
 
 **1. Heading Characters**
 - **Start:** 0s
-- **Duration:** 0.5s
-- **Animation:** `y: 0%` → `y: -100%` (exit upward)
+- **Duration:** 0.4s
+- **Animation:** `y: 0%` → `y: 100%` (exit downward)
 - **Easing:** `power2.in`
-- **Stagger:** 0.008s per character
+- **Stagger:** 0.006s per character
 
 **2. Filter Button**
-- **Start:** 0.05s
-- **Duration:** 0.5s
+- **Start:** 0.04s
+- **Duration:** 0.4s
 - **Animation:** `y: 0%` → `y: 100%` (exit downward)
 - **Easing:** `power2.in`
 
-**3. Page Fade**
+**3. Collection Items**
+- **Start:** 0.08s
+- **Duration:** 0.35s
+- **Animation:** `opacity: 1, y: 0` → `opacity: 0, y: 15px` (subtle fade + down)
+- **Easing:** `power2.in`
+- **Stagger:** 0.015s per item
+
+**4. Page Fade**
 - **Start:** After exit animation completes
 - **Duration:** 0.3s
 - **Animation:** `opacity: 1` → `0`
