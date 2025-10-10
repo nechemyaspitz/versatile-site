@@ -147,16 +147,28 @@ export async function initCollections(nsCtx) {
 
     async init() {
       try {
-        // Check if we should restore from session (back button)
-        if (this.tryRestoreFromSession()) {
-          console.log('✅ Restored from session cache');
+        // Detect if this is a back button navigation
+        const isBackButton = window.performance && 
+          (performance.navigation?.type === 2 || 
+           performance.getEntriesByType('navigation')[0]?.type === 'back_forward');
+        
+        console.log('🔍 Navigation type:', isBackButton ? 'BACK BUTTON' : 'REGULAR LINK');
+        
+        // ONLY restore on back button
+        if (isBackButton && this.tryRestoreFromSession()) {
+          console.log('✅ Restored from session cache (back button)');
           this.initNiceSelect();
           this.initEventListeners();
           this.initInfiniteScroll();
           return; // Don't fetch - we restored!
         }
         
-        // Fresh load
+        // Fresh load (navbar link, direct URL, etc.) - clear old cache
+        if (!isBackButton) {
+          console.log('🆕 Fresh load - clearing old session data');
+          sessionStorage.removeItem('collections_state');
+        }
+        
         this.initNiceSelect();
         this.loadFromURLParams();
         this.initEventListeners();
@@ -1192,10 +1204,10 @@ export async function initCollections(nsCtx) {
     }
     
     setupProductClickTracking() {
-      // Track clicks on product links
-      const productLinks = this.productContainer.querySelectorAll('.collection_image-cover, .collection_details');
+      // Track clicks on product links AND variant thumbnails
+      const productLinks = this.productContainer.querySelectorAll('.collection_image-cover, .collection_details, .variant-thumb-link');
       
-      console.log(`🔧 Setting up click tracking for ${productLinks.length} product links`);
+      console.log(`🔧 Setting up click tracking for ${productLinks.length} links (products + variants)`);
       
       productLinks.forEach((link) => {
         link.addEventListener('click', (e) => {
@@ -1204,11 +1216,10 @@ export async function initCollections(nsCtx) {
           if (gridItem) {
             // Use data-product-id attribute (matches what we query for)
             const productId = gridItem.dataset.productId || gridItem.dataset.baseUrl;
-            console.log('🖱️ Product clicked!');
-            console.log('  - Grid item:', gridItem);
-            console.log('  - Product ID from data-product-id:', gridItem.dataset.productId);
-            console.log('  - Product ID from data-base-url:', gridItem.dataset.baseUrl);
-            console.log('  - Final product ID:', productId);
+            const linkType = e.currentTarget.classList.contains('variant-thumb-link') ? 'variant' : 'product';
+            
+            console.log(`🖱️ ${linkType} clicked!`);
+            console.log('  - Product ID:', productId);
             
             if (productId) {
               this._clickedProductId = productId;
