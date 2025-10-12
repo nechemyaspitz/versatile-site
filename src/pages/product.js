@@ -377,6 +377,20 @@ export async function initProduct(nsCtx) {
             display: { right: ['zoomIn', 'zoomOut', 'thumbs', 'close'] },
           },
         },
+        on: {
+          // Stop Lenis when Fancybox opens
+          reveal: () => {
+            if (window.lenis) {
+              window.lenis.stop();
+            }
+          },
+          // Restart Lenis when Fancybox closes
+          close: () => {
+            if (window.lenis) {
+              window.lenis.start();
+            }
+          },
+        },
       });
     }
 
