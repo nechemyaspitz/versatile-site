@@ -83,11 +83,13 @@ export class CollectionCache {
   /**
    * Restore state from sessionStorage
    * Returns null if no cache, expired, or invalid
+   * @param {boolean} isBackButton - Whether this is a back button navigation
+   * @param {Object} state - Optional state to generate key from (instead of URL)
    */
-  restore(isBackButton = false) {
+  restore(isBackButton = false, state = null) {
     try {
-      const cacheKey = this.getCacheKey();
-      console.log(`  🔑 Cache key: "${cacheKey}"`);
+      const cacheKey = this.getCacheKey(state);
+      console.log(`  🔑 Cache key: "${cacheKey}"${state ? ' (from state)' : ' (from URL)'}`);
       
       const saved = sessionStorage.getItem(cacheKey);
       if (!saved) {

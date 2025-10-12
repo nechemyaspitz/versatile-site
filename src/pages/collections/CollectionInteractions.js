@@ -222,9 +222,32 @@ export class CollectionInteractions {
     this.page.state.setCurrentPage(1);
     this.page.state.setItems([]);
     
-    // Clear container and fetch
+    // Clear container
     this.page.renderer.container.innerHTML = '';
-    await this.page.fetchItems(false);
+    
+    // CRITICAL FIX: Check cache BEFORE fetching!
+    // Generate cache key based on NEW filter state (before URL is updated)
+    const cacheData = this.page.cache.restore(false, this.page.state);
+    
+    if (cacheData) {
+      // Cache hit! Restore state and render
+      console.log('  💾 Restoring from cache instead of fetching');
+      this.page.state.fromJSON(cacheData);
+      await this.page.renderer.renderItems(this.page.state.getItems(), true);
+      this.page.updateUI();
+      
+      // Initialize interactions for restored items
+      this.setupProductClickTracking();
+      this.initImageHover();
+      this.updateProductImages();
+      this.updateProductLinks();
+      
+      console.log(`  ✅ Restored ${this.page.state.getItems().length}/${this.page.state.getTotalItems()} items from cache`);
+    } else {
+      // Cache miss! Fetch fresh data
+      console.log('  📡 No cache - fetching fresh data');
+      await this.page.fetchItems(false);
+    }
     
     // Update URL
     this.updateURLParams();
