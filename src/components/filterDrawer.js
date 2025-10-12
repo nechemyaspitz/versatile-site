@@ -19,6 +19,15 @@ export function setupFilterListeners() {
   // from creating a stacking context that would break position: fixed
   const pageWrapper = document.querySelector('.page-wrapper');
   if (pageWrapper && drawer.parentElement !== pageWrapper) {
+    // CRITICAL FIX: Remove any orphaned drawers from previous page visits
+    const orphanedDrawers = pageWrapper.querySelectorAll('.filter-drawer');
+    orphanedDrawers.forEach(old => {
+      if (old !== drawer) {
+        console.log('🧹 Removing orphaned drawer from .page-wrapper');
+        old.remove();
+      }
+    });
+    
     console.log('📦 Moving .filter-drawer to .page-wrapper (was inside:', drawer.parentElement, ')');
     pageWrapper.appendChild(drawer);
   }
