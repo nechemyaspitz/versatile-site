@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.2.6';
+const VERSION = '4.2.7';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✅ Move drawer to .page-wrapper (cleaner structure)', 'color: #00ff00;');
+console.log('%c🔧 FIX: Preserve variant params in thumbnail links', 'color: #ffaa00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

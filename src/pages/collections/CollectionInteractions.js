@@ -344,32 +344,51 @@ export class CollectionInteractions {
   updateProductLinks() {
     const currentProducts = document.querySelectorAll('.collection_grid-item');
     const activeFilters = this.page.state.getActiveFilters();
+    const colorFilters = activeFilters.colors || activeFilters.color;
+    
     currentProducts.forEach((product) => {
       const baseUrl = product.dataset.baseUrl || '';
       const productLinks = product.querySelectorAll(
         '.collection_image-cover, .collection_details'
       );
-      const variantLinks = product.querySelectorAll('.variant-thumb-link');
-      const params = new URLSearchParams();
-      Object.entries(activeFilters).forEach(([key, values]) => {
-        if (values.length > 0) {
-          params.set(key, values.join(','));
+      
+      // Determine main product URL
+      let mainUrl = baseUrl;
+      
+      // If single color filter, link to that color variant
+      if (colorFilters && colorFilters.length === 1) {
+        const matching = this.getVariantsForColor(product, colorFilters[0].toLowerCase());
+        if (matching.length === 1) {
+          mainUrl = `${baseUrl}?variant=${matching[0]}`;
         }
-      });
-      const currentSort = this.page.state.getCurrentSort();
-      if (currentSort !== 'recommended') {
-        params.set('sort', currentSort);
       }
-      const queryString = params.toString();
-      const productUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+      
+      // Update main product links (image cover + details)
       productLinks.forEach((link) => {
-        link.href = productUrl;
+        link.href = mainUrl;
       });
-      variantLinks.forEach((link) => {
-        const originalHref = link.href.split('?')[0];
-        link.href = queryString ? `${originalHref}?${queryString}` : originalHref;
-      });
+      
+      // IMPORTANT: Leave variant thumbnail links unchanged!
+      // They already have ?variant=xxx in their href from createVariantThumbnailsHTML
+      // We don't want to strip that out
     });
+  }
+  
+  getVariantsForColor(gridItem, colorFilter) {
+    const variantThumbs = gridItem.querySelectorAll('.variant-thumb');
+    const matching = [];
+    variantThumbs.forEach((thumb) => {
+      const variantMeta = thumb.closest('.w-dyn-item')?.querySelector('.variant-meta');
+      if (!variantMeta) return;
+      const color = variantMeta.getAttribute('data-color');
+      const slug = variantMeta.getAttribute('data-slug');
+      if (!color || !slug) return;
+      const variantColors = color.split(',').map((c) => c.trim().toLowerCase());
+      if (variantColors.includes(colorFilter)) {
+        matching.push(slug);
+      }
+    });
+    return matching;
   }
   
   updateProductImages() {
