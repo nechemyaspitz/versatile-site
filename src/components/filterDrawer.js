@@ -36,7 +36,7 @@ export function setupFilterListeners() {
     left: 0,
     width: '100%',
     height: '100%',
-    zIndex: 9999
+    zIndex: 30
   });
   gsap.set(controls, { xPercent: 100 });
 
@@ -57,7 +57,7 @@ export function setupFilterListeners() {
           left: 0,
           width: '100%',
           height: '100%',
-          zIndex: 9999
+          zIndex: 30
         });
         
         // Animate in
