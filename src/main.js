@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.3.6';
+const VERSION = '4.3.7';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔥 CRITICAL: Actually call destroy() on page leave (now it works!)', 'color: #ff0000;');
+console.log('%c✅ FIX: Close drawer in onLeave, destroy in onLeaveCompleted', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

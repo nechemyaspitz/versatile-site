@@ -29,9 +29,29 @@ export default function createCollectionsRenderer() {
     }
     
     onLeave() {
-      // CRITICAL FIX: Call destroy on page instance when leaving
+      // Close filter drawer immediately if it's open (before transition starts)
+      const drawer = document.querySelector('.filter-drawer');
+      if (drawer && window.gsap) {
+        const currentOpacity = window.getComputedStyle(drawer).opacity;
+        if (parseFloat(currentOpacity) > 0) {
+          console.log('🎬 CollectionsRenderer onLeave - closing drawer');
+          window.gsap.to(drawer, {
+            opacity: 0,
+            duration: 0.15,
+            ease: 'power2.out',
+            onComplete: () => {
+              window.gsap.set(drawer, { display: 'none' });
+            }
+          });
+        }
+      }
+    }
+    
+    onLeaveCompleted() {
+      // CRITICAL FIX: Call destroy AFTER transition completes
+      // (onLeave is too early - transition needs state for exit animation)
       if (this.pageInstance && typeof this.pageInstance.destroy === 'function') {
-        console.log('🎬 CollectionsRenderer onLeave - destroying page instance');
+        console.log('🎬 CollectionsRenderer onLeaveCompleted - destroying page instance');
         this.pageInstance.destroy();
         this.pageInstance = null;
       }
