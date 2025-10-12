@@ -22,19 +22,14 @@ export function setupFilterListeners() {
   gsap.set(drawer, { display: 'none', opacity: 0 });
   gsap.set(controls, { xPercent: 100 });
 
-  // Store scroll position for restoration
-  let scrollPosition = 0;
-
   if (openBtn) {
     openBtn.addEventListener(
       'click',
       () => {
-        // Lock body scroll and preserve scroll position
-        scrollPosition = window.pageYOffset;
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollPosition}px`;
-        document.body.style.width = '100%';
+        // Stop Lenis smooth scroll
+        if (window.lenis) {
+          window.lenis.stop();
+        }
         
         gsap.set(drawer, { display: 'flex' });
         const tl = gsap.timeline({ defaults: { ease: 'power1.inOut' } });
@@ -48,28 +43,40 @@ export function setupFilterListeners() {
     );
   }
 
+  // Close drawer function (reusable)
+  const closeDrawer = () => {
+    const tl = gsap.timeline({
+      defaults: { ease: 'power1.inOut', duration: 0.1 },
+      onComplete: () => {
+        gsap.set(drawer, { display: 'none' });
+        
+        // Resume Lenis smooth scroll
+        if (window.lenis) {
+          window.lenis.start();
+        }
+      },
+    });
+    tl.to(controls, { xPercent: 100, ease: 'power4.in', duration: 0.2 }).to(
+      drawer,
+      { opacity: 0, duration: 0.05 },
+      '-=0.1'
+    );
+  };
+  
+  // Close button click
   if (closeBtn) {
-    closeBtn.addEventListener(
+    closeBtn.addEventListener('click', closeDrawer, { signal: ac.signal });
+  }
+  
+  // Click outside controls to close (click on drawer background)
+  if (drawer) {
+    drawer.addEventListener(
       'click',
-      () => {
-        const tl = gsap.timeline({
-          defaults: { ease: 'power1.inOut', duration: 0.1 },
-          onComplete: () => {
-            gsap.set(drawer, { display: 'none' });
-            
-            // Unlock body scroll and restore scroll position
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.top = '';
-            document.body.style.width = '';
-            window.scrollTo(0, scrollPosition);
-          },
-        });
-        tl.to(controls, { xPercent: 100, ease: 'power4.in', duration: 0.2 }).to(
-          drawer,
-          { opacity: 0, duration: 0.05 },
-          '-=0.1'
-        );
+      (e) => {
+        // Only close if clicking directly on drawer (not on controls or their children)
+        if (e.target === drawer) {
+          closeDrawer();
+        }
       },
       { signal: ac.signal }
     );
