@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.3.4';
+const VERSION = '4.3.5';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🧹 FIX: Remove orphaned filter drawers (fixes NiceSelect on popstate)', 'color: #ff0000;');
+console.log('%c🧹 FIX: Clean up filter drawer on page leave (prevents visible drawer on exit)', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

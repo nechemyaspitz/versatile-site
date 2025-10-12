@@ -485,6 +485,17 @@ export class CollectionsPage {
       this.interactions.destroy();
     }
     
+    // CRITICAL FIX: Remove filter drawer from .page-wrapper when leaving page
+    // (prevents drawer staying visible/open when navigating away)
+    const pageWrapper = document.querySelector('.page-wrapper');
+    if (pageWrapper) {
+      const drawers = pageWrapper.querySelectorAll('.filter-drawer');
+      drawers.forEach(drawer => {
+        console.log('  🧹 Removing filter drawer from .page-wrapper on page leave');
+        drawer.remove();
+      });
+    }
+    
     // Clear pending scroll restoration
     window.__pendingScrollRestoration = null;
     
