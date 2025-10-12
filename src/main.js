@@ -4,7 +4,7 @@ import { initTaxi } from './taxi.js';
 const VERSION = '4.3.3';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c✅ FIX: applyFilters now checks cache before fetching', 'color: #00ff00;');
+console.log('%c🔧 FIX: NiceSelect now properly cleans up and reinitializes', 'color: #00ff00;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();

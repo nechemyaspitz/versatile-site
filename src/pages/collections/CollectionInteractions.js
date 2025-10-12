@@ -38,12 +38,6 @@ export class CollectionInteractions {
   // ===== NICE SELECT =====
   
   initNiceSelect() {
-    // Skip if already initialized
-    if (this.niceSelect) {
-      console.log('  ⏭️  NiceSelect already initialized, skipping');
-      return;
-    }
-    
     if (!this.sortDropdown) {
       console.warn('  ⚠️  Sort dropdown element not found (#sort-select)');
       return;
@@ -55,6 +49,17 @@ export class CollectionInteractions {
     }
     
     try {
+      // CRITICAL FIX: Always destroy existing NiceSelect instance first
+      // (prevents issues when navigating back via popstate)
+      const existingWrapper = this.sortDropdown.parentElement?.querySelector('.nice-select');
+      if (existingWrapper) {
+        console.log('  🧹 Cleaning up old NiceSelect wrapper');
+        existingWrapper.remove();
+      }
+      
+      // Reset the select element (NiceSelect hides it)
+      this.sortDropdown.style.display = '';
+      
       console.log('  🎨 Initializing NiceSelect on:', this.sortDropdown);
       
       this.niceSelect = NiceSelect.bind(this.sortDropdown, {
@@ -664,6 +669,28 @@ export class CollectionInteractions {
   
   destroy() {
     this._ac.abort();
+    
+    // Destroy NiceSelect instance
+    if (this.niceSelect) {
+      try {
+        // Remove the NiceSelect wrapper
+        const wrapper = this.sortDropdown?.parentElement?.querySelector('.nice-select');
+        if (wrapper) {
+          wrapper.remove();
+        }
+        
+        // Reset the select element
+        if (this.sortDropdown) {
+          this.sortDropdown.style.display = '';
+        }
+        
+        this.niceSelect = null;
+        console.log('  🧹 NiceSelect destroyed');
+      } catch (error) {
+        console.error('Failed to destroy NiceSelect:', error);
+      }
+    }
+    
     console.log('  👋 CollectionInteractions destroyed');
   }
 }
