@@ -378,17 +378,19 @@ export async function initProduct(nsCtx) {
           },
         },
         on: {
-          // Stop Lenis when Fancybox opens
+          // Stop Lenis and prevent body scroll when Fancybox opens
           reveal: () => {
             if (window.lenis) {
               window.lenis.stop();
             }
+            document.body.style.overflow = 'hidden';
           },
-          // Restart Lenis when Fancybox closes
+          // Restart Lenis and restore body scroll when Fancybox closes
           close: () => {
             if (window.lenis) {
               window.lenis.start();
             }
+            document.body.style.overflow = '';
           },
         },
       });
