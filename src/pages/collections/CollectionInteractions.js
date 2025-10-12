@@ -20,7 +20,16 @@ export class CollectionInteractions {
    * Initialize all interactions
    */
   init() {
+    // Try to initialize NiceSelect immediately
     this.initNiceSelect();
+    
+    // Retry after a short delay if it failed (library might not be loaded yet)
+    if (!this.niceSelect) {
+      setTimeout(() => {
+        this.initNiceSelect();
+      }, 500);
+    }
+    
     this.initEventListeners();
     this.initFilterChipEvents();
     this.setupProductClickTracking();
@@ -29,18 +38,35 @@ export class CollectionInteractions {
   // ===== NICE SELECT =====
   
   initNiceSelect() {
-    if (this.sortDropdown && typeof NiceSelect !== 'undefined') {
-      try {
-        this.niceSelect = NiceSelect.bind(this.sortDropdown, {
-          searchable: false,
-          placeholder: 'Select...',
-          searchtext: 'Search',
-          selectedtext: 'geselecteerd',
-        });
-        console.log('  ✅ NiceSelect initialized');
-      } catch (error) {
-        console.error('Failed to initialize Nice Select 2:', error);
-      }
+    // Skip if already initialized
+    if (this.niceSelect) {
+      console.log('  ⏭️  NiceSelect already initialized, skipping');
+      return;
+    }
+    
+    if (!this.sortDropdown) {
+      console.warn('  ⚠️  Sort dropdown element not found (#sort-select)');
+      return;
+    }
+    
+    if (typeof NiceSelect === 'undefined') {
+      console.warn('  ⚠️  NiceSelect library not loaded yet');
+      return;
+    }
+    
+    try {
+      console.log('  🎨 Initializing NiceSelect on:', this.sortDropdown);
+      
+      this.niceSelect = NiceSelect.bind(this.sortDropdown, {
+        searchable: false,
+        placeholder: 'Select...',
+        searchtext: 'Search',
+        selectedtext: 'geselecteerd',
+      });
+      
+      console.log('  ✅ NiceSelect initialized successfully!');
+    } catch (error) {
+      console.error('  ❌ Failed to initialize Nice Select 2:', error);
     }
   }
   
@@ -60,17 +86,11 @@ export class CollectionInteractions {
    * Called after loading from URL params or cache
    */
   syncUIWithState() {
-    // 1. Update sort dropdown value first
+    // 1. Update sort dropdown value and NiceSelect
     const currentSort = this.page.state.getCurrentSort();
-    if (this.sortDropdown) {
-      this.sortDropdown.value = currentSort;
-    }
+    this.updateNiceSelect(currentSort);
     
-    // 2. Re-initialize NiceSelect to reflect the new value
-    // (NiceSelect might not have been initialized yet on first call)
-    this.initNiceSelect();
-    
-    // 3. Update filter checkboxes
+    // 2. Update filter checkboxes
     const activeFilters = this.page.state.getActiveFilters();
     
     // First, uncheck all
