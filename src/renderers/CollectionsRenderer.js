@@ -6,6 +6,11 @@ export default function createCollectionsRenderer() {
   const DefaultRenderer = createDefaultRenderer();
   
   return class CollectionsRenderer extends DefaultRenderer {
+    constructor(props) {
+      super(props);
+      this.pageInstance = null; // Store page instance for cleanup
+    }
+    
     initialLoad() {
       // Don't call initCollections() here - let onEnter() handle it
       this.onEnter();
@@ -18,9 +23,18 @@ export default function createCollectionsRenderer() {
       const isBackButton = trigger === 'popstate';
       console.log('🎬 CollectionsRenderer onEnter - trigger:', trigger, 'isBackButton:', isBackButton);
       
-      // Pass back button flag to initCollections
+      // Pass back button flag to initCollections and store the instance
       // (Page reveal happens in CollectionsPage.init())
-      await initCollections(isBackButton);
+      this.pageInstance = await initCollections(isBackButton);
+    }
+    
+    onLeave() {
+      // CRITICAL FIX: Call destroy on page instance when leaving
+      if (this.pageInstance && typeof this.pageInstance.destroy === 'function') {
+        console.log('🎬 CollectionsRenderer onLeave - destroying page instance');
+        this.pageInstance.destroy();
+        this.pageInstance = null;
+      }
     }
   };
 }
