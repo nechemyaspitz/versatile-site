@@ -21,8 +21,6 @@ export class CollectionState {
     
     // Scroll restoration
     this.clickedProductId = null;
-    
-    console.log('📊 CollectionState initialized');
   }
   
   // ===== GETTERS =====
@@ -57,12 +55,10 @@ export class CollectionState {
   
   setItems(items) {
     this.allLoadedItems = [...items];
-    console.log(`  📊 State: Set items to ${this.allLoadedItems.length}`);
   }
   
   appendItems(items) {
     this.allLoadedItems.push(...items);
-    console.log(`  📊 State: Appended ${items.length} items, total now ${this.allLoadedItems.length}`);
   }
   
   setTotalItems(total) {
@@ -71,12 +67,10 @@ export class CollectionState {
   
   setActiveFilters(filters) {
     this.activeFilters = { ...filters };
-    console.log(`  📊 State: Filters updated:`, JSON.stringify(this.activeFilters));
   }
   
   setCurrentSort(sort) {
     this.currentSort = sort;
-    console.log(`  📊 State: Sort updated: ${sort}`);
   }
   
   setCurrentPage(page) {
@@ -101,7 +95,6 @@ export class CollectionState {
     this.allLoadedItems = [];
     this.currentPage = 1;
     this.hasMorePages = true;
-    console.log('  📊 State: Reset to initial state');
   }
   
   // ===== SERIALIZATION =====
@@ -128,8 +121,6 @@ export class CollectionState {
     this.currentPage = data.currentPage || 1;
     this.hasMorePages = data.hasMorePages !== undefined ? data.hasMorePages : true;
     this.clickedProductId = data.clickedProductId || null;
-    
-    console.log(`  📊 State: Restored from JSON - ${this.allLoadedItems.length} items`);
   }
 }
 
