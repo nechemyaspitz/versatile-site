@@ -377,24 +377,6 @@ export async function initProduct(nsCtx) {
             display: { right: ['zoomIn', 'zoomOut', 'thumbs', 'close'] },
           },
         },
-        on: {
-          reveal: () => {
-            if (window.lenis) {
-              window.lenis.stop();
-            }
-            // Aggressive scroll lock
-            document.documentElement.style.overflow = 'hidden';
-            document.body.style.overflow = 'hidden';
-          },
-          close: () => {
-            if (window.lenis) {
-              window.lenis.start();
-            }
-            // Restore scroll
-            document.documentElement.style.overflow = '';
-            document.body.style.overflow = '';
-          },
-        },
       });
     }
 
