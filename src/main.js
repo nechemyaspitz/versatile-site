@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.2.4';
+const VERSION = '4.2.5';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔧 FIX: Drawer position fixed explicitly via GSAP (100% fixed)', 'color: #ff0000;');
+console.log('%c🔧 CRITICAL: Move drawer to body (escape stacking context)', 'color: #ff0000;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
