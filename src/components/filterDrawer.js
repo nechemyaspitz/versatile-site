@@ -14,12 +14,13 @@ export function setupFilterListeners() {
   // GSAP required
   if (!window.gsap) return;
   
-  // CRITICAL FIX: Move drawer to be direct child of body
-  // This prevents any parent transforms (from data-taxi-view, Lenis, etc.) 
+  // CRITICAL FIX: Move drawer to .page-wrapper (escape data-taxi-view stacking context)
+  // This prevents parent transforms (from data-taxi-view, Lenis, etc.) 
   // from creating a stacking context that would break position: fixed
-  if (drawer.parentElement !== document.body) {
-    console.log('📦 Moving .filter-drawer to body (was inside:', drawer.parentElement);
-    document.body.appendChild(drawer);
+  const pageWrapper = document.querySelector('.page-wrapper');
+  if (pageWrapper && drawer.parentElement !== pageWrapper) {
+    console.log('📦 Moving .filter-drawer to .page-wrapper (was inside:', drawer.parentElement, ')');
+    pageWrapper.appendChild(drawer);
   }
 
   // Clear any existing GSAP properties first (important for page revisits)
