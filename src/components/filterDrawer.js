@@ -19,7 +19,16 @@ export function setupFilterListeners() {
   gsap.set(controls, { clearProps: 'all' });
   
   // Then set initial state
-  gsap.set(drawer, { display: 'none', opacity: 0 });
+  gsap.set(drawer, { 
+    display: 'none', 
+    opacity: 0,
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 9999
+  });
   gsap.set(controls, { xPercent: 100 });
 
   if (openBtn) {
@@ -31,7 +40,18 @@ export function setupFilterListeners() {
           window.lenis.stop();
         }
         
-        gsap.set(drawer, { display: 'flex' });
+        // Ensure drawer is fixed and positioned correctly
+        gsap.set(drawer, { 
+          display: 'flex',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 9999
+        });
+        
+        // Animate in
         const tl = gsap.timeline({ defaults: { ease: 'power1.inOut' } });
         tl.to(drawer, { opacity: 1, duration: 0.1 }).to(
           controls,

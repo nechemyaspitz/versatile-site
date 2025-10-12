@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.2.3';
+const VERSION = '4.2.4';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
-console.log('%c🔧 FIX: Filter drawer uses Lenis stop/start + click outside to close', 'color: #ffaa00;');
+console.log('%c🔧 FIX: Drawer position fixed explicitly via GSAP (100% fixed)', 'color: #ff0000;');
 
 document.addEventListener('DOMContentLoaded', () => {
   const taxi = initTaxi();
