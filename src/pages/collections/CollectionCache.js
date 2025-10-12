@@ -11,17 +11,40 @@ export class CollectionCache {
   }
   
   /**
-   * Generate cache key from current URL query params
+   * Generate cache key from URL or state
    * Each filter/sort combo gets a unique key
+   * @param {Object} state - Optional CollectionState to generate key from
    */
-  getCacheKey() {
-    const params = new URLSearchParams(window.location.search);
+  getCacheKey(state = null) {
+    let params;
     
-    // Remove pagination/config params (we cache all loaded items)
-    params.delete('page');
-    params.delete('limit');
-    params.delete('config');
-    params.delete('collection_id');
+    if (state) {
+      // Generate key from STATE (for saving)
+      params = new URLSearchParams();
+      
+      // Add filters
+      const activeFilters = state.getActiveFilters();
+      Object.entries(activeFilters).forEach(([key, values]) => {
+        if (values && values.length > 0) {
+          params.set(key, values.join(','));
+        }
+      });
+      
+      // Add sort (if not default)
+      const sort = state.getCurrentSort();
+      if (sort && sort !== 'recommended') {
+        params.set('sort', sort);
+      }
+    } else {
+      // Generate key from URL (for loading)
+      params = new URLSearchParams(window.location.search);
+      
+      // Remove pagination/config params (we cache all loaded items)
+      params.delete('page');
+      params.delete('limit');
+      params.delete('config');
+      params.delete('collection_id');
+    }
     
     // Sort params alphabetically for consistent keys
     const sortedParams = Array.from(params.entries())
@@ -34,11 +57,11 @@ export class CollectionCache {
   
   /**
    * Save state to sessionStorage
-   * BUG FIX: Always generate fresh cache key from current URL
+   * BUG FIX: Generate cache key from STATE, not URL (URL might not be updated yet)
    */
   save(state) {
     try {
-      const cacheKey = this.getCacheKey();
+      const cacheKey = this.getCacheKey(state);
       const data = {
         ...state.toJSON(),
         timestamp: Date.now()
