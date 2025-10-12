@@ -1,7 +1,7 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.3.2';
+const VERSION = '4.3.3';
 
 console.log(`%c🚕 Versatile Site v${VERSION}`, 'color: #00ff00; font-weight: bold;');
 console.log('%c✅ FIX: applyFilters now checks cache before fetching', 'color: #00ff00;');
