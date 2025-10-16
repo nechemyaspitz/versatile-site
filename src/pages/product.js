@@ -2,7 +2,187 @@
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 
+// Page enter animation
+function playPageEnterAnimation() {
+  // 0. Reveal page immediately (hidden by CSS/transition to prevent FOUC)
+  const view = document.querySelector('[data-taxi-view="product"]');
+  if (view) {
+    if (window.gsap) {
+      gsap.set(view, { opacity: 1 });
+    } else {
+      // Fallback if GSAP not loaded yet
+      view.style.opacity = '1';
+    }
+  }
+  
+  if (!window.gsap) return Promise.resolve();
+  
+  const tl = gsap.timeline();
+  
+  // 1. Hero cover: width 100% → 0%
+  const heroCover = document.querySelector('.hero-cover');
+  if (heroCover) {
+    gsap.set(heroCover, { width: '100%' });
+    tl.to(heroCover, {
+      width: '0%',
+      duration: 0.85,
+      ease: 'expo.inOut',
+    }, 0);
+  }
+  
+  // 2. Product title: words + chars split, opacity + y offset
+  const title = document.querySelector('#product-title');
+  if (title && window.SplitText) {
+    const split = new SplitText(title, { type: 'words,chars' });
+    gsap.set(split.chars, { opacity: 0, yPercent: 20 });
+    
+    tl.to(split.chars, {
+      opacity: 1,
+      yPercent: 0,
+      duration: 0.85,
+      ease: 'expo.out',
+      stagger: 0.17 / split.chars.length, // Total stagger time: 0.17s
+    }, 0.17);
+  }
+  
+  // 3. Product description: lines split with mask
+  const description = document.querySelector('.product-description');
+  if (description && window.SplitText) {
+    const split = new SplitText(description, { 
+      type: 'lines',
+      linesClass: 'split-line',
+    });
+    
+    // Wrap each line in a mask div
+    split.lines.forEach(line => {
+      const wrapper = document.createElement('div');
+      wrapper.style.overflow = 'hidden';
+      line.parentNode.insertBefore(wrapper, line);
+      wrapper.appendChild(line);
+    });
+    
+    gsap.set(split.lines, { yPercent: 100 });
+    
+    tl.to(split.lines, {
+      yPercent: 0,
+      duration: 0.85,
+      ease: 'expo.out',
+      stagger: 0.085 / split.lines.length, // Total stagger time: 0.085s
+    }, 0.3);
+  }
+  
+  // 4-9. Variant sections and specs
+  const elements = [
+    { selector: '.variant-buttons', start: 0.45 },
+    { selector: '.variant-sizes', start: 0.51 },
+    { selector: '.variant-finishes', start: 0.59 },
+    { selector: '#material', start: 0.66 },
+    { selector: '#thickness', start: 0.73 },
+    { selector: '#applications', start: 0.8 },
+  ];
+  
+  elements.forEach(({ selector, start }) => {
+    const el = document.querySelector(selector);
+    if (el) {
+      gsap.set(el, { opacity: 0, yPercent: 20 });
+      tl.to(el, {
+        opacity: 1,
+        yPercent: 0,
+        duration: 0.7,
+        ease: 'expo.out',
+      }, start);
+    }
+  });
+  
+  return tl;
+}
+
+// Page exit animation (reverse of enter, faster, tighter)
+function playPageExitAnimation() {
+  if (!window.gsap) return Promise.resolve();
+  
+  const tl = gsap.timeline();
+  
+  // 1-6. Variant sections and specs (reverse order, exit down)
+  const elements = [
+    { selector: '#applications', start: 0 },
+    { selector: '#thickness', start: 0.025 },
+    { selector: '#material', start: 0.05 },
+    { selector: '.variant-finishes', start: 0.075 },
+    { selector: '.variant-sizes', start: 0.1 },
+    { selector: '.variant-buttons', start: 0.125 },
+  ];
+  
+  elements.forEach(({ selector, start }) => {
+    const el = document.querySelector(selector);
+    if (el) {
+      tl.to(el, {
+        opacity: 0,
+        yPercent: 20, // Exit down (same direction as enter from)
+        duration: 0.35,
+        ease: 'power2.in',
+      }, start);
+    }
+  });
+  
+  // 7. Description exit (lines go back DOWN with masking)
+  const description = document.querySelector('.product-description');
+  if (description && window.SplitText) {
+    const split = new SplitText(description, { type: 'lines' });
+    
+    // Re-wrap lines in mask if needed
+    split.lines.forEach(line => {
+      if (!line.parentNode.style.overflow) {
+        const wrapper = document.createElement('div');
+        wrapper.style.overflow = 'hidden';
+        line.parentNode.insertBefore(wrapper, line);
+        wrapper.appendChild(line);
+      }
+    });
+    
+    tl.to(split.lines, {
+      yPercent: 100, // Exit DOWN (back where it came from)
+      duration: 0.35,
+      ease: 'power2.in',
+      stagger: 0.025 / split.lines.length,
+    }, 0.15);
+  }
+  
+  // 8. Product title chars exit down
+  const title = document.querySelector('#product-title');
+  if (title && window.SplitText) {
+    const split = new SplitText(title, { type: 'chars' });
+    
+    tl.to(split.chars, {
+      opacity: 0,
+      yPercent: 20, // Exit down (same direction as enter from)
+      duration: 0.35,
+      ease: 'power2.in',
+      stagger: 0.05 / split.chars.length,
+    }, 0.175);
+  }
+  
+  // 9. Hero cover: width 0% → 100% (last, covers everything)
+  const heroCover = document.querySelector('.hero-cover');
+  if (heroCover) {
+    tl.to(heroCover, {
+      width: '100%',
+      duration: 0.45,
+      ease: 'expo.inOut',
+    }, 0.2);
+  }
+  
+  return tl;
+}
+
 export async function initProduct(nsCtx) {
+  // Load GSAP SplitText for animations
+  if (!window.SplitText) {
+    await loadScript(
+      'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js'
+    );
+  }
+  
   // Load styles and scripts
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/carousel/carousel.css'
@@ -42,9 +222,21 @@ export async function initProduct(nsCtx) {
   const mainImg = document.querySelector('.product-image');
   const productName = document.querySelector('[data-product-name]');
   if (!container || !mainImg || !productName) {
-    setState('product', { destroy: () => {} });
+    setState('product', { 
+      playExitAnimation: () => playPageExitAnimation(),
+      destroy: () => {} 
+    });
     return;
   }
+  
+  // Set up state IMMEDIATELY with exit animation
+  setState('product', {
+    playExitAnimation: () => playPageExitAnimation(),
+    destroy: () => {}, // Will be updated with actual destroy
+  });
+  
+  // Play page enter animation
+  playPageEnterAnimation();
 
   class ProductSlider {
     constructor() {
@@ -328,6 +520,12 @@ export async function initProduct(nsCtx) {
   }
 
   const ps = new ProductSlider();
-  setState('product', { destroy: () => ps.destroy() });
+  
+  // Update state with actual destroy function
+  const existingState = { playExitAnimation: () => playPageExitAnimation() };
+  setState('product', {
+    ...existingState,
+    destroy: () => ps.destroy(),
+  });
 }
 

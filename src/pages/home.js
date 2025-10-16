@@ -41,12 +41,225 @@ export async function initHome(nsCtx) {
   let autoplayTimer = null;
   let introPlayed = false;
   let currentX = 0;
+  let exitAnimation = null;
 
   // SplitText is a Club plugin; only register if available
   if (window.SplitText && window.gsap && gsap.registerPlugin) {
     try {
       gsap.registerPlugin(SplitText);
     } catch (e) {}
+  }
+
+  // ====== PAGE ENTER ANIMATION ======
+  function playPageEnterAnimation(swiperInstance) {
+    // 0. Reveal page immediately (hidden by CSS/transition to prevent FOUC)
+    const view = document.querySelector('[data-taxi-view="home"]');
+    if (view) {
+      if (window.gsap) {
+        gsap.set(view, { opacity: 1 });
+      } else {
+        // Fallback if GSAP not loaded yet
+        view.style.opacity = '1';
+      }
+    }
+    
+    if (!window.gsap) return Promise.resolve();
+    
+    const enterTL = gsap.timeline();
+
+    // 1. Hero heading: opacity 0→1, scale 0.8→1
+    const heroHeading = document.querySelector('.hero-heading');
+    if (heroHeading) {
+      enterTL.fromTo(
+        heroHeading,
+        { opacity: 0, scale: 0.8 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.85,
+          ease: 'expo.inOut',
+          transformOrigin: 'top left',
+        },
+        0 // Start at 0s
+      );
+    }
+
+    // 2. Button group children: y 102%→0%, stagger 0.045s
+    const btnGroupChildren = document.querySelectorAll('.btn-group > *');
+    if (btnGroupChildren.length > 0) {
+      // Clear any CSS transforms first, then set GSAP initial state
+      gsap.set(btnGroupChildren, { clearProps: 'transform' });
+      gsap.set(btnGroupChildren, { yPercent: 102 });
+      
+      enterTL.to(
+        btnGroupChildren,
+        {
+          yPercent: 0,
+          duration: 0.85,
+          ease: 'expo.inOut',
+          stagger: 0.045,
+        },
+        0.09 // Start 0.09s into animation
+      );
+    }
+
+    // 3. Hero cover: width 100%→0%
+    const heroCover = document.querySelector('.hero-cover');
+    if (heroCover) {
+      enterTL.fromTo(
+        heroCover,
+        { width: '100%' },
+        {
+          width: '0%',
+          duration: 0.85,
+          ease: 'expo.inOut',
+        },
+        0.28 // Start 0.28s into animation
+      );
+    }
+
+    // 4. Small premium text: split chars, opacity 0→1, stagger 0.017s
+    const smPremium = document.querySelector('.sm-premium');
+    if (smPremium && window.SplitText) {
+      // Set parent to visible so we can see the chars animate
+      gsap.set(smPremium, { opacity: 1 });
+      
+      const split = new SplitText(smPremium, { type: 'chars' });
+      gsap.set(split.chars, { opacity: 0 });
+      
+      enterTL.to(
+        split.chars,
+        {
+          opacity: 1,
+          duration: 1.05,
+          ease: 'power1.out',
+          stagger: 0.017,
+        },
+        0.4 // Start 0.4s into animation
+      );
+    }
+
+    // 5. Swiper: scale 1.1→1
+    if (rootSwiper) {
+      enterTL.fromTo(
+        rootSwiper,
+        { scale: 1.1 },
+        {
+          scale: 1,
+          duration: 1.05,
+          ease: 'expo.out',
+        },
+        0.42 // Start 0.42s into animation
+      );
+    }
+
+    // 6. Slider text: animate in the first slide's text during page enter
+    if (swiperInstance && !prefersReduced) {
+      const activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
+      const split = splitOnce(activeSlide);
+      if (split) {
+        enterTL.to(
+          split.chars,
+          {
+            yPercent: 0,
+            rotate: 0,
+            opacity: 1,
+            duration: 0.9,
+            ease: 'power3.out',
+            stagger: { each: 0.02, from: 'start' },
+          },
+          0.8 // Start 0.8s into animation - during the page enter flow
+        );
+      }
+    }
+
+    return enterTL;
+  }
+
+  // ====== PAGE EXIT ANIMATION ======
+  function playPageExitAnimation() {
+    const exitTL = gsap.timeline();
+
+    // 1. Small premium text: opacity 1→0, stagger chars 0.009s
+    const smPremium = document.querySelector('.sm-premium');
+    if (smPremium && window.SplitText) {
+      const split = new SplitText(smPremium, { type: 'chars' });
+      exitTL.fromTo(
+        split.chars,
+        { opacity: 1 },
+        {
+          opacity: 0,
+          duration: 0.65,
+          ease: 'power1.out',
+          stagger: 0.009,
+        },
+        0 // Start at 0s
+      );
+    }
+
+    // 2. Hero heading: opacity 1→0, scale 1→0.8
+    const heroHeading = document.querySelector('.hero-heading');
+    if (heroHeading) {
+      exitTL.fromTo(
+        heroHeading,
+        { opacity: 1, scale: 1 },
+        {
+          opacity: 0,
+          scale: 0.8,
+          duration: 0.8,
+          ease: 'expo.inOut',
+          transformOrigin: 'top left',
+        },
+        0 // Start at 0s
+      );
+    }
+
+    // 3. Button group children: y 0%→102%, stagger 0.045s
+    const btnGroupChildren = document.querySelectorAll('.btn-group > *');
+    if (btnGroupChildren.length > 0) {
+      exitTL.fromTo(
+        btnGroupChildren,
+        { yPercent: 0 },
+        {
+          yPercent: 102,
+          duration: 0.8,
+          ease: 'expo.inOut',
+          stagger: 0.045,
+        },
+        0.05 // Start 0.05s into animation
+      );
+    }
+
+    // 4. Hero cover: width 0%→100%
+    const heroCover = document.querySelector('.hero-cover');
+    if (heroCover) {
+      exitTL.fromTo(
+        heroCover,
+        { width: '0%' },
+        {
+          width: '100%',
+          duration: 0.8,
+          ease: 'expo.inOut',
+        },
+        0.16 // Start 0.16s into animation
+      );
+    }
+
+    // 5. Swiper: scale 1→0.5
+    if (rootSwiper) {
+      exitTL.fromTo(
+        rootSwiper,
+        { scale: 1 },
+        {
+          scale: 0.5,
+          duration: 0.8,
+          ease: 'expo.in',
+        },
+        0.16 // Start 0.16s into animation
+      );
+    }
+
+    return exitTL;
   }
 
   function splitOnce(slide) {
@@ -155,14 +368,7 @@ export async function initHome(nsCtx) {
   function introFirstSlide(sw) {
     if (introPlayed || prefersReduced) return;
     const active = sw.slides[sw.activeIndex];
-    const img = active?.querySelector('.slider-img');
-    if (img) {
-      gsap.fromTo(
-        img,
-        { scale: 1.12 },
-        { scale: 1, duration: 1.0, ease: 'power2.out' }
-      );
-    }
+    // No intro animation - just show the text
     animateTextIn(active);
     introPlayed = true;
   }
@@ -245,6 +451,7 @@ export async function initHome(nsCtx) {
     tl.add(() => animateTextIn(curSlide), SLIDE_DUR * TEXT_IN_FRACTION);
   }
 
+  // Initialize swiper first (before enter animation so we can access the active slide)
   const swiper = new Swiper('.swiper', {
     loop: true,
     slidesPerView: 1,
@@ -265,8 +472,15 @@ export async function initHome(nsCtx) {
           force3D: true,
         });
         updateParallax(sw, currentX);
-        introFirstSlide(sw);
-        scheduleAutoplay(() => transitionTo(sw, 'next'));
+        
+        // Play page enter animation (includes slider text)
+        const enterAnimation = playPageEnterAnimation(sw);
+        
+        // Wait for enter animation to complete before starting autoplay
+        enterAnimation.then(() => {
+          introPlayed = true; // Mark as played
+          scheduleAutoplay(() => transitionTo(sw, 'next'));
+        });
       },
       resize(sw) {
         sw.updateSlides();
@@ -284,18 +498,15 @@ export async function initHome(nsCtx) {
   };
   document.addEventListener('visibilitychange', onVisChange);
 
-  const onEnter = () => clearAutoplay();
-  const onLeave = () =>
-    scheduleAutoplay(() => transitionTo(swiper, 'next'));
-  rootSwiper.addEventListener('mouseenter', onEnter);
-  rootSwiper.addEventListener('mouseleave', onLeave);
-
   setState('home', {
+    playExitAnimation: () => {
+      // Play exit animation and return the timeline
+      exitAnimation = playPageExitAnimation();
+      return exitAnimation;
+    },
     destroy: () => {
       try {
         document.removeEventListener('visibilitychange', onVisChange);
-        rootSwiper.removeEventListener('mouseenter', onEnter);
-        rootSwiper.removeEventListener('mouseleave', onLeave);
       } catch (e) {}
       try {
         clearAutoplay();
@@ -305,6 +516,12 @@ export async function initHome(nsCtx) {
       } catch (e) {}
       try {
         swiper?.destroy?.(true, true);
+      } catch (e) {}
+      try {
+        enterAnimation?.kill?.();
+      } catch (e) {}
+      try {
+        exitAnimation?.kill?.();
       } catch (e) {}
     },
   });
