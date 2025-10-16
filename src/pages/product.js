@@ -30,10 +30,10 @@ function playPageEnterAnimation() {
     }, 0);
   }
   
-  // 2. Product title: chars split, opacity + y offset
+  // 2. Product title: words + chars split, opacity + y offset
   const title = document.querySelector('#product-title');
   if (title && window.SplitText) {
-    const split = new SplitText(title, { type: 'chars' });
+    const split = new SplitText(title, { type: 'words,chars' });
     gsap.set(split.chars, { opacity: 0, yPercent: 20 });
     
     tl.to(split.chars, {
