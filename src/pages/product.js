@@ -94,6 +94,17 @@ function playPageEnterAnimation() {
     }
   });
   
+  // 10. Footer: fade in near end of animation
+  const footer = document.querySelector('.footer-section');
+  if (footer) {
+    gsap.set(footer, { opacity: 0 });
+    tl.to(footer, {
+      opacity: 1,
+      duration: 0.6,
+      ease: 'power2.inOut',
+    }, 0.5);
+  }
+  
   return tl;
 }
 
@@ -102,6 +113,16 @@ function playPageExitAnimation() {
   if (!window.gsap) return Promise.resolve();
   
   const tl = gsap.timeline();
+  
+  // 0. Footer: fade out immediately
+  const footer = document.querySelector('.footer-section');
+  if (footer) {
+    tl.to(footer, {
+      opacity: 0,
+      duration: 0.65,
+      ease: 'power2.inOut',
+    }, 0);
+  }
   
   // 1-6. Variant sections and specs (reverse order, exit down)
   const elements = [

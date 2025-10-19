@@ -13,13 +13,40 @@ function playPageEnterAnimation() {
     }
   }
   
+  // 1. Footer: fade in
+  if (window.gsap) {
+    const footer = document.querySelector('.footer-section');
+    if (footer) {
+      window.gsap.set(footer, { opacity: 0 });
+      window.gsap.to(footer, {
+        opacity: 1,
+        duration: 0.6,
+        ease: 'power2.inOut',
+        delay: 0.2,
+      });
+    }
+  }
+  
   // Future: Add enter animations here (fade in, slide up, etc.)
 }
 
 // Page exit animation
 function playPageExitAnimation() {
-  // Future: Add exit animations here
-  return Promise.resolve();
+  if (!window.gsap) return Promise.resolve();
+  
+  const tl = window.gsap.timeline();
+  
+  // Footer: fade out
+  const footer = document.querySelector('.footer-section');
+  if (footer) {
+    tl.to(footer, {
+      opacity: 0,
+      duration: 0.6,
+      ease: 'power2.inOut',
+    }, 0);
+  }
+  
+  return tl;
 }
 
 // AJAX form handler
