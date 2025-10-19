@@ -16,7 +16,21 @@ export default {
   external: ['@unseenco/taxi'],
   plugins: [
     nodeResolve(),
-    production && terser()
+    production && terser({
+      compress: {
+        drop_console: ['log', 'debug', 'info', 'warn'], // Remove console.log/debug/info/warn, keep console.error
+        passes: 2, // Run compression twice for better results
+        pure_funcs: ['console.log', 'console.debug', 'console.info', 'console.warn'],
+      },
+      mangle: {
+        properties: false, // Don't mangle property names (safer)
+      },
+      format: {
+        comments: false, // Remove comments
+        preserve_annotations: false,
+      },
+      maxWorkers: 4, // Use 4 workers to avoid timeout
+    })
   ]
 };
 
