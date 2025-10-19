@@ -11,6 +11,7 @@ import { CollectionInfiniteScroll } from './CollectionInfiniteScroll.js';
 import { CollectionInteractions } from './CollectionInteractions.js';
 import { setState } from '../../core/state.js';
 import { setupFilterListeners } from '../../components/filterDrawer.js';
+import { updateCurrentYear } from '../../utils/currentYear.js';
 
 export class CollectionsPage {
   constructor() {
@@ -501,6 +502,9 @@ export async function initCollections(isBackButton = false) {
   if (document.fonts && document.fonts.ready) {
     await document.fonts.ready;
   }
+  
+  // Update current year in footer
+  updateCurrentYear();
   
   const page = new CollectionsPage();
   

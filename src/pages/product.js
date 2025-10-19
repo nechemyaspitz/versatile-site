@@ -1,6 +1,7 @@
 // Product page: Fancyapps Carousel + Fancybox
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
+import { updateCurrentYear } from '../utils/currentYear.js';
 
 // Page enter animation
 function playPageEnterAnimation() {
@@ -201,6 +202,9 @@ export async function initProduct(nsCtx) {
   if (document.fonts && document.fonts.ready) {
     await document.fonts.ready;
   }
+  
+  // Update current year in footer
+  updateCurrentYear();
   
   // Load Fancyapps styles and scripts (GSAP + SplitText are already globally available)
   await loadStyle(

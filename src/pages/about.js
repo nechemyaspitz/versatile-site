@@ -1,4 +1,5 @@
 import { setState } from '../core/state.js';
+import { updateCurrentYear } from '../utils/currentYear.js';
 
 // Page enter animation
 function playPageEnterAnimation() {
@@ -55,6 +56,9 @@ export async function initAbout() {
   if (document.fonts && document.fonts.ready) {
     await document.fonts.ready;
   }
+  
+  // Update current year in footer
+  updateCurrentYear();
   
   // Store in state for cleanup
   setState('about', {
