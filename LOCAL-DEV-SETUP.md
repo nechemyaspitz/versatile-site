@@ -1,96 +1,71 @@
-# Local Development Setup
+# Local Development Setup for Webflow
 
 ## Quick Start
 
-### 1. Replace the script tag in your HTML
+### 1. Add the loader script to Webflow
 
-**Old:**
-```html
-<script defer src="https://nechemyaspitz.github.io/versatile-site/main.js"></script>
-```
+In **Webflow Designer → Project Settings → Custom Code → Before `</body>` tag**:
 
-**New:**
 ```html
 <script defer src="https://nechemyaspitz.github.io/versatile-site/loader.js"></script>
 ```
 
-### 2. Start the watch mode
+That's it! The loader automatically:
+- ✅ **Tries local server first** (`http://localhost:8000/main.js`) when you're developing
+- ✅ **Falls back to production** (GitHub Pages) when local isn't available
+- ✅ **No manual switching needed!**
 
-In your terminal:
+### 2. Development Workflow
+
+When developing locally:
+
 ```bash
+# Terminal 1: Auto-rebuild on changes
 npm run dev
-```
 
-This will automatically rebuild `main.js` whenever you make changes to any file in `src/`.
-
-### 3. Serve your site locally
-
-You need a local web server to test the site. Choose one:
-
-**Option A: Using Python (built-in)**
-```bash
-# Python 3
+# Terminal 2: Serve the file
 python3 -m http.server 8000
-
-# Python 2
-python -m SimpleHTTPServer 8000
 ```
 
-**Option B: Using Node.js `http-server`**
-```bash
-# Install globally (one time)
-npm install -g http-server
+Now:
+1. View your Webflow site (preview or published)
+2. It loads from `localhost:8000` (you'll see `🔧 Loading LOCAL version` in console)
+3. Make changes → Save → Refresh browser → See changes instantly!
 
-# Run server
-http-server -p 8000
-```
+### 3. Testing on Other Devices
 
-**Option C: Using VS Code Live Server**
-- Install the "Live Server" extension
-- Right-click on your HTML file and select "Open with Live Server"
+**No extra steps needed!**
 
-### 4. Open your site
+- View Webflow site on phone/tablet → Automatically loads production version
+- View on your dev computer without local server running → Loads production version
+- Share preview link with others → They get production version
 
-Navigate to `http://localhost:8000` (or whatever port you're using)
+**Only your dev machine with local server running gets the local version!**
 
 ## How It Works
 
 The `loader.js` script:
-1. **Tries to load `/main.js` from your local server** (your development build)
-2. **If that fails, loads from GitHub Pages** (production build)
+1. Tries to load `http://localhost:8000/main.js`
+2. If found → Uses local version (for development)
+3. If not found → Uses GitHub Pages version (production)
 
-When working locally:
-- You see: `🔧 Loading LOCAL version of main.js`
-- Changes rebuild automatically via `npm run dev`
-- Refresh the page to see changes
-
-When viewing the live site:
-- Users see: `🌐 Loading PRODUCTION version from GitHub Pages`
-- No changes needed to deploy
+Console will show:
+- `🔧 Loading LOCAL version` = Development mode
+- `🌐 Loading PRODUCTION version` = Production mode
 
 ## Deployment Workflow
 
-### During Development
-```bash
-# Terminal 1: Watch and rebuild
-npm run dev
-
-# Terminal 2: Serve locally
-python3 -m http.server 8000
-
-# Make changes → Files rebuild automatically → Refresh browser
-```
-
 ### When Ready to Deploy
-```bash
-# Stop the dev watcher (Ctrl+C)
 
-# Build production version
+```bash
+# 1. Stop the dev watcher (Ctrl+C in both terminals)
+
+# 2. Build production version
 npm run build:prod
 
-# Commit and deploy
+# 3. Commit and deploy
 git add -A
-git commit -m "Your commit message"
+git commit -m "Your update message"
 git push origin master
 git checkout gh-pages
 git merge master -m "Auto-deploy"
@@ -98,22 +73,52 @@ git push origin gh-pages
 git checkout master
 ```
 
-Or use the existing deploy script patterns!
+**That's it!** No need to change anything in Webflow - the loader stays the same.
+
+### Testing the Deployment
+
+1. View your Webflow site (without local server running)
+2. Console should show: `🌐 Loading PRODUCTION version`
+3. Test on other devices - they automatically get the new version
+
+## Complete Workflow Example
+
+```bash
+# === Development Session ===
+npm run dev                      # Terminal 1: Auto-rebuild
+python3 -m http.server 8000      # Terminal 2: Serve file
+
+# Make changes → Save → Refresh browser → Repeat
+# Console shows: 🔧 Loading LOCAL version
+
+# === Ready to Deploy ===
+Ctrl+C                           # Stop both terminals
+npm run build:prod               # Build production
+git add -A && git commit -m "..." && git push
+# ... deploy to gh-pages ...
+
+# === Test on Other Devices ===
+# Just view the site, loader handles everything!
+# Console shows: 🌐 Loading PRODUCTION version
+```
 
 ## Benefits
 
-✅ **No more deploying for every tiny change**  
-✅ **Automatic rebuilds** - just refresh the browser  
-✅ **Seamless fallback** - live site still works without changes  
-✅ **Same codebase** - no environment-specific code needed  
+✅ **Set once, forget it** - loader stays in Webflow permanently  
+✅ **Automatic dev/prod switching** - no manual changes  
+✅ **Test on any device instantly** - production always available  
+✅ **Rapid local development** - just refresh browser  
 
 ## Troubleshooting
 
-**Issue**: Still loading from GitHub Pages  
-**Fix**: Make sure you're running a local server (not opening HTML directly via `file://`)
+**Issue**: Still loading production version on dev machine  
+**Fix**: Make sure both `npm run dev` and local server are running
 
 **Issue**: Changes not showing up  
 **Fix**: Hard refresh your browser (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows)
+
+**Issue**: Other devices showing old version  
+**Fix**: Wait ~1 minute for GitHub Pages to update, then hard refresh
 
 **Issue**: Build errors  
 **Fix**: Check the terminal where `npm run dev` is running for error messages

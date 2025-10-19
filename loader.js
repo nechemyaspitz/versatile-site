@@ -1,25 +1,23 @@
-// Local development loader - tries local first, falls back to GitHub Pages
+// Smart loader: tries local dev server first, falls back to production
 (function() {
-  const LOCAL_PATH = '/main.js';
-  const GITHUB_PATH = 'https://nechemyaspitz.github.io/versatile-site/main.js';
+  const LOCAL_URL = 'http://localhost:8000/main.js';
+  const PRODUCTION_URL = 'https://nechemyaspitz.github.io/versatile-site/main.js';
   
-  // Try loading local version first
-  fetch(LOCAL_PATH, { method: 'HEAD' })
+  // Try to load from local server first
+  fetch(LOCAL_URL, { method: 'HEAD', cache: 'no-cache' })
     .then(response => {
       if (response.ok) {
-        // Local file exists, load it
-        console.log('🔧 Loading LOCAL version of main.js');
-        loadScript(LOCAL_PATH);
+        console.log('🔧 Loading LOCAL version');
+        loadScript(LOCAL_URL);
       } else {
-        // Local file not found, load from GitHub
-        console.log('🌐 Loading PRODUCTION version from GitHub Pages');
-        loadScript(GITHUB_PATH);
+        console.log('🌐 Loading PRODUCTION version');
+        loadScript(PRODUCTION_URL);
       }
     })
     .catch(() => {
-      // Error checking local file, load from GitHub
-      console.log('🌐 Loading PRODUCTION version from GitHub Pages');
-      loadScript(GITHUB_PATH);
+      // Local server not running, use production
+      console.log('🌐 Loading PRODUCTION version');
+      loadScript(PRODUCTION_URL);
     });
   
   function loadScript(src) {
