@@ -286,26 +286,22 @@ export async function initHome(nsCtx) {
     // 1. Featured materials content: fade in
     const featuredContent = document.querySelector('.featured-materials-content');
     if (featuredContent) {
-      // Always reset to initial state
-      gsap.set(featuredContent, { opacity: 0 });
+      // Create animation but don't set initial state yet
+      const anim = gsap.fromTo(featuredContent,
+        { opacity: 0 },
+        {
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power1.inOut',
+          paused: true,
+        }
+      );
       
       const trigger = ScrollTrigger.create({
         trigger: featuredContent,
         start: '10% bottom',
-        onEnter: () => {
-          gsap.to(featuredContent, {
-            opacity: 1,
-            duration: 0.3,
-            ease: 'power1.inOut',
-          });
-        },
-        onLeaveBack: () => {
-          gsap.to(featuredContent, {
-            opacity: 0,
-            duration: 0.2,
-            ease: 'power1.inOut',
-          });
-        },
+        animation: anim,
+        toggleActions: 'play none none reverse',
       });
       scrollTriggers.push(trigger);
     }
@@ -315,28 +311,22 @@ export async function initHome(nsCtx) {
     if (featuredGrid) {
       const gridChildren = gsap.utils.toArray(featuredGrid.children);
       if (gridChildren.length > 0) {
-        // Always reset to initial state
-        gsap.set(gridChildren, { opacity: 0 });
+        const anim = gsap.fromTo(gridChildren,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.5,
+            ease: 'power1.inOut',
+            stagger: 0.1,
+            paused: true,
+          }
+        );
         
         const trigger = ScrollTrigger.create({
           trigger: featuredGrid,
           start: 'top 90%',
-          onEnter: () => {
-            gsap.to(gridChildren, {
-              opacity: 1,
-              duration: 0.5,
-              ease: 'power1.inOut',
-              stagger: 0.1,
-            });
-          },
-          onLeaveBack: () => {
-            gsap.to(gridChildren, {
-              opacity: 0,
-              duration: 0.3,
-              ease: 'power1.inOut',
-              stagger: 0.05,
-            });
-          },
+          animation: anim,
+          toggleActions: 'play none none reverse',
         });
         scrollTriggers.push(trigger);
       }
@@ -347,30 +337,24 @@ export async function initHome(nsCtx) {
     txtLgElements.forEach((txtLg) => {
       if (window.SplitText) {
         const split = new SplitText(txtLg, { type: 'chars' });
-        // Always reset to initial state
-        gsap.set(split.chars, { opacity: 0, x: 50 });
+        
+        const anim = gsap.fromTo(split.chars,
+          { opacity: 0, x: 50 },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 1, // Updated to 1s
+            ease: 'power4.inOut',
+            stagger: { amount: 0.15 }, // Total stagger time
+            paused: true,
+          }
+        );
         
         const trigger = ScrollTrigger.create({
           trigger: txtLg,
           start: 'bottom bottom',
-          onEnter: () => {
-            gsap.to(split.chars, {
-              opacity: 1,
-              x: 0,
-              duration: 1, // Updated to 1s
-              ease: 'power4.inOut',
-              stagger: { amount: 0.15 }, // Total stagger time
-            });
-          },
-          onLeaveBack: () => {
-            gsap.to(split.chars, {
-              opacity: 0,
-              x: 50,
-              duration: 0.4,
-              ease: 'power2.in',
-              stagger: { amount: 0.08 },
-            });
-          },
+          animation: anim,
+          toggleActions: 'play none none reverse',
         });
         scrollTriggers.push(trigger);
       }
@@ -379,29 +363,29 @@ export async function initHome(nsCtx) {
     // 4. Scroll buttons: slide up from 100%
     const btnScrollElements = gsap.utils.toArray('[data-btn-scroll]');
     btnScrollElements.forEach((btn) => {
-      // Always reset to initial state
-      gsap.set(btn, { yPercent: 100 });
+      const anim = gsap.fromTo(btn,
+        { yPercent: 100 },
+        {
+          yPercent: 0,
+          duration: 0.8,
+          ease: 'power4.inOut',
+          paused: true,
+        }
+      );
       
       const trigger = ScrollTrigger.create({
         trigger: btn,
         start: 'bottom bottom',
-        onEnter: () => {
-          gsap.to(btn, {
-            yPercent: 0,
-            duration: 0.8,
-            ease: 'power4.inOut',
-          });
-        },
-        onLeaveBack: () => {
-          gsap.to(btn, {
-            yPercent: 100,
-            duration: 0.4,
-            ease: 'power2.in',
-          });
-        },
+        animation: anim,
+        toggleActions: 'play none none reverse',
       });
       scrollTriggers.push(trigger);
     });
+    
+    // Refresh ScrollTrigger after all triggers are created to ensure proper positioning
+    if (window.ScrollTrigger) {
+      ScrollTrigger.refresh();
+    }
   }
 
   function killAndReverseScrollAnimations(exitTL) {
@@ -699,6 +683,10 @@ export async function initHome(nsCtx) {
   document.addEventListener('visibilitychange', onVisChange);
 
   setState('home', {
+    setupScrollAnimations: () => {
+      // Re-setup scroll animations (useful when returning to page)
+      setupScrollAnimations();
+    },
     playExitAnimation: () => {
       // Play exit animation and return the timeline
       exitAnimation = playPageExitAnimation();
