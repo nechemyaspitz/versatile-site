@@ -23,8 +23,8 @@ When developing locally:
 # Terminal 1: Auto-rebuild on changes
 npm run dev
 
-# Terminal 2: Serve the file
-python3 -m http.server 8000
+# Terminal 2: Serve the file with CORS enabled
+python3 dev-server.py
 ```
 
 Now:
@@ -86,7 +86,7 @@ git checkout master
 ```bash
 # === Development Session ===
 npm run dev                      # Terminal 1: Auto-rebuild
-python3 -m http.server 8000      # Terminal 2: Serve file
+python3 dev-server.py            # Terminal 2: Serve file with CORS
 
 # Make changes → Save → Refresh browser → Repeat
 # Console shows: 🔧 Loading LOCAL version
@@ -111,8 +111,11 @@ git add -A && git commit -m "..." && git push
 
 ## Troubleshooting
 
+**Issue**: CORS error when trying to load local version  
+**Fix**: Make sure you're using `python3 dev-server.py` (not `python3 -m http.server`). The dev-server.py includes CORS headers needed for cross-origin requests.
+
 **Issue**: Still loading production version on dev machine  
-**Fix**: Make sure both `npm run dev` and local server are running
+**Fix**: Make sure both `npm run dev` and `python3 dev-server.py` are running. Check console for which version is loading.
 
 **Issue**: Changes not showing up  
 **Fix**: Hard refresh your browser (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows)
@@ -122,4 +125,7 @@ git add -A && git commit -m "..." && git push
 
 **Issue**: Build errors  
 **Fix**: Check the terminal where `npm run dev` is running for error messages
+
+**Issue**: "ERR_FAILED 200 (OK)" in console  
+**Fix**: This is a CORS error. Use `python3 dev-server.py` instead of the regular Python HTTP server.
 
