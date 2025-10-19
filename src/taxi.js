@@ -7,6 +7,8 @@ import createDefaultRenderer from './renderers/DefaultRenderer.js';
 import createHomeRenderer from './renderers/HomeRenderer.js';
 import createCollectionsRenderer from './renderers/CollectionsRenderer.js';
 import createProductRenderer from './renderers/ProductRenderer.js';
+import createAboutRenderer from './renderers/AboutRenderer.js';
+import createContactRenderer from './renderers/ContactRenderer.js';
 
 // Import transition factories
 import createSmartTransition from './transitions/SmartTransition.js';
@@ -23,6 +25,8 @@ export function initTaxi() {
   const HomeRenderer = createHomeRenderer();
   const CollectionsRenderer = createCollectionsRenderer();
   const ProductRenderer = createProductRenderer();
+  const AboutRenderer = createAboutRenderer();
+  const ContactRenderer = createContactRenderer();
   const SmartTransition = createSmartTransition();
   
   // Initialize Taxi
@@ -41,6 +45,8 @@ export function initTaxi() {
       home: HomeRenderer,
       collections: CollectionsRenderer,
       product: ProductRenderer,
+      about: AboutRenderer,
+      contact: ContactRenderer,
     },
   });
   
