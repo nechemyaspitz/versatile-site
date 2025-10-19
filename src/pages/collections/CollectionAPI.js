@@ -11,7 +11,6 @@ export class CollectionAPI {
     this.abortController = null;
     this.responseCache = new Map(); // API response cache (different from session cache)
     
-    console.log('🌐 CollectionAPI initialized');
   }
   
   /**
@@ -81,14 +80,9 @@ export class CollectionAPI {
   async fetchItems(state) {
     const url = this.buildRequestUrl(state);
     
-    console.log('%c[API] Fetching items...', 'color: #00aaff');
-    console.log('  URL:', url);
-    console.log('  Page:', state.getCurrentPage());
-    console.log('  Filters:', JSON.stringify(state.getActiveFilters()));
     
     // Check response cache
     if (this.responseCache.has(url)) {
-      console.log('  ✅ Using cached API response');
       return this.responseCache.get(url);
     }
     
@@ -124,8 +118,6 @@ export class CollectionAPI {
       // Cache the response
       this.responseCache.set(url, data);
       
-      console.log(`  ✅ Fetched ${data.items?.length || 0} items`);
-      console.log(`  Total items: ${data.pagination?.total || 0}`);
       
       return data;
     } catch (error) {
@@ -143,7 +135,6 @@ export class CollectionAPI {
    */
   clearCache() {
     this.responseCache.clear();
-    console.log('  🗑️ Cleared API response cache');
   }
 }
 

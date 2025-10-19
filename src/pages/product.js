@@ -176,14 +176,7 @@ function playPageExitAnimation() {
 }
 
 export async function initProduct(nsCtx) {
-  // Load GSAP SplitText for animations
-  if (!window.SplitText) {
-    await loadScript(
-      'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js'
-    );
-  }
-  
-  // Load styles and scripts
+  // Load Fancyapps styles and scripts (GSAP + SplitText are already globally available)
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/carousel/carousel.css'
   );

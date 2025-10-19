@@ -3,17 +3,7 @@ import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 
 export async function initHome(nsCtx) {
-  // Load assets
-  if (!window.gsap) {
-    await loadScript(
-      'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js'
-    );
-  }
-  if (!window.ScrollTrigger) {
-    await loadScript(
-      'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js'
-    );
-  }
+  // Load Swiper (GSAP is already globally available)
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css'
   );

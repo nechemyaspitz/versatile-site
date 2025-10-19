@@ -24,8 +24,6 @@ export class CollectionsPage {
     
     // Loading flag
     this.isLoading = false;
-    
-    console.log('🎬 CollectionsPage initialized');
   }
   
   /**
@@ -42,8 +40,6 @@ export class CollectionsPage {
       if (window.gsap) {
         window.gsap.set(view, { opacity: 1, force3D: false });
       }
-      
-      console.log('  👁️  Page revealed (opacity forced to 1)');
     }
     
     if (!window.gsap) return Promise.resolve();
@@ -227,10 +223,6 @@ export class CollectionsPage {
    * Initialize the page
    */
   async init(isBackButton = false) {
-    console.log('%c========== COLLECTIONS INIT ==========', 'color: #00ff00; font-weight: bold');
-    console.log(`URL: ${window.location.href}`);
-    console.log(`Back button: ${isBackButton}`);
-    
     // Register state IMMEDIATELY for exit animation
     setState('collections', {
       playExitAnimation: () => this.playPageExitAnimation(),
@@ -271,11 +263,8 @@ export class CollectionsPage {
       if (isBackButton && this.state.clickedProductId) {
         window.__pendingScrollRestoration = this.state.clickedProductId;
       }
-      
-      console.log(`✅ Restored from cache: ${this.state.getItems().length}/${this.state.getTotalItems()} items`);
     } else {
       // Cache miss! Fetch fresh data
-      console.log('  📡 No cache - fetching fresh data');
       await this.loadInitialData();
     }
     
@@ -284,8 +273,6 @@ export class CollectionsPage {
     
     // BUG FIX: Save to cache AFTER everything is loaded
     this.cache.save(this.state);
-    
-    console.log('%c========== INIT COMPLETE ==========', 'color: #00ff00; font-weight: bold');
   }
   
   /**
@@ -312,11 +299,6 @@ export class CollectionsPage {
     }
     
     this.state.setActiveFilters(filters);
-    
-    console.log('  📄 Loaded from URL:', {
-      sort: this.state.getCurrentSort(),
-      filters: this.state.getActiveFilters()
-    });
   }
   
   /**
@@ -361,14 +343,6 @@ export class CollectionsPage {
       // API uses camelCase: hasMore, not has_more
       this.state.setHasMorePages(data.pagination.hasMore || false);
       
-      console.log(`  📊 Pagination updated:`, {
-        currentPage: this.state.getCurrentPage(),
-        itemsLoaded: this.state.getItems().length,
-        totalItems: this.state.getTotalItems(),
-        hasMore: data.pagination.hasMore,
-        hasMoreInState: this.state.hasMorePages,
-      });
-      
       // Render
       if (append) {
         await this.renderer.appendItems(data.items);
@@ -389,12 +363,9 @@ export class CollectionsPage {
       
       // Increment page for next fetch
       this.state.incrementPage();
-      console.log(`  📄 Next page will be: ${this.state.getCurrentPage()}`);
       
       // BUG FIX: Save to cache AFTER state is updated
       this.cache.save(this.state);
-      
-      console.log(`✅ Fetch complete: ${this.state.getItems().length}/${this.state.getTotalItems()} items loaded`);
       
     } catch (error) {
       if (error.name !== 'AbortError') {
@@ -417,19 +388,8 @@ export class CollectionsPage {
     this.infiniteScroll = new CollectionInfiniteScroll(
       '.product-grid',
       () => {
-        console.log('  ♾️  Infinite scroll triggered:', {
-          hasMorePages: this.state.hasMorePages,
-          isLoading: this.isLoading,
-          itemsLoaded: this.state.getItems().length,
-          totalItems: this.state.getTotalItems(),
-        });
-        
         if (this.state.hasMorePages && !this.isLoading) {
           this.fetchItems(true);
-        } else if (!this.state.hasMorePages) {
-          console.log('  ⛔ No more pages to load');
-        } else if (this.isLoading) {
-          console.log('  ⏳ Already loading, skipping');
         }
       }
     );
@@ -490,10 +450,7 @@ export class CollectionsPage {
     const pageWrapper = document.querySelector('.page-wrapper');
     if (pageWrapper) {
       const drawers = pageWrapper.querySelectorAll('.filter-drawer');
-      drawers.forEach(drawer => {
-        console.log('  🧹 Removing filter drawer from .page-wrapper on page leave');
-        drawer.remove();
-      });
+      drawers.forEach(drawer => drawer.remove());
     }
     
     // Clear pending scroll restoration
@@ -504,8 +461,6 @@ export class CollectionsPage {
     
     // Clear state from global store
     setState('collections', null);
-    
-    console.log('  👋 CollectionsPage destroyed');
   }
 }
 
@@ -519,7 +474,6 @@ export async function initCollections(isBackButton = false) {
     if (window.gsap) {
       window.gsap.set(view, { opacity: 1, force3D: false });
     }
-    console.log('  👁️  Page revealed IMMEDIATELY (before CollectionsPage)');
   }
   
   const page = new CollectionsPage();

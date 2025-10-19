@@ -9,14 +9,9 @@ export class CollectionRenderer {
     this.container = document.querySelector(containerSelector);
     if (!this.container) {
       console.error(`Container not found: ${containerSelector}`);
-      console.log('Available containers:', {
-        productGrid: document.querySelector('.product-grid'),
-        collectionList: document.querySelector('.collection_product-list'),
-      });
       throw new Error(`Container not found: ${containerSelector}`);
     }
     
-    console.log('🎨 CollectionRenderer initialized');
   }
   
   // ===== MAIN RENDERING =====
@@ -25,8 +20,6 @@ export class CollectionRenderer {
    * Render items (replaces all content)
    */
   async renderItems(items, fromCache = false) {
-    console.log('%c[RENDER] Rendering items', 'color: #9900ff');
-    console.log(`  Items: ${items.length}, fromCache: ${fromCache}`);
     
     // Check for skeleton loaders
     const hasSkeletons = this.container.querySelectorAll('.skeleton-item').length > 0;
@@ -59,8 +52,6 @@ export class CollectionRenderer {
    * Append items (adds to existing content)
    */
   async appendItems(items) {
-    console.log('%c[RENDER] Appending items', 'color: #9900ff');
-    console.log(`  Items: ${items.length}`);
     
     // Fade out skeletons if any
     await this.removeSkeletonLoaders(true);
@@ -184,7 +175,6 @@ export class CollectionRenderer {
   // ===== SKELETON LOADERS =====
   
   showSkeletonLoaders(count) {
-    console.log(`  💀 Showing ${count} skeleton loaders`);
     
     for (let i = 0; i < count; i++) {
       const skeleton = document.createElement('div');
@@ -283,7 +273,6 @@ export class CollectionRenderer {
       if (window.lenis) {
         window.lenis.resize();
       }
-      console.log('  📸 All images loaded, Lenis resized');
     });
   }
 }
