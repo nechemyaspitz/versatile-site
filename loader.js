@@ -23,7 +23,7 @@
   function loadScript(src) {
     const script = document.createElement('script');
     script.src = src;
-    script.defer = true;
+    // Don't use defer - execute immediately when loaded
     document.head.appendChild(script);
   }
 })();
