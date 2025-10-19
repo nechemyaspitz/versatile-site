@@ -210,8 +210,25 @@ export async function initProduct(nsCtx) {
     );
   }
   
-  // Small delay to ensure plugins are fully registered (needed on fresh page load)
-  await new Promise(resolve => setTimeout(resolve, 50));
+  // Wait for plugins to be fully available (with retry logic)
+  let retries = 0;
+  while ((!window.Arrows || !window.Thumbs) && retries < 10) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    retries++;
+  }
+  
+  // Check if plugins are available (might be on window or Carousel object)
+  const hasArrows = window.Arrows || (window.Carousel && window.Carousel.Arrows);
+  const hasThumbs = window.Thumbs || (window.Carousel && window.Carousel.Thumbs);
+  
+  if (!hasArrows || !hasThumbs) {
+    console.error('Carousel plugins check:', { 
+      windowArrows: !!window.Arrows, 
+      windowThumbs: !!window.Thumbs,
+      carouselArrows: !!(window.Carousel && window.Carousel.Arrows),
+      carouselThumbs: !!(window.Carousel && window.Carousel.Thumbs)
+    });
+  }
 
   // If no product carousel, skip
   const container = document.getElementById('product-carousel');
@@ -349,7 +366,15 @@ export async function initProduct(nsCtx) {
       });
 
       try {
-        // Factory style - explicitly reference from window to ensure plugins are available
+        // Build plugins object - check both window and Carousel namespace
+        const plugins = {};
+        const ArrowsPlugin = window.Arrows || (Carousel && Carousel.Arrows);
+        const ThumbsPlugin = window.Thumbs || (Carousel && Carousel.Thumbs);
+        
+        if (ArrowsPlugin) plugins.Arrows = ArrowsPlugin;
+        if (ThumbsPlugin) plugins.Thumbs = ThumbsPlugin;
+        
+        // Factory style - explicitly reference plugins to ensure they're available
         this.carousel = Carousel(
           carouselContainer,
           {
@@ -359,10 +384,14 @@ export async function initProduct(nsCtx) {
             dragFree: false,
             initialPage: this.initialSlideIndex,
           },
-          { Arrows: window.Arrows, Thumbs: window.Thumbs }
+          plugins
         ).init();
       } catch (error) {
         console.error('Failed to initialize Carousel:', error);
+        console.error('Available plugins:', { 
+          Arrows: !!(window.Arrows || (Carousel && Carousel.Arrows)),
+          Thumbs: !!(window.Thumbs || (Carousel && Carousel.Thumbs))
+        });
       }
     }
 
