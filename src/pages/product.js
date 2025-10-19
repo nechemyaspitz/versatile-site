@@ -209,6 +209,9 @@ export async function initProduct(nsCtx) {
       'https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/carousel/carousel.thumbs.umd.js'
     );
   }
+  
+  // Small delay to ensure plugins are fully registered (needed on fresh page load)
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   // If no product carousel, skip
   const container = document.getElementById('product-carousel');
@@ -346,7 +349,7 @@ export async function initProduct(nsCtx) {
       });
 
       try {
-        // Factory style
+        // Factory style - explicitly reference from window to ensure plugins are available
         this.carousel = Carousel(
           carouselContainer,
           {
@@ -356,7 +359,7 @@ export async function initProduct(nsCtx) {
             dragFree: false,
             initialPage: this.initialSlideIndex,
           },
-          { Arrows, Thumbs }
+          { Arrows: window.Arrows, Thumbs: window.Thumbs }
         ).init();
       } catch (error) {
         console.error('Failed to initialize Carousel:', error);
