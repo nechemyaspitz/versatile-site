@@ -1,12 +1,16 @@
 // Home page: Swiper + GSAP SplitText slider
 import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
+import { updateCurrentYear } from '../utils/currentYear.js';
 
 export async function initHome(nsCtx) {
   // Wait for fonts to load before SplitText (prevents layout shift warnings)
   if (document.fonts && document.fonts.ready) {
     await document.fonts.ready;
   }
+  
+  // Update current year in footer
+  updateCurrentYear();
   
   // Load Swiper (GSAP is already globally available)
   await loadStyle(

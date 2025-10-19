@@ -1,4 +1,5 @@
 import { setState } from '../core/state.js';
+import { updateCurrentYear } from '../utils/currentYear.js';
 
 // Page enter animation
 function playPageEnterAnimation() {
@@ -126,6 +127,9 @@ export async function initContact() {
   if (document.fonts && document.fonts.ready) {
     await document.fonts.ready;
   }
+  
+  // Update current year in footer
+  updateCurrentYear();
   
   // Setup AJAX form handler
   const cleanupFormHandler = setupFormHandler();
