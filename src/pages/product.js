@@ -217,18 +217,6 @@ export async function initProduct(nsCtx) {
     retries++;
   }
   
-  // Check if plugins are available (might be on window or Carousel object)
-  const hasArrows = window.Arrows || (window.Carousel && window.Carousel.Arrows);
-  const hasThumbs = window.Thumbs || (window.Carousel && window.Carousel.Thumbs);
-  
-  if (!hasArrows || !hasThumbs) {
-    console.error('Carousel plugins check:', { 
-      windowArrows: !!window.Arrows, 
-      windowThumbs: !!window.Thumbs,
-      carouselArrows: !!(window.Carousel && window.Carousel.Arrows),
-      carouselThumbs: !!(window.Carousel && window.Carousel.Thumbs)
-    });
-  }
 
   // If no product carousel, skip
   const container = document.getElementById('product-carousel');
@@ -379,11 +367,6 @@ export async function initProduct(nsCtx) {
           plugins.Thumbs = window.Thumbs;
         }
         
-        console.log('Initializing carousel with plugins:', Object.keys(plugins), { 
-          hasArrows: !!plugins.Arrows,
-          hasThumbs: !!plugins.Thumbs 
-        });
-        
         // Factory style - pass plugins object as third parameter
         this.carousel = Carousel(
           carouselContainer,
@@ -396,8 +379,6 @@ export async function initProduct(nsCtx) {
           },
           plugins
         ).init();
-        
-        console.log('Carousel initialized successfully');
       } catch (error) {
         console.error('Failed to initialize Carousel:', error);
       }
