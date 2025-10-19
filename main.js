@@ -557,51 +557,40 @@
       scrollTriggers.forEach(trigger => trigger.kill());
       scrollTriggers = [];
       
-      // Exit animations: Children first, then container
-      
-      // 1. Grid children fade out first
-      const featuredGrid = document.querySelector('.featured-materials-grid');
-      if (featuredGrid) {
-        const gridChildren = gsap.utils.toArray(featuredGrid.children);
-        exitTL.to(gridChildren, {
-          opacity: 0,
-          duration: 0.4,
-          ease: 'power1.inOut',
-          stagger: 0.05, // Faster stagger on exit
-        }, 0);
-      }
-      
-      // 2. Text chars exit to left
-      const txtLgElements = gsap.utils.toArray('.txt-lg');
-      txtLgElements.forEach((txtLg) => {
-        if (window.SplitText) {
-          const split = new SplitText(txtLg, { type: 'chars' });
-          exitTL.to(split.chars, {
-            opacity: 0,
-            x: -30, // Exit to the left (opposite direction)
-            duration: 0.5,
-            ease: 'power2.in',
-            stagger: { amount: 0.08 }, // Faster stagger on exit
-          }, 0);
-        }
-      });
-      
-      // 3. Buttons slide down
-      const btnScrollElements = gsap.utils.toArray('[data-btn-scroll]');
-      exitTL.to(btnScrollElements, {
-        yPercent: 100,
-        duration: 0.5,
-        ease: 'power2.in',
-      }, 0);
-      
-      // 4. Container fades out LAST (after children are gone)
+      // Simple fade out with stagger - clean and elegant
       const featuredContent = document.querySelector('.featured-materials-content');
       if (featuredContent) {
+        // Collect all animated children
+        const allElements = [];
+        
+        // Add grid children
+        const featuredGrid = featuredContent.querySelector('.featured-materials-grid');
+        if (featuredGrid) {
+          allElements.push(...gsap.utils.toArray(featuredGrid.children));
+        }
+        
+        // Add text elements
+        allElements.push(...gsap.utils.toArray(featuredContent.querySelectorAll('.txt-lg')));
+        
+        // Add buttons
+        allElements.push(...gsap.utils.toArray(featuredContent.querySelectorAll('[data-btn-scroll]')));
+        
+        // Fade out all elements with a gentle stagger
+        if (allElements.length > 0) {
+          exitTL.to(allElements, {
+            opacity: 0,
+            duration: 0.4,
+            ease: 'power2.inOut',
+            stagger: 0.03, // Gentle stagger
+          }, 0);
+        }
+        
+        // Fade out container last
         exitTL.to(featuredContent, {
           opacity: 0,
-          duration: 0.5,
-          ease: 'power1.inOut',
-        }, 0.3); // Delayed by 0.3s so children animate out first
+          duration: 0.4,
+          ease: 'power2.inOut',
+        }, 0.2); // Slight delay
       }
     }
 
@@ -811,9 +800,6 @@
           // Play page enter animation (includes slider text)
           const enterAnimation = playPageEnterAnimation(sw);
           
-          // Set up scroll animations immediately (they trigger on scroll)
-          setupScrollAnimations();
-          
           // Wait for enter animation to complete before starting autoplay
           enterAnimation.then(() => {
             scheduleAutoplay(() => transitionTo(sw, 'next'));
@@ -887,6 +873,14 @@
       
       async onEnter() {
         await initHome();
+        
+        // Setup scroll animations on every page entry (with slight delay for DOM readiness)
+        requestAnimationFrame(() => {
+          const homeState = getState('home');
+          if (homeState?.setupScrollAnimations) {
+            homeState.setupScrollAnimations();
+          }
+        });
       }
     };
   }
@@ -3820,7 +3814,7 @@
 
   // Main entry point - Taxi.js SPA
 
-  const VERSION = '4.5.2';
+  const VERSION = '4.5.3';
 
   console.log(`Versatile Site v${VERSION}`);
 

@@ -1,6 +1,7 @@
 // Home page renderer
 import createDefaultRenderer from './DefaultRenderer.js';
 import { initHome } from '../pages/home.js';
+import { getState } from '../core/state.js';
 
 export default function createHomeRenderer() {
   const DefaultRenderer = createDefaultRenderer();
@@ -14,6 +15,14 @@ export default function createHomeRenderer() {
     
     async onEnter() {
       await initHome();
+      
+      // Setup scroll animations on every page entry (with slight delay for DOM readiness)
+      requestAnimationFrame(() => {
+        const homeState = getState('home');
+        if (homeState?.setupScrollAnimations) {
+          homeState.setupScrollAnimations();
+        }
+      });
     }
   };
 }
