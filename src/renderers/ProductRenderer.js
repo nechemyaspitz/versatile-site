@@ -7,7 +7,7 @@ export default function createProductRenderer() {
   
   return class ProductRenderer extends DefaultRenderer {
     initialLoad() {
-      initProduct();
+      // Don't call initProduct here - onEnter will handle it
       this.onEnter();
       this.onEnterCompleted();
     }
