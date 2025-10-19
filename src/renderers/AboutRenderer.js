@@ -11,6 +11,15 @@ export default function createAboutRenderer() {
     }
 
     async onEnter() {
+      // Reveal page immediately (must be synchronous)
+      const view = document.querySelector('[data-taxi-view="about"]');
+      if (view) {
+        view.style.opacity = '1';
+        if (window.gsap) {
+          window.gsap.set(view, { opacity: 1, force3D: false });
+        }
+      }
+      
       await initAbout();
     }
   };
