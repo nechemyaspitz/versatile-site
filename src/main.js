@@ -1,10 +1,10 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.6.6';
+const VERSION = '4.6.7';
 
 console.log(`Versatile Site v${VERSION}`);
-console.log('%cSite by nechemya.dev', 'color: #00aaff; font-weight: bold;');
+console.log('Site by nechemya.dev');
 console.log('https://nechemya.dev');
 
 document.addEventListener('DOMContentLoaded', () => {
