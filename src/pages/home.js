@@ -9,6 +9,11 @@ export async function initHome(nsCtx) {
       'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js'
     );
   }
+  if (!window.ScrollTrigger) {
+    await loadScript(
+      'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js'
+    );
+  }
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css'
   );
@@ -43,12 +48,16 @@ export async function initHome(nsCtx) {
   let currentX = 0;
   let exitAnimation = null;
 
-  // SplitText is a Club plugin; only register if available
-  if (window.SplitText && window.gsap && gsap.registerPlugin) {
+  // Register GSAP plugins if available
+  if (window.gsap && gsap.registerPlugin) {
     try {
-      gsap.registerPlugin(SplitText);
+      if (window.SplitText) gsap.registerPlugin(SplitText);
+      if (window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     } catch (e) {}
   }
+  
+  // Store ScrollTrigger instances for cleanup
+  let scrollTriggers = [];
 
   // ====== PAGE ENTER ANIMATION ======
   function playPageEnterAnimation(swiperInstance) {
@@ -179,7 +188,11 @@ export async function initHome(nsCtx) {
   // ====== PAGE EXIT ANIMATION ======
   function playPageExitAnimation() {
     const exitTL = gsap.timeline();
+    
+    // Kill ScrollTriggers and reverse scroll animations
+    killAndReverseScrollAnimations(exitTL);
 
+    // Hero section exit animations:
     // 1. Small premium text: opacity 1→0, stagger chars 0.009s
     const smPremium = document.querySelector('.sm-premium');
     if (smPremium && window.SplitText) {
@@ -260,6 +273,146 @@ export async function initHome(nsCtx) {
     }
 
     return exitTL;
+  }
+
+  // ====== SCROLL ANIMATIONS ======
+  function setupScrollAnimations() {
+    if (!window.gsap || !window.ScrollTrigger) return;
+    
+    // 1. Featured materials content: fade in
+    const featuredContent = document.querySelector('.featured-materials-content');
+    if (featuredContent) {
+      gsap.set(featuredContent, { opacity: 0 });
+      
+      const trigger = ScrollTrigger.create({
+        trigger: featuredContent,
+        start: '10% bottom',
+        onEnter: () => {
+          gsap.to(featuredContent, {
+            opacity: 1,
+            duration: 0.3,
+            ease: 'power1.inOut',
+          });
+        },
+      });
+      scrollTriggers.push(trigger);
+    }
+    
+    // 2. Featured materials grid: stagger fade in children
+    const featuredGrid = document.querySelector('.featured-materials-grid');
+    if (featuredGrid) {
+      const gridChildren = gsap.utils.toArray(featuredGrid.children);
+      if (gridChildren.length > 0) {
+        gsap.set(gridChildren, { opacity: 0 });
+        
+        const trigger = ScrollTrigger.create({
+          trigger: featuredGrid,
+          start: 'top 90%',
+          onEnter: () => {
+            gsap.to(gridChildren, {
+              opacity: 1,
+              duration: 0.5,
+              ease: 'power1.inOut',
+              stagger: 0.1,
+            });
+          },
+        });
+        scrollTriggers.push(trigger);
+      }
+    }
+    
+    // 3. Large text: split by chars, fade + slide in from right
+    const txtLgElements = gsap.utils.toArray('.txt-lg');
+    txtLgElements.forEach((txtLg) => {
+      if (window.SplitText) {
+        const split = new SplitText(txtLg, { type: 'chars' });
+        gsap.set(split.chars, { opacity: 0, x: 50 });
+        
+        const trigger = ScrollTrigger.create({
+          trigger: txtLg,
+          start: 'bottom bottom',
+          onEnter: () => {
+            gsap.to(split.chars, {
+              opacity: 1,
+              x: 0,
+              duration: 0.8,
+              ease: 'power4.inOut',
+              stagger: { amount: 0.15 }, // Total stagger time
+            });
+          },
+        });
+        scrollTriggers.push(trigger);
+      }
+    });
+    
+    // 4. Scroll buttons: slide up from 100%
+    const btnScrollElements = gsap.utils.toArray('[data-btn-scroll]');
+    btnScrollElements.forEach((btn) => {
+      gsap.set(btn, { yPercent: 100 });
+      
+      const trigger = ScrollTrigger.create({
+        trigger: btn,
+        start: 'bottom bottom',
+        onEnter: () => {
+          gsap.to(btn, {
+            yPercent: 0,
+            duration: 0.8,
+            ease: 'power4.inOut',
+          });
+        },
+      });
+      scrollTriggers.push(trigger);
+    });
+  }
+
+  function killAndReverseScrollAnimations(exitTL) {
+    if (!window.gsap) return;
+    
+    // Kill all ScrollTriggers
+    scrollTriggers.forEach(trigger => trigger.kill());
+    scrollTriggers = [];
+    
+    // Reverse scroll animations quickly
+    const featuredContent = document.querySelector('.featured-materials-content');
+    if (featuredContent) {
+      exitTL.to(featuredContent, {
+        opacity: 0,
+        duration: 0.4,
+        ease: 'power1.inOut',
+      }, 0);
+    }
+    
+    const featuredGrid = document.querySelector('.featured-materials-grid');
+    if (featuredGrid) {
+      const gridChildren = gsap.utils.toArray(featuredGrid.children);
+      exitTL.to(gridChildren, {
+        opacity: 0,
+        duration: 0.4,
+        ease: 'power1.inOut',
+        stagger: 0.05, // Faster stagger on exit
+      }, 0);
+    }
+    
+    const txtLgElements = gsap.utils.toArray('.txt-lg');
+    txtLgElements.forEach((txtLg) => {
+      if (window.SplitText) {
+        const split = new SplitText(txtLg, { type: 'chars' });
+        exitTL.to(split.chars, {
+          opacity: 0,
+          x: -30, // Exit to the left (opposite direction)
+          duration: 0.5,
+          ease: 'power2.in',
+          stagger: { amount: 0.08 }, // Faster stagger on exit
+        }, 0);
+      }
+    });
+    
+    const btnScrollElements = gsap.utils.toArray('[data-btn-scroll]');
+    exitTL.to(btnScrollElements, {
+      yPercent: 100,
+      duration: 0.5,
+      ease: 'power2.in',
+    }, 0);
   }
 
   function splitOnce(slide) {
@@ -476,6 +629,9 @@ export async function initHome(nsCtx) {
         // Play page enter animation (includes slider text)
         const enterAnimation = playPageEnterAnimation(sw);
         
+        // Set up scroll animations immediately (they trigger on scroll)
+        setupScrollAnimations();
+        
         // Wait for enter animation to complete before starting autoplay
         enterAnimation.then(() => {
           introPlayed = true; // Mark as played
@@ -522,6 +678,11 @@ export async function initHome(nsCtx) {
       } catch (e) {}
       try {
         exitAnimation?.kill?.();
+      } catch (e) {}
+      try {
+        // Clean up ScrollTriggers
+        scrollTriggers.forEach(trigger => trigger.kill());
+        scrollTriggers = [];
       } catch (e) {}
     },
   });

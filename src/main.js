@@ -1,7 +1,7 @@
 // Main entry point - Taxi.js SPA
 import { initTaxi } from './taxi.js';
 
-const VERSION = '4.4.5';
+const VERSION = '4.5.0';
 
 console.log(`Versatile Site v${VERSION}`);
 
