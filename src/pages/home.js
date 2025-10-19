@@ -3,6 +3,11 @@ import { loadScript, loadStyle } from '../utils/assetLoader.js';
 import { setState } from '../core/state.js';
 
 export async function initHome(nsCtx) {
+  // Wait for fonts to load before SplitText (prevents layout shift warnings)
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+  
   // Load Swiper (GSAP is already globally available)
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css'

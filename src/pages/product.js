@@ -176,6 +176,11 @@ function playPageExitAnimation() {
 }
 
 export async function initProduct(nsCtx) {
+  // Wait for fonts to load before SplitText (prevents layout shift warnings)
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+  
   // Load Fancyapps styles and scripts (GSAP + SplitText are already globally available)
   await loadStyle(
     'https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/carousel/carousel.css'
