@@ -177,6 +177,21 @@ export async function initHome(nsCtx) {
       }
     }
 
+    // 7. Footer: fade in near end of animation
+    const footer = document.querySelector('.footer-section');
+    if (footer) {
+      gsap.set(footer, { opacity: 0 });
+      enterTL.to(
+        footer,
+        {
+          opacity: 1,
+          duration: 0.8,
+          ease: 'power2.inOut',
+        },
+        0.9 // Start near end of animation
+      );
+    }
+
     return enterTL;
   }
 
@@ -186,6 +201,20 @@ export async function initHome(nsCtx) {
     
     // Kill ScrollTriggers and reverse scroll animations
     killAndReverseScrollAnimations(exitTL);
+
+    // 0. Footer: fade out immediately
+    const footer = document.querySelector('.footer-section');
+    if (footer) {
+      exitTL.to(
+        footer,
+        {
+          opacity: 0,
+          duration: 0.8,
+          ease: 'power2.inOut',
+        },
+        0 // Start immediately
+      );
+    }
 
     // Hero section exit animations:
     // 1. Small premium text: opacity 1→0, stagger chars 0.009s

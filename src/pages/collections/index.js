@@ -77,6 +77,17 @@ export class CollectionsPage {
       }, 0.035);
     }
     
+    // 3. Footer: fade in near end of animation
+    const footer = document.querySelector('.footer-section');
+    if (footer) {
+      window.gsap.set(footer, { opacity: 0 });
+      tl.to(footer, {
+        opacity: 1,
+        duration: 0.5,
+        ease: 'power2.inOut',
+      }, 0.35);
+    }
+    
     return tl;
   }
   
@@ -87,6 +98,16 @@ export class CollectionsPage {
     if (!window.gsap) return Promise.resolve();
     
     const tl = window.gsap.timeline();
+    
+    // 0. Footer: fade out immediately
+    const footer = document.querySelector('.footer-section');
+    if (footer) {
+      tl.to(footer, {
+        opacity: 0,
+        duration: 0.4,
+        ease: 'power2.inOut',
+      }, 0);
+    }
     
     // 1. Heading chars: 0% → y: 100% (exit down)
     const heading = document.querySelector('.font-color-primary');
