@@ -21,7 +21,6 @@ export default function createCollectionsRenderer() {
       // Get trigger from global variable set by NAVIGATE_IN hook
       const trigger = window.__taxiNavigationTrigger;
       const isBackButton = trigger === 'popstate';
-      console.log('🎬 CollectionsRenderer onEnter - trigger:', trigger, 'isBackButton:', isBackButton);
       
       // Pass back button flag to initCollections and store the instance
       // (Page reveal happens in CollectionsPage.init())
@@ -34,7 +33,6 @@ export default function createCollectionsRenderer() {
       if (drawer && window.gsap) {
         const currentOpacity = window.getComputedStyle(drawer).opacity;
         if (parseFloat(currentOpacity) > 0) {
-          console.log('🎬 CollectionsRenderer onLeave - closing drawer');
           window.gsap.to(drawer, {
             opacity: 0,
             duration: 0.15,
@@ -51,7 +49,6 @@ export default function createCollectionsRenderer() {
       // CRITICAL FIX: Call destroy AFTER transition completes
       // (onLeave is too early - transition needs state for exit animation)
       if (this.pageInstance && typeof this.pageInstance.destroy === 'function') {
-        console.log('🎬 CollectionsRenderer onLeaveCompleted - destroying page instance');
         this.pageInstance.destroy();
         this.pageInstance = null;
       }

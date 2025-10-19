@@ -23,12 +23,10 @@ export function setupFilterListeners() {
     const orphanedDrawers = pageWrapper.querySelectorAll('.filter-drawer');
     orphanedDrawers.forEach(old => {
       if (old !== drawer) {
-        console.log('🧹 Removing orphaned drawer from .page-wrapper');
         old.remove();
       }
     });
     
-    console.log('📦 Moving .filter-drawer to .page-wrapper (was inside:', drawer.parentElement, ')');
     pageWrapper.appendChild(drawer);
   }
 

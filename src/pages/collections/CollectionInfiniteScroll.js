@@ -14,7 +14,6 @@ export class CollectionInfiniteScroll {
       throw new Error(`Container not found: ${containerSelector}`);
     }
     
-    console.log('♾️  CollectionInfiniteScroll initialized');
   }
   
   /**
@@ -39,7 +38,6 @@ export class CollectionInfiniteScroll {
       (entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            console.log('  ♾️  Sentinel visible - loading more items');
             this.callback();
           }
         });
@@ -52,7 +50,6 @@ export class CollectionInfiniteScroll {
     );
     
     this.observer.observe(this.sentinel);
-    console.log('  ♾️  Observer attached to sentinel');
   }
   
   /**
@@ -69,7 +66,6 @@ export class CollectionInfiniteScroll {
       this.sentinel = null;
     }
     
-    console.log('  ♾️  Infinite scroll destroyed');
   }
 }
 

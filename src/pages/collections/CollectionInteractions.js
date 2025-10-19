@@ -13,7 +13,6 @@ export class CollectionInteractions {
     this.niceSelect = null;
     this._ac = new AbortController();
     
-    console.log('🎮 CollectionInteractions initialized');
   }
   
   /**
@@ -39,12 +38,10 @@ export class CollectionInteractions {
   
   initNiceSelect() {
     if (!this.sortDropdown) {
-      console.warn('  ⚠️  Sort dropdown element not found (#sort-select)');
       return;
     }
     
     if (typeof NiceSelect === 'undefined') {
-      console.warn('  ⚠️  NiceSelect library not loaded yet');
       return;
     }
     
@@ -53,14 +50,12 @@ export class CollectionInteractions {
       // (prevents issues when navigating back via popstate)
       const existingWrapper = this.sortDropdown.parentElement?.querySelector('.nice-select');
       if (existingWrapper) {
-        console.log('  🧹 Cleaning up old NiceSelect wrapper');
         existingWrapper.remove();
       }
       
       // Reset the select element (NiceSelect hides it)
       this.sortDropdown.style.display = '';
       
-      console.log('  🎨 Initializing NiceSelect on:', this.sortDropdown);
       
       this.niceSelect = NiceSelect.bind(this.sortDropdown, {
         searchable: false,
@@ -69,7 +64,6 @@ export class CollectionInteractions {
         selectedtext: 'geselecteerd',
       });
       
-      console.log('  ✅ NiceSelect initialized successfully!');
     } catch (error) {
       console.error('  ❌ Failed to initialize Nice Select 2:', error);
     }
@@ -134,7 +128,6 @@ export class CollectionInteractions {
     // 3. Update filter chips
     this.updateFilterChips();
     
-    console.log('  ✅ UI synced with state');
   }
   
   // ===== EVENT LISTENERS =====
@@ -178,7 +171,6 @@ export class CollectionInteractions {
       );
     }
     
-    console.log('  ✅ Event listeners initialized');
   }
   
   // ===== FILTER MANAGEMENT =====
@@ -236,7 +228,6 @@ export class CollectionInteractions {
     
     if (cacheData) {
       // Cache hit! Restore state and render
-      console.log('  💾 Restoring from cache instead of fetching');
       this.page.state.fromJSON(cacheData);
       await this.page.renderer.renderItems(this.page.state.getItems(), true);
       this.page.updateUI();
@@ -247,10 +238,8 @@ export class CollectionInteractions {
       this.updateProductImages();
       this.updateProductLinks();
       
-      console.log(`  ✅ Restored ${this.page.state.getItems().length}/${this.page.state.getTotalItems()} items from cache`);
     } else {
       // Cache miss! Fetch fresh data
-      console.log('  📡 No cache - fetching fresh data');
       await this.page.fetchItems(false);
     }
     
@@ -650,7 +639,6 @@ export class CollectionInteractions {
       link.addEventListener('click', this._productClickHandler);
     });
     
-    console.log(`  🖱️  Product click tracking set up for ${productLinks.length} links`);
   }
   
   _productClickHandler = (e) => {
@@ -660,7 +648,6 @@ export class CollectionInteractions {
       if (productId) {
         this.page.state.setClickedProductId(productId);
         this.page.cache.save(this.page.state);
-        console.log(`  💾 Saved clicked product: ${productId}`);
       }
     }
   }
@@ -685,13 +672,11 @@ export class CollectionInteractions {
         }
         
         this.niceSelect = null;
-        console.log('  🧹 NiceSelect destroyed');
       } catch (error) {
         console.error('Failed to destroy NiceSelect:', error);
       }
     }
     
-    console.log('  👋 CollectionInteractions destroyed');
   }
 }
 

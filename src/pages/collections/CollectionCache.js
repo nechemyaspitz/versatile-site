@@ -7,7 +7,6 @@
 export class CollectionCache {
   constructor() {
     this.cacheExpiration = 300000; // 5 minutes
-    console.log('💾 CollectionCache initialized');
   }
   
   /**
@@ -69,9 +68,6 @@ export class CollectionCache {
       
       sessionStorage.setItem(cacheKey, JSON.stringify(data));
       
-      console.log(`  💾 Saved to cache: "${cacheKey}"`);
-      console.log(`     Items: ${data.allLoadedItems.length}/${data.totalItems}`);
-      console.log(`     Filters:`, JSON.stringify(data.activeFilters));
       
       return true;
     } catch (error) {
@@ -89,11 +85,9 @@ export class CollectionCache {
   restore(isBackButton = false, state = null) {
     try {
       const cacheKey = this.getCacheKey(state);
-      console.log(`  🔑 Cache key: "${cacheKey}"${state ? ' (from state)' : ' (from URL)'}`);
       
       const saved = sessionStorage.getItem(cacheKey);
       if (!saved) {
-        console.log('  ❌ No cache found for this URL state');
         return null;
       }
       
@@ -101,18 +95,15 @@ export class CollectionCache {
       const now = Date.now();
       const age = now - data.timestamp;
       
-      console.log(`  📦 Cache found: age=${Math.round(age / 1000)}s, items=${data.allLoadedItems?.length || 0}/${data.totalItems}`);
       
       // Check expiration
       if (age > this.cacheExpiration) {
-        console.log('  ⏰ Cache expired (>5min)');
         sessionStorage.removeItem(cacheKey);
         return null;
       }
       
       // Validate data
       if (!data.allLoadedItems || data.allLoadedItems.length === 0) {
-        console.log('  ⚠️ Cache has no items');
         return null;
       }
       
@@ -121,7 +112,6 @@ export class CollectionCache {
         data.clickedProductId = null;
       }
       
-      console.log(`  ✅ Restoring ${data.allLoadedItems.length}/${data.totalItems} items from cache`);
       
       return data;
     } catch (error) {
@@ -138,7 +128,6 @@ export class CollectionCache {
   clear() {
     const cacheKey = this.getCacheKey();
     sessionStorage.removeItem(cacheKey);
-    console.log(`  🗑️ Cleared cache: "${cacheKey}"`);
   }
   
   /**
@@ -154,7 +143,6 @@ export class CollectionCache {
     }
     
     keys.forEach(key => sessionStorage.removeItem(key));
-    console.log(`  🗑️ Cleared ${keys.length} cache entries`);
   }
 }
 

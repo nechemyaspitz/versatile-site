@@ -18,9 +18,7 @@ export default {
     nodeResolve(),
     production && terser({
       compress: {
-        drop_console: ['log', 'debug', 'info', 'warn'], // Remove console.log/debug/info/warn, keep console.error
         passes: 2, // Run compression twice for better results
-        pure_funcs: ['console.log', 'console.debug', 'console.info', 'console.warn'],
       },
       mangle: {
         properties: false, // Don't mangle property names (safer)
