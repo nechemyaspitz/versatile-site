@@ -506,11 +506,11 @@
         }
       }
       
-      // 3. Large text: split by chars, fade + slide in from right
+      // 3. Large text: split by words + chars, fade + slide in from right
       const txtLgElements = gsap.utils.toArray('.txt-lg');
       txtLgElements.forEach((txtLg) => {
         if (window.SplitText) {
-          const split = new SplitText(txtLg, { type: 'chars' });
+          const split = new SplitText(txtLg, { type: 'words,chars' });
           
           const anim = gsap.fromTo(split.chars,
             { opacity: 0, x: 50 },
@@ -3834,7 +3834,7 @@
 
   // Main entry point - Taxi.js SPA
 
-  const VERSION = '4.5.4';
+  const VERSION = '4.5.5';
 
   console.log(`Versatile Site v${VERSION}`);
 
