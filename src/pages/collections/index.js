@@ -476,6 +476,11 @@ export async function initCollections(isBackButton = false) {
     }
   }
   
+  // Wait for fonts to load before any potential SplitText usage
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+  
   const page = new CollectionsPage();
   
   // Initialize (async)
