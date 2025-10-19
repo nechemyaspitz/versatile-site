@@ -366,15 +366,25 @@ export async function initProduct(nsCtx) {
       });
 
       try {
-        // Build plugins object - check both window and Carousel namespace
+        // For UMD loaded plugins, access them directly from window after scripts load
+        // The pattern from Fancyapps docs shows: Carousel(el, opts, { Arrows }).init()
+        // This means Arrows/Thumbs should be in global scope
         const plugins = {};
-        const ArrowsPlugin = window.Arrows || (Carousel && Carousel.Arrows);
-        const ThumbsPlugin = window.Thumbs || (Carousel && Carousel.Thumbs);
         
-        if (ArrowsPlugin) plugins.Arrows = ArrowsPlugin;
-        if (ThumbsPlugin) plugins.Thumbs = ThumbsPlugin;
+        // Try to get plugins - they should be global after UMD load
+        if (typeof window.Arrows !== 'undefined') {
+          plugins.Arrows = window.Arrows;
+        }
+        if (typeof window.Thumbs !== 'undefined') {
+          plugins.Thumbs = window.Thumbs;
+        }
         
-        // Factory style - explicitly reference plugins to ensure they're available
+        console.log('Initializing carousel with plugins:', Object.keys(plugins), { 
+          hasArrows: !!plugins.Arrows,
+          hasThumbs: !!plugins.Thumbs 
+        });
+        
+        // Factory style - pass plugins object as third parameter
         this.carousel = Carousel(
           carouselContainer,
           {
@@ -386,12 +396,10 @@ export async function initProduct(nsCtx) {
           },
           plugins
         ).init();
+        
+        console.log('Carousel initialized successfully');
       } catch (error) {
         console.error('Failed to initialize Carousel:', error);
-        console.error('Available plugins:', { 
-          Arrows: !!(window.Arrows || (Carousel && Carousel.Arrows)),
-          Thumbs: !!(window.Thumbs || (Carousel && Carousel.Thumbs))
-        });
       }
     }
 
