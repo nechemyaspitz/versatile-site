@@ -279,9 +279,14 @@ export async function initHome(nsCtx) {
   function setupScrollAnimations() {
     if (!window.gsap || !window.ScrollTrigger) return;
     
+    // Kill any existing ScrollTriggers first
+    scrollTriggers.forEach(trigger => trigger.kill());
+    scrollTriggers = [];
+    
     // 1. Featured materials content: fade in
     const featuredContent = document.querySelector('.featured-materials-content');
     if (featuredContent) {
+      // Always reset to initial state
       gsap.set(featuredContent, { opacity: 0 });
       
       const trigger = ScrollTrigger.create({
@@ -294,6 +299,13 @@ export async function initHome(nsCtx) {
             ease: 'power1.inOut',
           });
         },
+        onLeaveBack: () => {
+          gsap.to(featuredContent, {
+            opacity: 0,
+            duration: 0.2,
+            ease: 'power1.inOut',
+          });
+        },
       });
       scrollTriggers.push(trigger);
     }
@@ -303,6 +315,7 @@ export async function initHome(nsCtx) {
     if (featuredGrid) {
       const gridChildren = gsap.utils.toArray(featuredGrid.children);
       if (gridChildren.length > 0) {
+        // Always reset to initial state
         gsap.set(gridChildren, { opacity: 0 });
         
         const trigger = ScrollTrigger.create({
@@ -316,6 +329,14 @@ export async function initHome(nsCtx) {
               stagger: 0.1,
             });
           },
+          onLeaveBack: () => {
+            gsap.to(gridChildren, {
+              opacity: 0,
+              duration: 0.3,
+              ease: 'power1.inOut',
+              stagger: 0.05,
+            });
+          },
         });
         scrollTriggers.push(trigger);
       }
@@ -326,6 +347,7 @@ export async function initHome(nsCtx) {
     txtLgElements.forEach((txtLg) => {
       if (window.SplitText) {
         const split = new SplitText(txtLg, { type: 'chars' });
+        // Always reset to initial state
         gsap.set(split.chars, { opacity: 0, x: 50 });
         
         const trigger = ScrollTrigger.create({
@@ -335,9 +357,18 @@ export async function initHome(nsCtx) {
             gsap.to(split.chars, {
               opacity: 1,
               x: 0,
-              duration: 0.8,
+              duration: 1, // Updated to 1s
               ease: 'power4.inOut',
               stagger: { amount: 0.15 }, // Total stagger time
+            });
+          },
+          onLeaveBack: () => {
+            gsap.to(split.chars, {
+              opacity: 0,
+              x: 50,
+              duration: 0.4,
+              ease: 'power2.in',
+              stagger: { amount: 0.08 },
             });
           },
         });
@@ -348,6 +379,7 @@ export async function initHome(nsCtx) {
     // 4. Scroll buttons: slide up from 100%
     const btnScrollElements = gsap.utils.toArray('[data-btn-scroll]');
     btnScrollElements.forEach((btn) => {
+      // Always reset to initial state
       gsap.set(btn, { yPercent: 100 });
       
       const trigger = ScrollTrigger.create({
@@ -358,6 +390,13 @@ export async function initHome(nsCtx) {
             yPercent: 0,
             duration: 0.8,
             ease: 'power4.inOut',
+          });
+        },
+        onLeaveBack: () => {
+          gsap.to(btn, {
+            yPercent: 100,
+            duration: 0.4,
+            ease: 'power2.in',
           });
         },
       });
@@ -372,16 +411,9 @@ export async function initHome(nsCtx) {
     scrollTriggers.forEach(trigger => trigger.kill());
     scrollTriggers = [];
     
-    // Reverse scroll animations quickly
-    const featuredContent = document.querySelector('.featured-materials-content');
-    if (featuredContent) {
-      exitTL.to(featuredContent, {
-        opacity: 0,
-        duration: 0.4,
-        ease: 'power1.inOut',
-      }, 0);
-    }
+    // Exit animations: Children first, then container
     
+    // 1. Grid children fade out first
     const featuredGrid = document.querySelector('.featured-materials-grid');
     if (featuredGrid) {
       const gridChildren = gsap.utils.toArray(featuredGrid.children);
@@ -393,6 +425,7 @@ export async function initHome(nsCtx) {
       }, 0);
     }
     
+    // 2. Text chars exit to left
     const txtLgElements = gsap.utils.toArray('.txt-lg');
     txtLgElements.forEach((txtLg) => {
       if (window.SplitText) {
@@ -407,12 +440,23 @@ export async function initHome(nsCtx) {
       }
     });
     
+    // 3. Buttons slide down
     const btnScrollElements = gsap.utils.toArray('[data-btn-scroll]');
     exitTL.to(btnScrollElements, {
       yPercent: 100,
       duration: 0.5,
       ease: 'power2.in',
     }, 0);
+    
+    // 4. Container fades out LAST (after children are gone)
+    const featuredContent = document.querySelector('.featured-materials-content');
+    if (featuredContent) {
+      exitTL.to(featuredContent, {
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power1.inOut',
+      }, 0.3); // Delayed by 0.3s so children animate out first
+    }
   }
 
   function splitOnce(slide) {
