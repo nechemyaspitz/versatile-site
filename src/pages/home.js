@@ -283,10 +283,16 @@ export async function initHome(nsCtx) {
     scrollTriggers.forEach(trigger => trigger.kill());
     scrollTriggers = [];
     
+    // Configure ScrollTrigger for better performance
+    ScrollTrigger.config({
+      limitCallbacks: true, // Limit callback frequency for better performance
+      syncInterval: 150, // Reduce sync checks
+    });
+    
     // 1. Featured materials content: fade in
     const featuredContent = document.querySelector('.featured-materials-content');
     if (featuredContent) {
-      // Create animation but don't set initial state yet
+      // Create animation with GPU acceleration
       const anim = gsap.fromTo(featuredContent,
         { opacity: 0 },
         {
@@ -294,6 +300,8 @@ export async function initHome(nsCtx) {
           duration: 0.3,
           ease: 'power1.inOut',
           paused: true,
+          force3D: true,
+          willChange: 'opacity',
         }
       );
       
@@ -302,6 +310,7 @@ export async function initHome(nsCtx) {
         start: '10% bottom',
         animation: anim,
         toggleActions: 'play none none reverse',
+        fastScrollEnd: true, // Optimize for fast scrolling
       });
       scrollTriggers.push(trigger);
     }
@@ -319,6 +328,8 @@ export async function initHome(nsCtx) {
             ease: 'power1.inOut',
             stagger: 0.1,
             paused: true,
+            force3D: true,
+            willChange: 'opacity',
           }
         );
         
@@ -327,6 +338,7 @@ export async function initHome(nsCtx) {
           start: 'top 90%',
           animation: anim,
           toggleActions: 'play none none reverse',
+          fastScrollEnd: true,
         });
         scrollTriggers.push(trigger);
       }
@@ -343,10 +355,12 @@ export async function initHome(nsCtx) {
           {
             opacity: 1,
             x: 0,
-            duration: 1, // Updated to 1s
+            duration: 1,
             ease: 'power4.inOut',
-            stagger: { amount: 0.15 }, // Total stagger time
+            stagger: { amount: 0.15 },
             paused: true,
+            force3D: true,
+            willChange: 'opacity, transform',
           }
         );
         
@@ -355,6 +369,7 @@ export async function initHome(nsCtx) {
           start: 'bottom bottom',
           animation: anim,
           toggleActions: 'play none none reverse',
+          fastScrollEnd: true,
         });
         scrollTriggers.push(trigger);
       }
@@ -370,6 +385,8 @@ export async function initHome(nsCtx) {
           duration: 0.8,
           ease: 'power4.inOut',
           paused: true,
+          force3D: true,
+          willChange: 'transform',
         }
       );
       
@@ -378,14 +395,17 @@ export async function initHome(nsCtx) {
         start: 'bottom bottom',
         animation: anim,
         toggleActions: 'play none none reverse',
+        fastScrollEnd: true,
       });
       scrollTriggers.push(trigger);
     });
     
-    // Refresh ScrollTrigger after all triggers are created to ensure proper positioning
-    if (window.ScrollTrigger) {
-      ScrollTrigger.refresh();
-    }
+    // Defer refresh to next frame to avoid jitter during setup
+    requestAnimationFrame(() => {
+      if (window.ScrollTrigger) {
+        ScrollTrigger.refresh();
+      }
+    });
   }
 
   function killAndReverseScrollAnimations(exitTL) {
