@@ -6,7 +6,7 @@ function playPageEnterAnimation() {
   const view = document.querySelector('[data-taxi-view="about"]');
   if (view) {
     if (window.gsap) {
-      gsap.set(view, { opacity: 1 });
+      window.gsap.set(view, { opacity: 1 });
     } else {
       // Fallback if GSAP not loaded yet
       view.style.opacity = '1';
